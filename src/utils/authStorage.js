@@ -1,0 +1,454 @@
+const accountsKey = 'aust-auth-accounts-v1';
+const sessionKey = 'aust-auth-session-v1';
+const profileKey = 'aust-user-profile';
+const applicationsKey = 'aust-role-applications-v1';
+
+// User-specific storage key prefixes
+const userStoragePrefixes = {
+  semesterResults: 'aust-user-semester-results',
+  routineAttendanceEnabled: 'aust-user-routine-attendance-enabled',
+  routineAttendanceData: 'aust-user-routine-attendance-data',
+  userRoutine: 'aust-user-routine',
+  userWeekDays: 'aust-user-weekdays',
+};
+
+// Get current session user ID for user-specific storage
+export function getCurrentUserId() {
+  try {
+    const session = loadSession();
+    return session?.userId || null;
+  } catch {
+    return null;
+  }
+}
+
+// Get user-specific storage key
+export function getUserStorageKey(keyType) {
+  const userId = getCurrentUserId();
+  const prefix = userStoragePrefixes[keyType];
+  if (!prefix) return null;
+  // If no user is logged in, use a guest key (data won't persist across sessions)
+  return userId ? `${prefix}-${userId}` : `${prefix}-guest-${Date.now()}`;
+}
+
+// User-specific localStorage operations
+export function getUserStorageItem(keyType) {
+  const key = getUserStorageKey(keyType);
+  if (!key) return null;
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setUserStorageItem(keyType, value) {
+  const key = getUserStorageKey(keyType);
+  if (!key) return;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Storage full or other error
+  }
+}
+
+export function removeUserStorageItem(keyType) {
+  const key = getUserStorageKey(keyType);
+  if (!key) return;
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Ignore errors
+  }
+}
+
+// Clear all user-specific storage (called on logout)
+export function clearUserStorage() {
+  try {
+    const userId = getCurrentUserId();
+    if (!userId) return;
+    
+    Object.values(userStoragePrefixes).forEach(prefix => {
+      const key = `${prefix}-${userId}`;
+      localStorage.removeItem(key);
+    });
+  } catch {
+    // Ignore errors
+  }
+}
+
+export const AUTH_ROLES = ['student', 'faculty', 'alumni', 'admin', 'cr', 'sr'];
+export const ALLOWED_EMAIL_DOMAINS = ['aust.edu', 'www.aust.edu'];
+
+export const guestUser = {
+  id: 'guest',
+  name: 'Guest',
+  email: '',
+  role: 'guest',
+  department: '',
+  batch: '',
+  batchNo: '',
+  initials: 'GU',
+  isGuest: true,
+  designation: '',
+};
+
+const rolePrefixes = {
+  student: 'STU',
+  faculty: 'FAC',
+  alumni: 'ALU',
+  cr: 'CR',
+  sr: 'SR',
+};
+
+export function getInitials(name) {
+  const initials = String(name || 'AU')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+  return initials || 'AU';
+}
+
+export function encodePassword(password) {
+  return btoa(unescape(encodeURIComponent(password)));
+}
+
+export function verifyPassword(password, encoded) {
+  return encodePassword(password) === encoded;
+}
+
+function loadAccounts() {
+  try {
+    const raw = localStorage.getItem(accountsKey);
+    const list = raw ? JSON.parse(raw) : [];
+    const adminExists = list.some(acc => acc.email === 'asp@admin.com');
+    if (!adminExists) {
+      list.push({
+        id: 'ADM-001',
+        name: 'System Administrator',
+        email: 'asp@admin.com',
+        password: btoa('12345678'),
+        role: 'admin',
+        department: 'Admin Department',
+        createdAt: new Date().toISOString(),
+      });
+      localStorage.setItem(accountsKey, JSON.stringify(list));
+    }
+    return list;
+  } catch {
+    return [];
+  }
+}
+
+function saveAccounts(accounts) {
+  localStorage.setItem(accountsKey, JSON.stringify(accounts));
+}
+
+export function loadSession() {
+  try {
+    const raw = localStorage.getItem(sessionKey);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSession(session) {
+  localStorage.setItem(sessionKey, JSON.stringify(session));
+}
+
+export function clearSession() {
+  clearUserStorage();
+  localStorage.removeItem(sessionKey);
+  localStorage.removeItem(profileKey);
+}
+
+export function getAccountById(userId) {
+  return loadAccounts().find((account) => account.id === userId) ?? null;
+}
+
+export function getAccountByEmail(email) {
+  const normalized = String(email || '').trim().toLowerCase();
+  return loadAccounts().find((account) => account.email === normalized) ?? null;
+}
+
+export function updateAccountProfile(userId, patch) {
+  const accounts = loadAccounts();
+  const index = accounts.findIndex((account) => account.id === userId);
+  if (index === -1) return null;
+
+  accounts[index] = {
+    ...accounts[index],
+    ...patch,
+    name: patch.name ?? accounts[index].name,
+    email: patch.email ?? accounts[index].email,
+  };
+
+  saveAccounts(accounts);
+  return accounts[index];
+}
+
+function createAccountId(role) {
+  const prefix = rolePrefixes[role] || 'USR';
+  return `${prefix}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+}
+
+export function accountToUser(account) {
+  return {
+    id: account.id,
+    name: account.name,
+    email: account.email,
+    role: account.role,
+    department: account.department || '',
+    batch: account.batch || '',
+    batchNo: account.batchNo || '',
+    batchName: account.batchName || account.batchNo || '',
+    designation: account.designation || '',
+    company: account.company || '',
+    graduationYear: account.graduationYear || '',
+    yearSemester: account.yearSemester || '',
+    section: account.section || '',
+    labSection: account.labSection || '',
+    semester: account.semester ?? 1,
+    avatar: account.avatar || null,
+    initials: getInitials(account.name),
+    cgpa: account.cgpa ?? 0,
+    creditsCompleted: account.creditsCompleted ?? 0,
+    totalCredits: account.totalCredits ?? 160,
+  };
+}
+
+function persistUserProfile(user) {
+  localStorage.setItem(profileKey, JSON.stringify(user));
+}
+
+function isValidAustEmail(email) {
+  const normalized = email.toLowerCase().trim();
+  return ALLOWED_EMAIL_DOMAINS.some(domain => 
+    normalized.endsWith(`@${domain}`) || normalized.endsWith(`@www.${domain}`)
+  );
+}
+
+export function signupAccount(payload) {
+  const name = String(payload.name || '').trim();
+  const email = String(payload.email || '').trim().toLowerCase();
+  const password = String(payload.password || '');
+  const role = AUTH_ROLES.includes(payload.role) ? payload.role : 'student';
+  const department = String(payload.department || '').trim();
+
+  if (!name) throw new Error('Full name is required.');
+  if (!email || !email.includes('@')) throw new Error('Enter a valid email address.');
+  if (!isValidAustEmail(email)) {
+    throw new Error('Only AUST university email addresses (@aust.edu) are allowed for registration.');
+  }
+  if (password.length < 6) throw new Error('Password must be at least 6 characters.');
+  if (!department) throw new Error('Department is required.');
+
+  if (getAccountByEmail(email)) {
+    throw new Error('An account with this email already exists.');
+  }
+
+  if (role === 'student' || role === 'alumni') {
+    if (!String(payload.batchNo || payload.batch || '').trim()) {
+      throw new Error('Batch is required for students and alumni.');
+    }
+  }
+
+  if (role === 'faculty' && !String(payload.designation || '').trim()) {
+    throw new Error('Designation is required for faculty accounts.');
+  }
+
+  const batchNo = String(payload.batchNo || '').trim();
+  const account = {
+    id: createAccountId(role),
+    name,
+    email,
+    password: encodePassword(password),
+    role,
+    department,
+    batch: batchNo ? `Batch ${batchNo}` : String(payload.batch || '').trim(),
+    batchNo,
+    batchName: String(payload.batchName || batchNo).trim(),
+    designation: String(payload.designation || '').trim(),
+    company: String(payload.company || '').trim(),
+    graduationYear: String(payload.graduationYear || '').trim(),
+    yearSemester: String(payload.yearSemester || '').trim(),
+    section: String(payload.section || '').trim(),
+    semester: Number(payload.semester) || 1,
+    createdAt: new Date().toISOString(),
+  };
+
+  const accounts = loadAccounts();
+  accounts.push(account);
+  saveAccounts(accounts);
+
+  return account;
+}
+
+export function loginAccount(email, password) {
+  const account = getAccountByEmail(email);
+  if (!account || !verifyPassword(password, account.password)) {
+    throw new Error('Invalid email or password.');
+  }
+  return account;
+}
+
+export function startSession(account) {
+  const user = accountToUser(account);
+  saveSession({ userId: account.id, role: account.role, startedAt: new Date().toISOString() });
+  persistUserProfile(user);
+  return user;
+}
+
+export function restoreSessionUser() {
+  const session = loadSession();
+  if (!session?.userId) return null;
+  const account = getAccountById(session.userId);
+  if (!account) {
+    clearSession();
+    return null;
+  }
+  const user = accountToUser(account);
+  persistUserProfile(user);
+  return user;
+}
+
+export function getRoleLabel(role) {
+  if (role === 'guest') return 'Guest';
+  if (role === 'faculty') return 'Faculty';
+  if (role === 'alumni') return 'Alumni';
+  if (role === 'admin') return 'Admin';
+  if (role === 'cr') return 'Class Representative (CR)';
+  if (role === 'sr') return 'Student Representative (SR)';
+  return 'Student';
+}
+
+export function getRoleBadgeClass(role) {
+  switch (role) {
+    case 'admin': return 'badge-rose';
+    case 'faculty': return 'badge-purple';
+    case 'alumni': return 'badge-cyan';
+    case 'cr': return 'badge-amber';
+    case 'sr': return 'badge-emerald';
+    default: return 'badge-blue';
+  }
+}
+
+export function getPortalSubtitle(role) {
+  if (!role || role === 'guest') return 'AUST Campus Hub';
+  if (role === 'faculty') return 'Faculty Portal';
+  if (role === 'alumni') return 'Alumni Portal';
+  if (role === 'admin') return 'Admin Panel';
+  return 'Student Portal';
+}
+
+// CR/SR Application Functions
+function loadApplications() {
+  try {
+    const raw = localStorage.getItem(applicationsKey);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveApplications(applications) {
+  localStorage.setItem(applicationsKey, JSON.stringify(applications));
+}
+
+export function submitRoleApplication(payload) {
+  const applications = loadApplications();
+  const userId = payload.userId;
+  const appliedRole = payload.appliedRole; // 'cr' or 'sr'
+
+  // Check if user already has an active application
+  const existingPending = applications.find(
+    app => app.userId === userId && app.status === 'pending'
+  );
+  if (existingPending) {
+    throw new Error('You already have a pending application.');
+  }
+
+  // Check if user already has this role
+  const user = getAccountById(userId);
+  if (user && user.role === appliedRole) {
+    throw new Error('You already have this role.');
+  }
+
+  const application = {
+    id: `APP-${Date.now()}`,
+    userId,
+    userName: user?.name || payload.userName,
+    userEmail: user?.email || payload.userEmail,
+    userDepartment: user?.department || payload.department,
+    userBatch: user?.batch || user?.batchNo || payload.batch,
+    userSection: user?.section || payload.userSection,
+    userLabSection: user?.labSection || payload.userLabSection,
+    appliedRole,
+    // For CR: targetLabSection (which lab group they're applying for)
+    // For SR: targetSection (which section they're applying for)
+    targetLabSection: appliedRole === 'cr' ? payload.targetLabSection : null,
+    targetSection: appliedRole === 'sr' ? payload.targetSection : null,
+    statement: payload.statement || '',
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+    reviewedAt: null,
+    reviewedBy: null,
+  };
+
+  applications.push(application);
+  saveApplications(applications);
+  return application;
+}
+
+export function getApplicationsByUserId(userId) {
+  const applications = loadApplications();
+  return applications.filter(app => app.userId === userId);
+}
+
+export function getAllRoleApplications() {
+  return loadApplications();
+}
+
+export function reviewRoleApplication(applicationId, status, adminId) {
+  const applications = loadApplications();
+  const index = applications.findIndex(app => app.id === applicationId);
+  
+  if (index === -1) {
+    throw new Error('Application not found.');
+  }
+
+  const application = applications[index];
+  if (application.status !== 'pending') {
+    throw new Error('Application has already been reviewed.');
+  }
+
+  application.status = status; // 'approved' or 'rejected'
+  application.reviewedAt = new Date().toISOString();
+  application.reviewedBy = adminId;
+
+  // If approved, update user's role
+  if (status === 'approved') {
+    updateAccountProfile(application.userId, { role: application.appliedRole });
+  }
+
+  applications[index] = application;
+  saveApplications(applications);
+  return application;
+}
+
+export function getUserApplicationStatus(userId) {
+  const applications = getApplicationsByUserId(userId);
+  const pending = applications.find(app => app.status === 'pending');
+  const approved = applications.find(app => app.status === 'approved' && app.appliedRole === 'cr' || app.appliedRole === 'sr');
+  
+  return {
+    hasPending: !!pending,
+    pendingApplication: pending || null,
+    hasActiveRole: !!approved,
+    activeRole: approved?.appliedRole || null,
+  };
+}

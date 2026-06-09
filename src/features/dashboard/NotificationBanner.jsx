@@ -1,0 +1,106 @@
+import { useState } from 'react';
+import { BellRing, X, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import {
+  isNotificationSupported,
+  getPermissionStatus,
+  loadSettings,
+  requestPermission,
+  saveSettings,
+} from '../../utils/notificationService';
+
+const DISMISSED_KEY = 'aust-notif-banner-dismissed';
+
+export default function NotificationBanner() {
+  const navigate = useNavigate();
+  const [dismissed, setDismissed] = useState(() => {
+    try { return Boolean(localStorage.getItem(DISMISSED_KEY)); } catch { return false; }
+  });
+  const [enabling, setEnabling] = useState(false);
+  const [done, setDone] = useState(() => {
+    const settings = loadSettings();
+    return settings.enabled && getPermissionStatus() === 'granted';
+  });
+
+  if (!isNotificationSupported()) return null;
+  if (getPermissionStatus() === 'denied') return null;
+  if (dismissed || done) return null;
+
+  const handleDismiss = () => {
+    localStorage.setItem(DISMISSED_KEY, '1');
+    setDismissed(true);
+  };
+
+  const handleEnable = async () => {
+    setEnabling(true);
+    const result = await requestPermission();
+    if (result === 'granted') {
+      saveSettings({ enabled: true, notifyClass: true, notifyDeadline: true });
+      setDone(true);
+    } else {
+      handleDismiss();
+    }
+    setEnabling(false);
+  };
+
+  return (
+    <div
+      className="animate-fadeIn"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        padding: '12px 16px',
+        background: 'linear-gradient(135deg, rgba(99,145,255,0.12), rgba(176,151,93,0.10))',
+        border: '1px solid var(--border-primary)',
+        borderRadius: 'var(--radius-lg)',
+        marginBottom: '4px',
+      }}
+    >
+      <div style={{
+        width: '36px', height: '36px', borderRadius: '50%',
+        background: 'var(--accent-blue-glow)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <BellRing size={18} style={{ color: 'var(--accent-blue)' }} />
+      </div>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-semibold)' }}>
+          Never miss a class or deadline
+        </p>
+        <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+          Enable browser alerts — get notified before your next class starts and when assignments are due.
+        </p>
+      </div>
+
+      <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={handleEnable}
+          disabled={enabling}
+          style={{ fontSize: '12px', whiteSpace: 'nowrap' }}
+        >
+          {enabling ? 'Requesting…' : <>Enable <ArrowRight size={12} /></>}
+        </button>
+        <button
+          className="btn btn-secondary btn-sm"
+          onClick={() => navigate('/settings')}
+          style={{ fontSize: '11px', padding: '6px 8px' }}
+          title="Open notification settings"
+        >
+          Settings
+        </button>
+        <button
+          className="btn btn-ghost btn-icon"
+          onClick={handleDismiss}
+          style={{ width: '28px', height: '28px', padding: 0 }}
+          title="Dismiss"
+        >
+          <X size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}

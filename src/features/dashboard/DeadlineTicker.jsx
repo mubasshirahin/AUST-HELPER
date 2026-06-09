@@ -1,0 +1,290 @@
+import { useState, useEffect } from 'react';
+import { Hourglass, AlertTriangle, CalendarRange, Plus, Trash2 } from 'lucide-react';
+import { deadlines } from '../../data/mockData';
+import { useAuth } from '../../context/AuthContext';
+import { useRoutine } from '../../context/RoutineContext';
+import CourseAutocomplete from '../../components/CourseAutocomplete';
+
+export default function DeadlineTicker() {
+  const { user } = useAuth();
+  const { routine } = useRoutine();
+  const [timers, setTimers] = useState([]);
+  const [calendarTasks, setCalendarTasks] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newDeadline, setNewDeadline] = useState({
+    title: '',
+    course: '',
+    dueDate: '',
+    dueTime: '',
+    type: '',
+    customType: '',
+    priority: 'medium',
+    color: '#3b82f6'
+  });
+
+  // Get unique courses from routine
+  const routineCourses = (() => {
+    const courses = new Set();
+    Object.values(routine || {}).forEach(dayClasses => {
+      (dayClasses || []).forEach(cls => {
+        if (cls.course) courses.add(cls.course);
+      });
+    });
+    return Array.from(courses);
+  })();
+
+  // Get CR group info
+  const crGroup = (() => {
+    if (user?.role === 'cr') {
+      return user?.section ? `Section ${user.section}` : user?.batch ? `Batch ${user.batch}` : '';
+    }
+    return '';
+  })();
+
+  // Check if user can add deadlines (admin, CR, SR only)
+  const canAddDeadline = user?.role === 'admin' || user?.role === 'cr' || user?.role === 'sr';
+
+  // Get user's batch group (A1, A2, B1, B2, C1, C2)
+  const userBatchGroup = (() => {
+    if (user?.section && ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].includes(user.section.toUpperCase())) {
+      return user.section.toUpperCase();
+    }
+    if (user?.labSection && ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].includes(user.labSection.toUpperCase())) {
+      return user.labSection.toUpperCase();
+    }
+    if (user?.batchNo) {
+      const batchNo = parseInt(user.batchNo);
+      const batchGroupIndex = (batchNo - 52) % 6;
+      const groups = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+      return groups[batchGroupIndex >= 0 ? batchGroupIndex : 0];
+    }
+    return 'A1';
+  })();
+
+  const deadlineTypes = ['Quiz', 'Online', 'Lab Report', 'Assignment', 'Viva', 'Project Submission', 'Mid', 'Semester Final', 'Manual'];
+
+  useEffect(() => {
+    // Load deadlines from localStorage or use empty array
+    const stored = localStorage.getItem('aust-deadlines');
+    const loadedDeadlines = stored ? JSON.parse(stored) : [...deadlines];
+    setTimers(loadedDeadlines);
+
+    // Load calendar tasks from localStorage
+    const storedTasks = localStorage.getItem('aust-week-tasks');
+    if (storedTasks) {
+      setCalendarTasks(JSON.parse(storedTasks));
+    }
+  }, []);
+
+  // Combine manual deadlines with calendar tasks for user's batch
+  const combinedDeadlines = (() => {
+    // Convert calendar tasks to deadline format (only for user's batch)
+    const taskDeadlines = calendarTasks
+      .filter(task => task.batchGroup === userBatchGroup)
+      .filter(task => {
+        const taskDate = new Date(task.date);
+        if (task.time) {
+          const [hours, minutes] = task.time.split(':');
+          taskDate.setHours(parseInt(hours), parseInt(minutes), 0);
+        } else {
+          taskDate.setHours(23, 59, 59);
+        }
+        return taskDate.getTime() > Date.now(); // Only future tasks
+      })
+      .map(task => {
+        const taskDate = new Date(task.date);
+        if (task.time) {
+          const [hours, minutes] = task.time.split(':');
+          taskDate.setHours(parseInt(hours), parseInt(minutes), 0);
+        } else {
+          taskDate.setHours(23, 59, 59);
+        }
+        return {
+          id: `task-${task.id}`,
+          title: task.title,
+          course: task.courseCode || task.courseName || 'General',
+          dueDate: taskDate,
+          type: 'Quiz',
+          priority: 'medium',
+          color: 'var(--accent-cyan)',
+          fromCalendar: true,
+          batchGroup: task.batchGroup
+        };
+      });
+
+    // Combine with manual deadlines
+    return [...timers, ...taskDeadlines];
+  })();
+
+  // State for live countdown display
+  const [displayDeadlines, setDisplayDeadlines] = useState([]);
+
+  useEffect(() => {
+    if (combinedDeadlines.length === 0) {
+      setDisplayDeadlines([]);
+      return undefined;
+    }
+
+    const calculateTimeRemaining = () => {
+      const updated = combinedDeadlines.map(dl => {
+        const diff = dl.dueDate.getTime() - Date.now();
+        
+        if (diff <= 0) {
+          return { ...dl, formatted: 'Passed', urgent: false };
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const mins = Math.floor((diff / (1000 * 60)) % 60);
+        const secs = Math.floor((diff / 1000) % 60);
+
+        let formatted = '';
+        if (days > 0) formatted += `${days}d `;
+        formatted += `${hours.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
+
+        const urgent = diff < 48 * 60 * 60 * 1000; // less than 48 hours
+
+        return { ...dl, formatted, urgent };
+      });
+
+      // Sort by nearest deadline
+      updated.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+      setDisplayDeadlines(updated.slice(0, 4)); // Show top 4
+    };
+
+    calculateTimeRemaining();
+    const interval = setInterval(calculateTimeRemaining, 1000);
+    return () => clearInterval(interval);
+  }, [combinedDeadlines.length, calendarTasks.length, timers.length]);
+
+  const saveDeadlines = (updatedDeadlines) => {
+    setTimers(updatedDeadlines);
+    localStorage.setItem('aust-deadlines', JSON.stringify(updatedDeadlines));
+  };
+
+  const handleAddDeadline = (e) => {
+    e.preventDefault();
+    if (!newDeadline.title.trim() || !newDeadline.dueDate) return;
+
+    // Combine date and time
+    let dueDateTime;
+    if (newDeadline.dueDate && newDeadline.dueTime) {
+      dueDateTime = new Date(`${newDeadline.dueDate}T${newDeadline.dueTime}`);
+    } else if (newDeadline.dueDate) {
+      dueDateTime = new Date(newDeadline.dueDate);
+      dueDateTime.setHours(23, 59, 59);
+    } else {
+      return;
+    }
+
+    const typeLabel = newDeadline.type === 'Manual' ? (newDeadline.customType || 'Manual') : newDeadline.type;
+
+    const deadline = {
+      id: Date.now(),
+      title: newDeadline.title.trim(),
+      course: newDeadline.course.trim() || 'General',
+      dueDate: dueDateTime,
+      type: typeLabel,
+      priority: newDeadline.priority,
+      crGroup: crGroup || undefined,
+      color: newDeadline.priority === 'high' ? '#ef4444' : newDeadline.priority === 'medium' ? '#f59e0b' : '#3b82f6'
+    };
+
+    const updated = [...timers, deadline];
+    saveDeadlines(updated);
+    setNewDeadline({ title: '', course: '', dueDate: '', dueTime: '', type: '', customType: '', priority: 'medium', color: '#3b82f6' });
+    setShowAddModal(false);
+  };
+
+  const handleDeleteDeadline = (id) => {
+    if (!canAddDeadline) return;
+    const updated = timers.filter(dl => dl.id !== id);
+    saveDeadlines(updated);
+  };
+
+  return (
+    <div className="glass-card-static deadline-ticker animate-fadeInUp">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="icon" style={{ backgroundColor: 'var(--accent-rose-glow)', color: 'var(--accent-rose)', padding: '6px', borderRadius: '8px' }}>
+            <Hourglass size={18} />
+          </div>
+          <div>
+            <h3 className="section-title" style={{ fontSize: 'var(--fs-md)', margin: 0 }}>Upcoming Deadlines</h3>
+            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>Live countdown tracker</p>
+          </div>
+        </div>
+        <CalendarRange size={16} style={{ color: 'var(--text-tertiary)' }} />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {displayDeadlines.length === 0 ? (
+          <div className="empty-state" style={{ padding: '24px 0' }}>
+            <Hourglass size={32} />
+            <p>No upcoming deadlines</p>
+          </div>
+        ) : displayDeadlines.map(dl => {
+          return (
+            <div 
+              key={dl.id}
+              className="flex justify-between items-center p-3"
+              style={{
+                background: 'var(--bg-input)',
+                borderRadius: 'var(--radius-md)',
+                borderLeft: `3px solid ${dl.urgent ? 'var(--accent-rose)' : dl.color}`,
+                animation: dl.urgent ? 'countdownPulse 2s infinite' : 'none'
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0, paddingRight: '12px' }}>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span style={{ fontSize: '10px', fontWeight: 'var(--fw-bold)', color: 'var(--text-tertiary)' }}>{dl.course}</span>
+                  <span className={`badge ${dl.priority === 'high' ? 'badge-rose' : dl.priority === 'medium' ? 'badge-amber' : 'badge-blue'}`} style={{ fontSize: '8px', padding: '1px 4px' }}>
+                    {dl.type}
+                  </span>
+                  {dl.crGroup && (
+                    <span className="badge badge-emerald" style={{ fontSize: '8px', padding: '1px 4px' }}>
+                      {dl.crGroup}
+                    </span>
+                  )}
+                  {dl.fromCalendar && (
+                    <span className="badge badge-cyan" style={{ fontSize: '8px', padding: '1px 4px' }}>
+                      {dl.batchGroup}
+                    </span>
+                  )}
+                </div>
+                <h4 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-medium)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {dl.title}
+                </h4>
+              </div>
+
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <span 
+                  style={{ 
+                    fontFamily: 'monospace', 
+                    fontSize: 'var(--fs-sm)', 
+                    fontWeight: 'var(--fw-semibold)',
+                    color: dl.urgent ? 'var(--accent-rose)' : 'var(--text-primary)'
+                  }}
+                >
+                  {dl.formatted}
+                </span>
+                {dl.urgent && (
+                  <div className="flex items-center justify-end gap-1 text-rose mt-1" style={{ color: 'var(--accent-rose)', fontSize: '8px', fontWeight: 'bold' }}>
+                    <AlertTriangle size={10} />
+                    <span>URGENT</span>
+                  </div>
+                )}
+                {dl.fromCalendar && (
+                  <div style={{ fontSize: '8px', color: 'var(--accent-cyan)', marginTop: '2px' }}>
+                    Calendar
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+    </div>
+  );
+}

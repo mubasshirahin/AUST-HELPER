@@ -1,0 +1,164 @@
+.community-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  width: 100%;
+}
+
+.community-header {
+  margin-bottom: var(--sp-1);
+}
+
+.community-tabs {
+  margin-bottom: 0;
+}
+
+.community-content-area {
+  animation: fadeInUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ─── Story Feed ─── */
+.story-feed-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+.story-feed-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.story-feed-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.story-card {
+  padding: var(--sp-5);
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.story-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-focus);
+}
+
+/* ─── Senior Secrets ─── */
+.secrets-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-5);
+}
+
+.secret-card {
+  padding: var(--sp-5);
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.secret-card.booster {
+  border-left: 3px solid var(--accent-emerald);
+}
+
+.secret-card.killer {
+  border-left: 3px solid var(--accent-rose);
+}
+
+.secret-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ─── Alumni Directory ─── */
+.alumni-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: var(--sp-5);
+}
+
+.alumni-card {
+  padding: var(--sp-5);
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.alumni-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-focus);
+}
+
+/* ─── Clubs ─── */
+.clubs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-5);
+}
+
+.club-card {
+  padding: var(--sp-5);
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  transition: box-shadow var(--transition-base), border-color var(--transition-base), transform var(--transition-base);
+}
+
+.club-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-focus);
+  transform: translateY(-1px);
+}
+
+/* ─── Grade Alerts ─── */
+.alerts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-5);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 900px) {
+  .story-feed-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .secrets-grid,
+  .clubs-grid,
+  .alerts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .secrets-grid,
+  .clubs-grid,
+  .alerts-grid,
+  .story-feed-layout {
+    grid-template-columns: 1fr;
+  }
+}
