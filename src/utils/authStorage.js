@@ -10,6 +10,12 @@ const userStoragePrefixes = {
   routineAttendanceData: 'aust-user-routine-attendance-data',
   userRoutine: 'aust-user-routine',
   userWeekDays: 'aust-user-weekdays',
+  // Semester Tracker
+  semesterTrackerCourses: 'aust-user-tracker-courses',
+  semesterTrackerMarks:   'aust-user-tracker-marks',
+  semesterTrackerLabCourses: 'aust-user-tracker-lab-courses',
+  semesterTrackerLabConfig:  'aust-user-tracker-lab-config',
+  semesterTrackerLabMarks:   'aust-user-tracker-lab-marks',
 };
 
 // Get current session user ID for user-specific storage
@@ -27,8 +33,8 @@ export function getUserStorageKey(keyType) {
   const userId = getCurrentUserId();
   const prefix = userStoragePrefixes[keyType];
   if (!prefix) return null;
-  // If no user is logged in, use a guest key (data won't persist across sessions)
-  return userId ? `${prefix}-${userId}` : `${prefix}-guest-${Date.now()}`;
+  // If no user is logged in, use a fixed guest key so reads & writes match
+  return userId ? `${prefix}-${userId}` : `${prefix}-guest`;
 }
 
 // User-specific localStorage operations

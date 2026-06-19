@@ -23,9 +23,11 @@ export default function TargetCalculator() {
   // Initialize course grades mapping
   const [grades, setGrades] = useState(() => {
     const initial = {};
-    currentSemester.courses.forEach(c => {
-      initial[c.code] = 'A'; // Default selection is A (3.75) for simulations
-    });
+    if (currentSemester?.courses) {
+      currentSemester.courses.forEach(c => {
+        initial[c.code] = 'A'; // Default selection is A (3.75) for simulations
+      });
+    }
     return initial;
   });
   const [targetCgpa, setTargetCgpa] = useState(currentUser.cgpa.toFixed(2));
@@ -55,12 +57,14 @@ export default function TargetCalculator() {
     let simSemesterCredits = 0;
     let simSemesterSum = 0;
 
-    currentSemester.courses.forEach(c => {
-      const selectedGrade = grades[c.code];
-      const pt = GRADE_POINTS[selectedGrade];
-      simSemesterCredits += c.credit;
-      simSemesterSum += pt * c.credit;
-    });
+    if (currentSemester?.courses) {
+      currentSemester.courses.forEach(c => {
+        const selectedGrade = grades[c.code];
+        const pt = GRADE_POINTS[selectedGrade];
+        simSemesterCredits += c.credit;
+        simSemesterSum += pt * c.credit;
+      });
+    }
 
     const projectedSGPA = simSemesterSum / simSemesterCredits;
     const projectedCGPA = (currentGradeSum + simSemesterSum) / (totalCurrentCredits + simSemesterCredits);
@@ -81,9 +85,11 @@ export default function TargetCalculator() {
 
   const resetSimulation = () => {
     const reset = {};
-    currentSemester.courses.forEach(c => {
-      reset[c.code] = 'A';
-    });
+    if (currentSemester?.courses) {
+      currentSemester.courses.forEach(c => {
+        reset[c.code] = 'A';
+      });
+    }
     setGrades(reset);
     setTargetCgpa(currentUser.cgpa.toFixed(2));
   };
@@ -109,7 +115,7 @@ export default function TargetCalculator() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {currentSemester.courses.map((course) => (
+          {currentSemester?.courses?.map((course) => (
             <div 
               key={course.code} 
               className="flex justify-between items-center p-3"
