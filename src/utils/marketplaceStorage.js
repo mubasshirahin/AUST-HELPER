@@ -8,6 +8,7 @@ const emptyStore = () => ({
   lostFound: [],
   partners: [],
   mentors: [],
+  mentorRequests: [],
 });
 
 export function getContributorId() {
@@ -60,31 +61,12 @@ export function getUserInitials(name) {
 }
 
 const seedData = {
-  exchange: [
-    { id: 'seed-ex-1', contributorId: 'seed', postedAt: new Date(Date.now() - 1 * 86400000).toISOString(), title: 'Calculus by Thomas (10th Ed)', price: 350, condition: 'Good', category: 'Books', image: '📘', seller: 'Batch 62 • CSE', contact: '+8801712345678' },
-    { id: 'seed-ex-2', contributorId: 'seed', postedAt: new Date(Date.now() - 2 * 86400000).toISOString(), title: 'Breadboard + Jumper Wire Kit', price: 180, condition: 'Like New', category: 'Lab Equipment', image: '🔧', seller: 'Batch 61 • EEE', contact: '+8801898765432' },
-    { id: 'seed-ex-3', contributorId: 'seed', postedAt: new Date(Date.now() - 3 * 86400000).toISOString(), title: 'Scientific Calculator (Casio fx-991EX)', price: 550, condition: 'Good', category: 'Electronics', image: '🧮', seller: 'Batch 63 • CSE', contact: '+8801611223344' },
-    { id: 'seed-ex-4', contributorId: 'seed', postedAt: new Date(Date.now() - 5 * 86400000).toISOString(), title: 'Data Structures & Algorithms Book', price: 400, condition: 'Fair', category: 'Books', image: '📗', seller: 'Batch 60 • CSE', contact: '+8801755443322' },
-  ],
-  tolet: [
-    { id: 'seed-tl-1', contributorId: 'seed', postedAt: new Date(Date.now() - 1 * 86400000).toISOString(), title: 'Bachelor Seat in Tejgaon', location: 'Tejgaon, 5 min from AUST', rent: 2500, type: 'Seat', amenities: ['WiFi', 'Mess', 'Security'], available: true, contact: '+8801812345678', owner: 'AUST Alumni' },
-    { id: 'seed-tl-2', contributorId: 'seed', postedAt: new Date(Date.now() - 3 * 86400000).toISOString(), title: 'Single Room Near Campus Gate', location: 'Farmgate, 8 min walk', rent: 4200, type: 'Room', amenities: ['WiFi', 'AC', 'Attached Bath'], available: true, contact: '+8801923456789', owner: 'Faculty • CSE' },
-    { id: 'seed-tl-3', contributorId: 'seed', postedAt: new Date(Date.now() - 7 * 86400000).toISOString(), title: '2-Bedroom Flat for Sharing', location: 'Bijoy Sarani', rent: 8000, type: 'Flat', amenities: ['WiFi', 'Kitchen', 'Lift', 'Security'], available: true, contact: '+8801611334455', owner: 'Batch 58 • Alumni' },
-  ],
-  lostFound: [
-    { id: 'seed-lf-1', contributorId: 'seed', postedAt: new Date(Date.now() - 1 * 86400000).toISOString(), title: 'Blue Water Bottle', type: 'lost', location: '6th Floor Cafeteria', description: 'Blue Tupperware bottle with AUST sticker on it. Left near the corner table during lunch.', image: '🎒', status: 'open', contact: '+8801712334455', reporter: 'Batch 63 • CSE' },
-    { id: 'seed-lf-2', contributorId: 'seed', postedAt: new Date(Date.now() - 2 * 86400000).toISOString(), title: 'Student ID Card', type: 'found', location: 'Library Reading Room', description: 'Found a student ID card (CSE dept) on the table near the window. Contact to claim.', image: '🪪', status: 'open', contact: '+8801812223344', reporter: 'Batch 62 • CSE' },
-    { id: 'seed-lf-3', contributorId: 'seed', postedAt: new Date(Date.now() - 4 * 86400000).toISOString(), title: 'Black Umbrella', type: 'lost', location: 'Lab 7B08', description: 'Left a black folding umbrella after the CS lab session on Tuesday.', image: '☂️', status: 'open', contact: '+8801955667788', reporter: 'Batch 63 • EEE' },
-  ],
-  partners: [
-    { id: 'seed-sp-1', contributorId: 'seed-p1', postedAt: new Date(Date.now() - 2 * 86400000).toISOString(), name: 'Arafat Hossain', batch: '63', department: 'CSE', skills: ['Python', 'Data Structures', 'SQL'], lookingFor: ['Machine Learning', 'React'], contact: '+8801712001122', avatar: 'AH' },
-    { id: 'seed-sp-2', contributorId: 'seed-p2', postedAt: new Date(Date.now() - 3 * 86400000).toISOString(), name: 'Nusrat Jahan', batch: '62', department: 'CSE', skills: ['React', 'JavaScript', 'CSS'], lookingFor: ['Node.js', 'System Design'], contact: '+8801811002233', avatar: 'NJ' },
-    { id: 'seed-sp-3', contributorId: 'seed-p3', postedAt: new Date(Date.now() - 5 * 86400000).toISOString(), name: 'Tanvir Ahmed', batch: '63', department: 'CSE', skills: ['C++', 'Algorithms', 'Competitive Programming'], lookingFor: ['Project Partners', 'Hackathon Team'], contact: '+8801919003344', avatar: 'TA' },
-  ],
-  mentors: [
-    { id: 'seed-m1', contributorId: 'seed-m1', postedAt: new Date(Date.now() - 5 * 86400000).toISOString(), name: 'Rafiqul Islam', batch: '55', expertise: 'Software Engineering, System Design', company: 'Samsung R&D Bangladesh', availability: 'Weekends, Online', contact: '+8801812334455', avatar: 'RI', sessions: 12, rating: 5 },
-    { id: 'seed-m2', contributorId: 'seed-m2', postedAt: new Date(Date.now() - 10 * 86400000).toISOString(), name: 'Shirin Akter', batch: '57', expertise: 'Machine Learning, Python, Data Science', company: 'Pathao', availability: 'Thursday evenings', contact: '+8801711445566', avatar: 'SA', sessions: 8, rating: 5 },
-  ],
+  exchange: [],
+  tolet: [],
+  lostFound: [],
+  partners: [],
+  mentors: [],
+  mentorRequests: [],
 };
 
 function loadStore() {
@@ -113,9 +95,10 @@ export function formatPostedDate(iso) {
 }
 
 function createBaseEntry() {
+  const profile = loadUserProfile();
   return {
     id: crypto.randomUUID(),
-    contributorId: getContributorId(),
+    contributorId: profile?.id || getContributorId(),
     postedAt: new Date().toISOString(),
   };
 }
@@ -142,7 +125,7 @@ export function addExchangeItem(payload) {
     price: Math.round(price),
     condition: payload.condition || 'Good',
     category: payload.category || 'Other',
-    image: payload.image || '📦',
+    image: payload.image || '',
     seller: payload.seller || getSellerLabel(),
     contact,
   };
@@ -176,9 +159,13 @@ export function addToLetListing(payload) {
     rent: Math.round(rent),
     type: payload.type || 'Seat',
     amenities: (payload.amenities || []).filter(Boolean),
+    image: payload.image || '',
     available: true,
     contact,
     owner: payload.owner || getSellerLabel(),
+    description: payload.description || '',
+    environment: payload.environment || 'Male',
+    utilities: payload.utilities || '',
   };
 
   store.tolet.unshift(entry);
@@ -220,7 +207,7 @@ export function addLostFoundItem(payload) {
     location,
     description,
     type,
-    image: payload.image || (type === 'lost' ? '❓' : '✨'),
+    image: payload.image || '',
     status: 'open',
     contact,
     reporter: payload.reporter || getSellerLabel(),
@@ -362,6 +349,63 @@ export function incrementMentorSessions(id) {
   return store.mentors;
 }
 
+export function listMentorRequests() {
+  return loadStore().mentorRequests.sort(
+    (left, right) => new Date(right.postedAt).getTime() - new Date(left.postedAt).getTime(),
+  );
+}
+
+export function addMentorRequest(payload) {
+  const topic = String(payload.topic || '').trim();
+  const description = String(payload.description || '').trim();
+  const contact = String(payload.contact || '').trim();
+
+  if (!topic) throw new Error('Topic is required (e.g., CP, Web Dev, ML).');
+  if (!contact) throw new Error('Contact number is required.');
+
+  const user = loadUserProfile();
+  const store = loadStore();
+  const entry = {
+    ...createBaseEntry(),
+    requesterName: payload.requesterName || user?.name || 'Anonymous',
+    batch: payload.batch || getBatchNoFromUser(user) || '—',
+    department: payload.department || user?.department || '—',
+    topic,
+    description,
+    contact,
+    responses: [],
+  };
+
+  store.mentorRequests.unshift(entry);
+  saveStore(store);
+  return entry;
+}
+
+export function addMentorResponse(requestId, payload) {
+  const message = String(payload.message || '').trim();
+  const contact = String(payload.contact || '').trim();
+  const responderName = String(payload.responderName || '').trim();
+
+  if (!message) throw new Error('Response message is required.');
+
+  const store = loadStore();
+  const request = store.mentorRequests.find((r) => r.id === requestId);
+  if (!request) throw new Error('Mentor request not found.');
+
+  const response = {
+    id: crypto.randomUUID(),
+    postedAt: new Date().toISOString(),
+    responderName: responderName || loadUserProfile()?.name || 'Anonymous',
+    responderBatch: payload.responderBatch || getBatchNoFromUser() || '—',
+    message,
+    contact,
+  };
+
+  request.responses = [...(request.responses || []), response];
+  saveStore(store);
+  return request;
+}
+
 export async function copyContact(contact, label = 'Contact') {
   const value = String(contact || '').trim();
   if (!value) {
@@ -372,4 +416,48 @@ export async function copyContact(contact, label = 'Contact') {
     return `${label} copied: ${value}`;
   }
   return `${label}: ${value}`;
+}
+
+export function deleteExchangeItem(id, userId, userRole) {
+  const store = loadStore();
+  const item = store.exchange.find((entry) => entry.id === id);
+  if (!item) return;
+  const isOwner = item.contributorId === (userId || getContributorId());
+  const isAdmin = userRole === 'admin';
+  if (!isOwner && !isAdmin) return;
+  store.exchange = store.exchange.filter((entry) => entry.id !== id);
+  saveStore(store);
+}
+
+export function deleteToLetListing(id, userId, userRole) {
+  const store = loadStore();
+  const item = store.tolet.find((entry) => entry.id === id);
+  if (!item) return;
+  const isOwner = item.contributorId === (userId || getContributorId());
+  const isAdmin = userRole === 'admin';
+  if (!isOwner && !isAdmin) return;
+  store.tolet = store.tolet.filter((entry) => entry.id !== id);
+  saveStore(store);
+}
+
+export function deleteLostFoundItem(id, userId, userRole) {
+  const store = loadStore();
+  const item = store.lostFound.find((entry) => entry.id === id);
+  if (!item) return;
+  const isOwner = item.contributorId === (userId || getContributorId());
+  const isAdmin = userRole === 'admin';
+  if (!isOwner && !isAdmin) return;
+  store.lostFound = store.lostFound.filter((entry) => entry.id !== id);
+  saveStore(store);
+}
+
+export function deleteMentorRequest(id, userId, userRole) {
+  const store = loadStore();
+  const item = store.mentorRequests.find((entry) => entry.id === id);
+  if (!item) return;
+  const isOwner = item.contributorId === (userId || getContributorId());
+  const isAdmin = userRole === 'admin';
+  if (!isOwner && !isAdmin) return;
+  store.mentorRequests = store.mentorRequests.filter((entry) => entry.id !== id);
+  saveStore(store);
 }

@@ -1,25 +1,63 @@
-import React, { useState } from 'react';
-import { ShoppingCart, Plus, X } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { ShoppingCart, Plus, X, Upload, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
   addExchangeItem,
   copyContact,
+  deleteExchangeItem,
   formatPostedDate,
   getSellerLabel,
   listExchangeItems,
 } from '../../utils/marketplaceStorage';
+import ConfirmDialog from './ConfirmDialog';
 
 const categories = ['Books', 'Lab Equipment', 'Stationery', 'Electronics', 'Other'];
 const conditions = ['New', 'Like New', 'Good', 'Fair'];
-const emojiOptions = ['📘', '🔌', '🤖', '🧮', '📗', '🔧', '📱', '🎒'];
 
 const defaultForm = {
   title: '',
   price: '',
   condition: 'Good',
   category: 'Books',
-  image: '📘',
+  image: '',
   contact: '',
+};
+
+function resizeImage(file, maxSize = 400) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        if (width > height && width > maxSize) {
+          height = Math.round((height * maxSize) / width);
+          width = maxSize;
+        } else if (height > maxSize) {
+          width = Math.round((width * maxSize) / height);
+          height = maxSize;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+const categoryColors = {
+  Books: 'badge-blue',
+  'Lab Equipment': 'badge-purple',
+  Stationery: 'badge-amber',
+  Electronics: 'badge-emerald',
+  Other: 'badge',
 };
 
 export default function ExchangeKits() {
@@ -29,8 +67,29 @@ export default function ExchangeKits() {
   const [form, setForm] = useState({ ...defaultForm });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [previewUrl, setPreviewUrl] = useState('');
+  const fileInputRef = useRef(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const refresh = () => setItems(listExchangeItems());
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await resizeImage(file);
+      setForm((c) => ({ ...c, image: dataUrl }));
+      setPreviewUrl(dataUrl);
+    } catch {
+      setError('Could not process image. Please try another file.');
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setForm((c) => ({ ...c, image: '' }));
+    setPreviewUrl('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -39,7 +98,9 @@ export default function ExchangeKits() {
 
     try {
       addExchangeItem({ ...form, seller: getSellerLabel(user) });
-      setForm({ ...defaultForm, contact: form.contact });
+      setForm({ ...defaultForm });
+      setPreviewUrl('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       setShowForm(false);
       refresh();
       setMessage('Listing published.');
@@ -56,6 +117,31 @@ export default function ExchangeKits() {
     } catch (contactError) {
       setError(contactError.message || 'Could not copy contact.');
     }
+  };
+
+  const handleDelete = (item) => {
+    const isOwner = item.contributorId === user?.id;
+    const isAdmin = user?.role === 'admin';
+    if (!isOwner && !isAdmin) return;
+    setDeleteTarget(item);
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteExchangeItem(deleteTarget.id, user?.id, user?.role);
+    refresh();
+    setMessage('Listing removed.');
+    setDeleteTarget(null);
+  };
+
+  const renderImage = (imageValue) => {
+    if (imageValue && imageValue.startsWith('data:')) {
+      return <img src={imageValue} alt="Product" />;
+    }
+    if (imageValue) {
+      return <span style={{ fontSize: '36px' }}>{imageValue}</span>;
+    }
+    return <ShoppingCart size={32} style={{ color: 'var(--text-tertiary)' }} />;
   };
 
   return (
@@ -114,12 +200,42 @@ export default function ExchangeKits() {
               </select>
             </label>
             <label style={{ fontSize: 'var(--fs-xs)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              Icon
-              <select className="input" value={form.image} onChange={(e) => setForm((c) => ({ ...c, image: e.target.value }))}>
-                {emojiOptions.map((emoji) => <option key={emoji} value={emoji}>{emoji}</option>)}
-              </select>
+              <span style={{ marginBottom: '2px', color: 'var(--text-secondary)' }}>Photo</span>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  padding: '8px 12px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--bg-input)',
+                  border: '1px dashed var(--border-primary)',
+                  color: 'var(--text-secondary)',
+                  fontSize: 'var(--fs-xs)',
+                  cursor: 'pointer',
+                  transition: 'all var(--transition-fast)',
+                }}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload size={16} />
+                <span style={{ fontWeight: 500 }}>Choose photo...</span>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
             </label>
           </div>
+          {previewUrl && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <img src={previewUrl} alt="Preview" style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-primary)' }} />
+              <button type="button" className="btn btn-ghost btn-sm" onClick={handleRemoveImage} style={{ color: 'var(--accent-rose)' }}>Remove photo</button>
+            </div>
+          )}
           <label style={{ fontSize: 'var(--fs-xs)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
             Contact (phone / WhatsApp)
             <input className="input" value={form.contact} onChange={(e) => setForm((c) => ({ ...c, contact: e.target.value }))} placeholder="+880..." required />
@@ -135,51 +251,46 @@ export default function ExchangeKits() {
           <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>Be the first to sell books, lab kits, or stationery.</p>
         </div>
       ) : (
-        <div className="grid-3">
+        <div className="exchange-grid">
           {items.map((item) => (
-            <div
-              key={item.id}
-              className="glass-card"
-              style={{
-                padding: '16px 20px',
-                background: 'var(--bg-input)',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                minHeight: '200px',
-              }}
-            >
-              <div>
-                <div className="flex justify-between items-start mb-2">
-                  <span className="badge badge-purple" style={{ fontSize: '9px' }}>{item.category}</span>
-                  <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>{formatPostedDate(item.postedAt)}</span>
-                </div>
-
-                <div className="flex gap-4 items-center" style={{ margin: '10px 0' }}>
-                  <span style={{ fontSize: '28px', background: 'var(--bg-secondary)', width: '48px', height: '48px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {item.image}
-                  </span>
-                  <div>
-                    <h3 style={{ fontSize: '14px', fontWeight: 'bold' }}>{item.title}</h3>
-                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Condition: <b>{item.condition}</b></p>
-                  </div>
-                </div>
-
-                <div style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', color: 'var(--accent-cyan)', marginTop: '8px' }}>
-                  ৳ {item.price}
-                </div>
+            <div key={item.id} className="mp-card">
+              <div className="mp-card-image">
+                {renderImage(item.image)}
               </div>
-
-              <div className="flex justify-between items-center mt-6 pt-3" style={{ borderTop: '1px solid var(--border-secondary)', fontSize: '11px' }}>
-                <span style={{ color: 'var(--text-tertiary)' }}>Owner: {item.seller}</span>
-                <button type="button" className="btn btn-primary btn-sm" onClick={() => handleContact(item)} style={{ fontSize: '10px', padding: '4px 10px' }}>
-                  Contact Seller
-                </button>
+              <div className="mp-card-body">
+                <div className="mp-card-header">
+                  <span className={`mp-card-badge ${categoryColors[item.category] || 'badge'}`}>{item.category}</span>
+                  <span className="mp-card-date">{formatPostedDate(item.postedAt)}</span>
+                </div>
+                <h3 className="mp-card-title">{item.title}</h3>
+                <p className="mp-card-subtitle">Condition: <b>{item.condition}</b></p>
+                <div className="mp-card-price">৳ {item.price}</div>
+              </div>
+              <div className="mp-card-footer">
+                <span className="mp-card-seller">Owner: {item.seller}</span>
+                <div className="mp-card-actions">
+                  {(user?.role === 'admin' || item.contributorId === user?.id) && (
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => handleDelete(item)} style={{ color: 'var(--accent-rose)', padding: '4px 8px' }}>
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                  <button type="button" className="btn btn-primary btn-sm" onClick={() => handleContact(item)} style={{ fontSize: '10px', padding: '4px 10px' }}>
+                    Contact Seller
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title={deleteTarget?.title}
+        message={`Are you sure you want to delete "${deleteTarget?.title}"? This cannot be undone.`}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

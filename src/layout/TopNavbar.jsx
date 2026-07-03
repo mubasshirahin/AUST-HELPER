@@ -2,6 +2,8 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { Search, Bell, Sun, Moon, Menu } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import SearchModal from './SearchModal';
 import './TopNavbar.css';
 
 const pageTitles = {
@@ -19,8 +21,20 @@ export default function TopNavbar({ onMenuClick }) {
   const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated } = useAuth();
   const location = useLocation();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const pageTitle = pageTitles[location.pathname] || 'AUST Helper';
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <header className="topbar">
@@ -39,9 +53,13 @@ export default function TopNavbar({ onMenuClick }) {
       </div>
 
       <div className="topbar-right">
-        <div className="topbar-search hide-mobile">
+        <div className="topbar-search hide-mobile" onClick={() => setIsSearchOpen(true)} role="button" tabIndex={0}>
           <Search size={16} />
-          <input type="text" placeholder="Search anything... (⌘K)" />
+          <input
+            type="text"
+            placeholder="Search anything... (⌘K)"
+            readOnly
+          />
         </div>
 
         <button className="topbar-icon-btn" onClick={toggleTheme} aria-label="Toggle theme">
@@ -55,6 +73,8 @@ export default function TopNavbar({ onMenuClick }) {
           <span className="notification-badge">3</span>
         </button>
       </div>
+
+      <SearchModal key={isSearchOpen ? 'open' : 'closed'} isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </header>
   );
 }

@@ -427,37 +427,32 @@ export default function SettingsPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <button 
               onClick={() => setActiveSubTab('profile')}
-              className={`btn btn-ghost ${activeSubTab === 'profile' ? 'btn-primary' : ''}`}
-              style={{ justifyContent: 'flex-start', padding: '10px 16px', fontSize: '13px' }}
+              className={`settings-nav-item ${activeSubTab === 'profile' ? 'active' : ''}`}
             >
               <User size={16} /> Student Profile
             </button>
             <button 
               onClick={() => setActiveSubTab('theme')}
-              className={`btn btn-ghost ${activeSubTab === 'theme' ? 'btn-primary' : ''}`}
-              style={{ justifyContent: 'flex-start', padding: '10px 16px', fontSize: '13px' }}
+              className={`settings-nav-item ${activeSubTab === 'theme' ? 'active' : ''}`}
             >
               <Settings size={16} /> Display & Theme
             </button>
             <button 
               onClick={() => setActiveSubTab('notifications')}
-              className={`btn btn-ghost ${activeSubTab === 'notifications' ? 'btn-primary' : ''}`}
-              style={{ justifyContent: 'flex-start', padding: '10px 16px', fontSize: '13px' }}
+              className={`settings-nav-item ${activeSubTab === 'notifications' ? 'active' : ''}`}
             >
               <Bell size={16} /> Notifications
             </button>
             <button 
               onClick={() => setActiveSubTab('about')}
-              className={`btn btn-ghost ${activeSubTab === 'about' ? 'btn-primary' : ''}`}
-              style={{ justifyContent: 'flex-start', padding: '10px 16px', fontSize: '13px' }}
+              className={`settings-nav-item ${activeSubTab === 'about' ? 'active' : ''}`}
             >
               <Info size={16} /> About Us
             </button>
             {isAuthenticated && (user?.role === 'student') && (
               <button 
                 onClick={() => setActiveSubTab('roleApplication')}
-                className={`btn btn-ghost ${activeSubTab === 'roleApplication' ? 'btn-primary' : ''}`}
-                style={{ justifyContent: 'flex-start', padding: '10px 16px', fontSize: '13px' }}
+                className={`settings-nav-item ${activeSubTab === 'roleApplication' ? 'active' : ''}`}
               >
                 <GraduationCap size={16} /> Apply for CR/SR
               </button>

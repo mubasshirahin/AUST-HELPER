@@ -2,8 +2,7 @@ import { useState } from 'react';
 import ExchangeKits from './ExchangeKits';
 import ToLetListings from './ToLetListings';
 import LostAndFound from './LostAndFound';
-import PartnerMatcher from './PartnerMatcher';
-import MentorFinder from './MentorFinder';
+import MentorRequests from './MentorRequests';
 import './MarketplacePage.css';
 
 export default function MarketplacePage() {
@@ -17,10 +16,8 @@ export default function MarketplacePage() {
         return <ToLetListings />;
       case 'lost':
         return <LostAndFound />;
-      case 'partner':
-        return <PartnerMatcher />;
-      case 'mentor':
-        return <MentorFinder />;
+      case 'mentorRequests':
+        return <MentorRequests />;
       default:
         return <ExchangeKits />;
     }
@@ -39,8 +36,7 @@ export default function MarketplacePage() {
         <button type="button" className={`tab ${activeTab === 'exchange' ? 'active' : ''}`} onClick={() => setActiveTab('exchange')}>Exchange Kits</button>
         <button type="button" className={`tab ${activeTab === 'tolet' ? 'active' : ''}`} onClick={() => setActiveTab('tolet')}>AUST To-Let</button>
         <button type="button" className={`tab ${activeTab === 'lost' ? 'active' : ''}`} onClick={() => setActiveTab('lost')}>Lost & Found</button>
-        <button type="button" className={`tab ${activeTab === 'partner' ? 'active' : ''}`} onClick={() => setActiveTab('partner')}>Study Partner Matcher</button>
-        <button type="button" className={`tab ${activeTab === 'mentor' ? 'active' : ''}`} onClick={() => setActiveTab('mentor')}>Find Mentors</button>
+        <button type="button" className={`tab ${activeTab === 'mentorRequests' ? 'active' : ''}`} onClick={() => setActiveTab('mentorRequests')}>Mentor Requests</button>
       </div>
 
       <div className="marketplace-content-area">

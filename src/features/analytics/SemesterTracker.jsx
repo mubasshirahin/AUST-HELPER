@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Trash2, AlertCircle, BookOpen, FlaskConical,
-  Plus, X, Check, Settings2, ChevronRight, RotateCcw, Info,
-  Sparkles, Target, TrendingUp
+  Plus, X, Check, Settings2, ChevronRight, RotateCcw, Info
 } from 'lucide-react';
 import { useRoutine } from '../../context/RoutineContext';
 import { findCourseByCode } from '../../data/courses';
@@ -105,10 +104,6 @@ export default function SemesterTracker() {
   const [activeCell, setActiveCell] = useState(null);
   const inputRefs = useRef({});
 
-  /* ── Simulator state ── */
-  const [showSim, setShowSim] = useState(false);
-  const [targetSGPA, setTargetSGPA] = useState(3.5);
-
   const { routine } = useRoutine();
 
   /* ── Persist theory ── */
@@ -119,111 +114,6 @@ export default function SemesterTracker() {
   useEffect(() => { setUserStorageItem(LAB_COURSES_KEY, labCourses); }, [labCourses]);
   useEffect(() => { setUserStorageItem(LAB_CONFIG_KEY,  labConfig);  }, [labConfig]);
   useEffect(() => { setUserStorageItem(LAB_MARKS_KEY,   labMarks);   }, [labMarks]);
-
-  /* ── Simulator calculation ── */
-  const simResults = useMemo(() => {
-    let totalCredits = 0;
-    let totalPointsProduct = 0;
-    let totalRemainingPossible = 0;
-    const neededPerCourse = [];
-
-    // Process Theory courses
-    theoryCourses.forEach(course => {
-      const m = theoryMarks[course.id] || {};
-      const attendance = m.attendance || 0;
-      const mid = m.midterm || 0;
-      const q1 = m.quiz1 || 0;
-      const q2 = m.quiz2 || 0;
-      const q3 = m.quiz3 || 0;
-      const bestTwoQuizzes = [...[q1, q2, q3].sort((a,b)=>b-a)].slice(0,2).reduce((s,v)=>s+v,0);
-      const tot = attendance + bestTwoQuizzes + mid + (m.final || 0);
-      
-      let theoryRemaining = 0;
-      THEORY_FIELDS.forEach(f => {
-        if (m[f.id] === undefined) {
-          theoryRemaining += f.maxMarks;
-        }
-      });
-      
-      totalRemainingPossible += theoryRemaining;
-
-      const credit = 3.0;
-      totalCredits += credit;
-      const grade = getGrade(tot);
-      totalPointsProduct += parseFloat(grade.gpa) * credit;
-
-      neededPerCourse.push({
-        id: course.id,
-        code: course.code,
-        type: 'Theory',
-        remaining: theoryRemaining,
-        earned: tot
-      });
-    });
-
-    // Process Lab courses
-    labCourses.forEach(course => {
-      const config = labConfig[course.id];
-      const cols = config ? expandLabColumns(config) : [];
-      const maxTot = totalPossibleLab(config);
-      const lMarks = labMarks[course.id] || {};
-      const tot = labTotal(course.id, cols);
-      const pct = maxTot ? (tot / maxTot) * 100 : 0;
-      const grade = getGrade(pct);
-      
-      const credit = 1.5;
-      totalCredits += credit;
-      totalPointsProduct += parseFloat(grade.gpa) * credit;
-
-      let labRemaining = 0;
-      if (config) {
-        cols.forEach(col => {
-          if (lMarks[col.key] === undefined) {
-            labRemaining += col.max;
-          }
-        });
-      } else {
-        labRemaining = 100;
-      }
-      totalRemainingPossible += labRemaining;
-
-      neededPerCourse.push({
-        id: course.id,
-        code: course.code,
-        type: 'Lab',
-        remaining: labRemaining,
-        earned: tot
-      });
-    });
-
-    const currentSGPA = totalCredits > 0 ? (totalPointsProduct / totalCredits).toFixed(2) : '0.00';
-    
-    let feasibility = 'possible';
-    let shortfallVal = 0;
-    if (parseFloat(currentSGPA) >= targetSGPA) {
-      feasibility = 'achieved';
-      shortfallVal = 0;
-    } else {
-      const pointsDiff = (targetSGPA * totalCredits) - totalPointsProduct;
-      shortfallVal = Math.max(0, pointsDiff * 25);
-      
-      if (shortfallVal > totalRemainingPossible) {
-        feasibility = 'impossible';
-      } else if (shortfallVal > totalRemainingPossible * 0.7) {
-        feasibility = 'hard';
-      } else {
-        feasibility = 'possible';
-      }
-    }
-
-    return {
-      currentSGPA,
-      feasibility,
-      shortfall: feasibility === 'achieved' ? '0.0' : shortfallVal.toFixed(1),
-      totalRemainingPossible,
-      neededPerCourse
-    };
-  }, [theoryCourses, theoryMarks, labCourses, labConfig, labMarks, targetSGPA]);
 
   /* ── Auto-add courses from routine ── */
   useEffect(() => {
@@ -768,103 +658,6 @@ export default function SemesterTracker() {
         </p>
       )}
 
-      {/* ══════════════════════════════
-          GPA TARGET SIMULATOR
-      ══════════════════════════════ */}
-      <button className="st-sim-toggle-btn" onClick={() => setShowSim(!showSim)}>
-        {showSim ? <X size={18}/> : <Target size={18}/>}
-        <span>{showSim ? 'Close Sim' : 'GPA Target Sim'}</span>
-      </button>
-
-      {showSim && (
-        <div className="st-sim-section animate-fadeInUp">
-          <div className="st-sim-header">
-            <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
-              <Sparkles className="text-amber" size={20}/>
-              <h3 className="st-section-title" style={{fontSize:'var(--fs-md)'}}>GPA Target Simulator</h3>
-            </div>
-            <div className="st-sim-target-input">
-              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                <span className="st-sim-label" style={{margin:0}}>Target SGPA</span>
-                <span style={{fontWeight:800, color:'var(--accent-blue)'}}>{targetSGPA.toFixed(2)}</span>
-              </div>
-              <input 
-                type="range" min="2.0" max="4.0" step="0.05" 
-                value={targetSGPA} 
-                onChange={e => setTargetSGPA(parseFloat(e.target.value))}
-                className="st-sim-slider"
-              />
-            </div>
-          </div>
-
-          <div className="st-sim-content">
-            <div className="st-sim-grid">
-              <div className="st-sim-card">
-                <div className="st-sim-label">Current SGPA</div>
-                <div className="st-sim-value" style={{color:'var(--accent-purple)'}}>{simResults.currentSGPA}</div>
-                <div style={{fontSize:'10px', color:'var(--text-tertiary)', marginTop:'4px'}}>Based on entered marks</div>
-              </div>
-              <div className="st-sim-card">
-                <div className="st-sim-label">Marks Needed</div>
-                <div className="st-sim-value" style={{color: simResults.feasibility === 'impossible' ? 'var(--danger)' : 'var(--accent-amber)'}}>
-                  {simResults.shortfall}
-                </div>
-                <div className="st-sim-feasibility-wrap">
-                  {simResults.feasibility === 'achieved' && <span className="st-sim-feasibility possible">Target Achieved! 🎉</span>}
-                  {simResults.feasibility === 'possible' && <span className="st-sim-feasibility possible">Very Possible 👍</span>}
-                  {simResults.feasibility === 'hard' && <span className="st-sim-feasibility hard">Will be tough! 💪</span>}
-                  {simResults.feasibility === 'impossible' && <span className="st-sim-feasibility impossible">Mathematically Impossible ❌</span>}
-                </div>
-              </div>
-              <div className="st-sim-card">
-                <div className="st-sim-label">Remaining Possible</div>
-                <div className="st-sim-value">{simResults.totalRemainingPossible.toFixed(1)}</div>
-                <div style={{fontSize:'10px', color:'var(--text-tertiary)', marginTop:'4px'}}>Total marks yet to be earned</div>
-              </div>
-            </div>
-
-            {simResults.neededPerCourse.length > 0 && (
-              <div className="st-sim-needed-wrap">
-                <div className="st-sim-label" style={{marginBottom:'10px', display:'flex', alignItems:'center', gap:'5px'}}>
-                  <TrendingUp size={14}/> Breakdown per course
-                </div>
-                <div className="st-sim-needed-list">
-                  {simResults.neededPerCourse.map(c => {
-                    const share = simResults.totalRemainingPossible > 0 
-                      ? (parseFloat(simResults.shortfall) * (c.remaining / simResults.totalRemainingPossible))
-                      : 0;
-                    
-                    return (
-                      <div key={c.id} className="st-sim-needed-item">
-                        <div style={{display:'flex', flexDirection:'column'}}>
-                          <span style={{fontWeight:700, color:'var(--text-primary)'}}>{c.code}</span>
-                          <span style={{fontSize:'10px', color:'var(--text-tertiary)'}}>{c.type} · {c.remaining} marks remaining</span>
-                        </div>
-                        <div style={{textAlign:'right'}}>
-                          <div style={{fontSize:'var(--fs-md)', fontWeight:800, color:'var(--accent-blue)'}}>
-                            {share > c.remaining ? 'MAX OUT' : (share <= 0 ? 'SECURED' : share.toFixed(1))}
-                          </div>
-                          <div style={{fontSize:'9px', color:'var(--text-tertiary)'}}>
-                            {share > 0 && share <= c.remaining ? `Needed in ${c.type==='Theory'?'Final':'remaining'}` : ''}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            
-            <div className="st-legend" style={{background:'var(--bg-input)', border:'none'}}>
-              <Info size={14} style={{opacity:0.6}}/>
-              <p style={{fontSize:'11px', color:'var(--text-secondary)', margin:0}}>
-                Calculations assume 3.0 credits for theory and 1.5 for labs. 
-                Needed marks are distributed proportionally based on remaining potential in each course.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

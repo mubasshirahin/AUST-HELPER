@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import RoutineCard from './RoutineCard';
+import ExamTracker from './ExamTracker';
 import AttendanceWidget from './AttendanceWidget';
 import DeadlineTicker from './DeadlineTicker';
 import NoticeBoard from './NoticeBoard';
@@ -124,6 +125,7 @@ export default function DashboardPage() {
       <div className="dashboard-grid">
         <div className="dashboard-main-col">
           <RoutineCard />
+          <ExamTracker />
           <RoutineAttendanceTracker />
         </div>
 
