@@ -1,5 +1,8 @@
 import 'dotenv/config';
 import http from 'node:http';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createServer as createViteServer } from 'vite';
 import { extractRoutineFromImage } from './routineExtractor.mjs';
 import { 
@@ -109,6 +112,24 @@ async function updateMessageKeyboardFn(botToken, chatId, messageId, clickedCallb
 
 const port = Number(process.env.PORT || 5174);
 const maxBodyBytes = 15 * 1024 * 1024;
+const useViteMiddleware = process.argv.includes('--vite');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const distDir = path.resolve(__dirname, '..', 'dist');
+
+const contentTypes = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+};
 
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
@@ -144,6 +165,35 @@ function sendJson(res, status, payload) {
   res.end(JSON.stringify(payload));
 }
 
+async function sendStaticFile(req, res) {
+  const requestUrl = new URL(req.url, `http://${req.headers.host}`);
+  const pathname = decodeURIComponent(requestUrl.pathname);
+  const relativePath = pathname === '/' ? 'index.html' : pathname.slice(1);
+  const candidatePath = path.resolve(distDir, relativePath);
+  const filePath = candidatePath.startsWith(distDir) ? candidatePath : path.join(distDir, 'index.html');
+
+  try {
+    const data = await readFile(filePath);
+    const ext = path.extname(filePath).toLowerCase();
+    res.writeHead(200, {
+      'Content-Type': contentTypes[ext] || 'application/octet-stream',
+      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=31536000, immutable',
+    });
+    res.end(data);
+  } catch {
+    try {
+      const data = await readFile(path.join(distDir, 'index.html'));
+      res.writeHead(200, {
+        'Content-Type': contentTypes['.html'],
+        'Cache-Control': 'no-cache',
+      });
+      res.end(data);
+    } catch {
+      sendJson(res, 500, { error: 'Build output missing. Run npm run build first.' });
+    }
+  }
+}
+
 // CORS preflight handler
 function handleCorsPreflight(req, res) {
   res.writeHead(204, {
@@ -154,10 +204,12 @@ function handleCorsPreflight(req, res) {
   res.end();
 }
 
-const vite = await createViteServer({
-  server: { middlewareMode: true },
-  appType: 'spa',
-});
+const vite = useViteMiddleware
+  ? await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa',
+    })
+  : null;
 
 const server = http.createServer(async (req, res) => {
   // CORS preflight
@@ -700,12 +752,17 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Serve Vite dev server
-  vite.middlewares(req, res);
+  if (vite) {
+    vite.middlewares(req, res);
+    return;
+  }
+
+  await sendStaticFile(req, res);
 });
 
 server.listen(port, '0.0.0.0', () => {
   console.log(`AUST Helper running at http://localhost:${port}`);
+  console.log(`Mode: ${useViteMiddleware ? 'Vite middleware' : 'static dist (no HMR)'}`);
   console.log('');
   console.log('Telegram API Endpoints:');
   console.log('  POST /api/telegram/register           - Register user (Chat ID only)');
