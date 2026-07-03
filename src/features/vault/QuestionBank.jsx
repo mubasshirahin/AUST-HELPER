@@ -1,25 +1,32 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { BookOpen, CheckCircle, ExternalLink, Trash2 } from 'lucide-react';
+import { BookOpen, CheckCircle, Trash2, Eye } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
-  getAllQuestionBankItems,
+  getQuestionBankSummaries,
   deleteQuestionPaper,
-  downloadQuestionPaper,
+  migrateQuestionBankFilesToIndexedDb,
 } from '../../utils/questionBankStorage';
 import {
   getQuestionBankTerms,
   getDefaultQuestionBankTermKey,
+  getExamTypesForCourseType,
+  getQuestionBankSubtitle,
+  formatPaperLabel,
+  getPaperNo,
 } from './vaultUtils';
 import AddQuestionPaper from './AddQuestionPaper';
+import PaperViewerModal from './PaperViewerModal';
 
 export default function QuestionBank({ vaultContext }) {
   const { user } = useAuth();
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('All');
   const [selectedTermKey, setSelectedTermKey] = useState(getDefaultQuestionBankTermKey);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [viewingPaperId, setViewingPaperId] = useState(null);
 
-  const { department, yearSem, course, courseName } = vaultContext;
+  const { department, yearSem, course, courseName, courseType = 'Theory' } = vaultContext;
+  const examTypes = useMemo(() => getExamTypesForCourseType(courseType), [courseType]);
+  const typeFilters = useMemo(() => ['All', ...examTypes], [examTypes]);
   const terms = useMemo(() => getQuestionBankTerms(), []);
 
   const refreshPapers = useCallback(() => {
@@ -27,10 +34,15 @@ export default function QuestionBank({ vaultContext }) {
   }, []);
 
   useEffect(() => {
+    migrateQuestionBankFilesToIndexedDb().then(() => {
+      refreshPapers();
+    });
+  }, [refreshPapers]);
+
+  useEffect(() => {
     setSelectedTermKey(getDefaultQuestionBankTermKey());
-    setSearchTerm('');
     setSelectedType('All');
-  }, [department, yearSem, course]);
+  }, [department, yearSem, course, courseType]);
 
   const selectedTerm = useMemo(
     () => terms.find((term) => term.key === selectedTermKey) || terms[0],
@@ -38,7 +50,7 @@ export default function QuestionBank({ vaultContext }) {
   );
 
   const courseQuestions = useMemo(() => {
-    return getAllQuestionBankItems().filter(
+    return getQuestionBankSummaries().filter(
       (item) =>
         item.department === department &&
         item.yearSem === yearSem &&
@@ -55,34 +67,28 @@ export default function QuestionBank({ vaultContext }) {
 
   const filteredItems = useMemo(() => {
     return termQuestions.filter((item) => {
-      const matchSearch =
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.course.toLowerCase().includes(searchTerm.toLowerCase());
       const matchType = selectedType === 'All' || item.type === selectedType;
-      return matchSearch && matchType;
+      return matchType;
     });
-  }, [termQuestions, searchTerm, selectedType]);
+  }, [termQuestions, selectedType]);
 
   const getTermPaperCount = (term) =>
     courseQuestions.filter(
       (item) => item.year === term.year && item.semester === term.season,
     ).length;
 
-  const handleDownload = (item) => {
-    try {
-      if (item.fileData) {
-        downloadQuestionPaper(item);
-        return;
-      }
-      alert(`Opening Question PDF: ${item.course} ${item.type} ${item.year}`);
-    } catch (downloadError) {
-      alert(downloadError.message || 'Could not download file.');
+  const handleView = (item) => {
+    if (!item.hasFile) {
+      alert('No file attached to this paper.');
+      return;
     }
+    setViewingPaperId(item.id);
   };
 
-  const handleDelete = (item) => {
+  const handleDelete = async (item, event) => {
+    event.stopPropagation();
     try {
-      deleteQuestionPaper(item.id, user?.id, user?.role === 'admin');
+      await deleteQuestionPaper(item.id, user?.id, user?.role === 'admin');
       refreshPapers();
     } catch (deleteError) {
       alert(deleteError.message || 'Could not delete paper.');
@@ -100,61 +106,50 @@ export default function QuestionBank({ vaultContext }) {
             Question Bank
           </h2>
           <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
-            {courseName} — Midterms, Finals, Quizzes & Solutions
+            {courseName} — {getQuestionBankSubtitle(courseType)}
           </p>
         </div>
       </div>
 
-      <div className="qb-term-nav" role="tablist" aria-label="Academic term">
-        {terms.map((term) => {
-          const paperCount = getTermPaperCount(term);
-          const isActive = term.key === selectedTermKey;
+      <div className="qb-year-section">
+        <p className="qb-year-section-label">Academic Year</p>
+        <div className="qb-year-slider-wrap">
+          <div className="qb-term-nav qb-year-slider" role="tablist" aria-label="Academic year">
+            {terms.map((term) => {
+              const paperCount = getTermPaperCount(term);
+              const isActive = term.key === selectedTermKey;
 
-          return (
-            <button
-              key={term.key}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              className={`qb-term-chip ${isActive ? 'active' : ''}`}
-              onClick={() => setSelectedTermKey(term.key)}
-            >
-              <span>{term.label}</span>
-              {paperCount > 0 && <span className="qb-term-chip-count">{paperCount}</span>}
-            </button>
-          );
-        })}
+              return (
+                <button
+                  key={term.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  className={`qb-term-chip ${isActive ? 'active' : ''}`}
+                  onClick={() => setSelectedTermKey(term.key)}
+                >
+                  <span>{term.label}</span>
+                  {paperCount > 0 && <span className="qb-term-chip-count">{paperCount}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
-      <div className="flex justify-between gap-4 mb-6 flex-wrap">
-        <div className="search-box" style={{ flex: 1, minWidth: '240px' }}>
-          <input
-            type="text"
-            placeholder={`Search ${selectedTerm?.label || ''} papers...`}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        <div
-          className="flex gap-1"
-          style={{
-            background: 'var(--bg-input)',
-            padding: '2px',
-            borderRadius: 'var(--radius-md)',
-          }}
-        >
-          {['All', 'Mid', 'Final', 'Quiz'].map((t) => (
-            <button
-              key={t}
-              onClick={() => setSelectedType(t)}
-              className={`btn btn-sm ${selectedType === t ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ padding: '6px 12px' }}
-            >
-              {t}s
-            </button>
-          ))}
-        </div>
+      <div className="qb-type-nav qb-type-nav-standalone" role="tablist" aria-label="Paper type">
+        {typeFilters.map((t) => (
+          <button
+            key={t}
+            type="button"
+            role="tab"
+            aria-selected={selectedType === t}
+            className={`qb-term-chip ${selectedType === t ? 'active' : ''}`}
+            onClick={() => setSelectedType(t)}
+          >
+            {t}
+          </button>
+        ))}
       </div>
 
       {filteredItems.length === 0 ? (
@@ -169,16 +164,21 @@ export default function QuestionBank({ vaultContext }) {
         </div>
       ) : (
         <div className="grid-3">
-          {filteredItems.map((item) => (
+          {filteredItems.map((item) => {
+            const paperLabel = formatPaperLabel(item.type, getPaperNo(item));
+
+            return (
             <div
               key={item.id}
-              className="glass-card"
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                padding: '16px',
-                background: 'var(--bg-input)',
+              className="glass-card qb-paper-card"
+              role="button"
+              tabIndex={0}
+              onClick={() => handleView(item)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  handleView(item);
+                }
               }}
             >
               <div>
@@ -198,12 +198,9 @@ export default function QuestionBank({ vaultContext }) {
                   </div>
                 </div>
                 <h3 style={{ fontSize: '14px', fontWeight: 'var(--fw-bold)', margin: '8px 0' }}>
-                  {item.type} Term Exam Paper
+                  {paperLabel}
                 </h3>
                 <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{item.name}</p>
-                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                  Total Questions: {item.questions}
-                </p>
                 {item.isUserUpload && item.contributorName && (
                   <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                     Uploaded by {item.contributorName}
@@ -238,7 +235,7 @@ export default function QuestionBank({ vaultContext }) {
                     <button
                       type="button"
                       className="btn btn-ghost btn-sm"
-                      onClick={() => handleDelete(item)}
+                      onClick={(event) => handleDelete(item, event)}
                       title="Delete upload"
                       style={{ padding: '2px 6px' }}
                     >
@@ -246,16 +243,16 @@ export default function QuestionBank({ vaultContext }) {
                     </button>
                   )}
                 </div>
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => handleDownload(item)}
+                <span
+                  className="qb-paper-view-hint"
                   style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}
                 >
-                  Download <ExternalLink size={12} />
-                </button>
+                  <Eye size={12} /> View
+                </span>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -264,6 +261,10 @@ export default function QuestionBank({ vaultContext }) {
         selectedTerm={selectedTerm}
         onAdded={refreshPapers}
       />
+
+      {viewingPaperId && (
+        <PaperViewerModal paperId={viewingPaperId} onClose={() => setViewingPaperId(null)} />
+      )}
     </div>
   );
 }

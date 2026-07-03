@@ -9,6 +9,7 @@ const emptySelection = () => ({
   yearSem: null,
   course: null,
   courseName: '',
+  courseType: 'Theory',
   activeTab: 'qb',
 });
 
@@ -35,6 +36,7 @@ export function loadVaultSelection() {
         yearSem: null,
         course: null,
         courseName: '',
+        courseType: 'Theory',
         activeTab: normalizeTab(saved.activeTab),
       };
     }
@@ -48,6 +50,7 @@ export function loadVaultSelection() {
         yearSem,
         course: null,
         courseName: '',
+        courseType: 'Theory',
         activeTab: normalizeTab(saved.activeTab),
       };
     }
@@ -57,6 +60,7 @@ export function loadVaultSelection() {
       yearSem,
       course: courseMatch.course,
       courseName: courseMatch.name,
+      courseType: courseMatch.courseType || 'Theory',
       activeTab: normalizeTab(saved.activeTab),
     };
   } catch {

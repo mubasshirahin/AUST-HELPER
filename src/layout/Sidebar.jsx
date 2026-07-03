@@ -4,7 +4,7 @@ import { getPortalSubtitle, getRoleLabel } from '../utils/authStorage';
 import {
   LayoutDashboard, CalendarDays, BarChart3, BookOpen, MapPin, Users, ShoppingBag, Settings,
   ChevronLeft, ChevronRight, GraduationCap, LogOut, LogIn, Shield, Eye, Megaphone, Utensils,
-  Library, FileText, FolderOpen, FileSpreadsheet
+  Library, FileText, FolderOpen, FileSpreadsheet, Map, ScrollText
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -15,6 +15,8 @@ const navItems = [
   { path: '/campus', label: 'Campus', icon: MapPin },
   { path: '/community', label: 'Community', icon: Users },
   { path: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
+  { path: '/career-roadmaps', label: 'Career Roadmaps', icon: Map },
+  { path: '/cheatsheets', label: 'Cheatsheets', icon: ScrollText },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 

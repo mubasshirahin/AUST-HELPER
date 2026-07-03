@@ -1,29 +1,60 @@
-import { questionBank as builtInQuestionBank } from '../data/mockData';
+import { ALL_EXAM_TYPES } from '../features/vault/vaultExamTypes';
+import { getCurrentUserId, getAccountById, accountToUser } from './authStorage';
 import { getSellerLabel } from './marketplaceStorage';
+import {
+  deleteQuestionPaperFile,
+  getQuestionPaperFile,
+  saveQuestionPaperFile,
+} from './questionBankFileStorage';
 
-const storageKey = 'aust-question-bank-user-v1';
-const userStorageKey = 'aust-user-profile';
-export const MAX_QUESTION_PAPER_BYTES = 200 * 1024 * 1024;
+const VALID_EXAM_TYPES = ALL_EXAM_TYPES;
+
+const storageKey = 'aust-question-bank-user-v2';
+const legacyStorageKey = 'aust-question-bank-user-v1';
+export const MAX_QUESTION_PAPER_BYTES = 8 * 1024 * 1024;
 
 function formatMaxFileSize(bytes) {
   return `${Math.round(bytes / (1024 * 1024))} MB`;
 }
 
-function loadUserProfile() {
-  try {
-    const savedUser = localStorage.getItem(userStorageKey);
-    return savedUser ? JSON.parse(savedUser) : null;
-  } catch {
-    return null;
-  }
+async function loadFileDataAsBytes(fileData) {
+  const raw = String(fileData || '').trim();
+  if (!raw) return null;
+  const response = await fetch(raw);
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+function isPdfBytes(bytes) {
+  if (!bytes || bytes.length < 4) return false;
+  return bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46;
+}
+
+function isUserUploadedPaper(item) {
+  return Boolean(item?.isUserUpload);
+}
+
+function paperHasStoredFile(item) {
+  return Boolean(item?.hasFile || item?.fileData);
 }
 
 function loadUserQuestions() {
   try {
     const raw = localStorage.getItem(storageKey);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.filter(isUserUploadedPaper) : [];
+    }
+
+    const legacyRaw = localStorage.getItem(legacyStorageKey);
+    if (!legacyRaw) return [];
+
+    const legacyItems = JSON.parse(legacyRaw);
+    const userItems = Array.isArray(legacyItems) ? legacyItems.filter(isUserUploadedPaper) : [];
+    localStorage.removeItem(legacyStorageKey);
+    if (userItems.length > 0) {
+      localStorage.setItem(storageKey, JSON.stringify(userItems));
+    }
+    return userItems;
   } catch {
     return [];
   }
@@ -34,32 +65,84 @@ function saveUserQuestions(items) {
     localStorage.setItem(storageKey, JSON.stringify(items));
   } catch {
     throw new Error(
-      'Could not save this file. Your browser storage may be full — try a smaller file or remove old uploads.',
+      'Could not save this paper. Your browser storage may be full — try a smaller file or remove old uploads.',
     );
   }
 }
 
-export function getAllQuestionBankItems() {
-  return [...builtInQuestionBank, ...loadUserQuestions()];
+async function resolvePaperFileData(item) {
+  if (!item) return '';
+
+  if (item.fileData) {
+    await saveQuestionPaperFile(item.id, item.fileData).catch(() => {});
+    return item.fileData;
+  }
+
+  return getQuestionPaperFile(item.id);
 }
 
-export function addQuestionPaper(payload) {
+async function migrateInlineFileToIndexedDb(item) {
+  if (!item?.id || !item.fileData) return item;
+
+  await saveQuestionPaperFile(item.id, item.fileData);
+  const { fileData, ...rest } = item;
+  return { ...rest, hasFile: true };
+}
+
+export function getAllQuestionBankItems() {
+  return loadUserQuestions();
+}
+
+export function getQuestionBankSummaries() {
+  return loadUserQuestions().map(({ fileData, ...summary }) => ({
+    ...summary,
+    hasFile: paperHasStoredFile({ ...summary, fileData }),
+  }));
+}
+
+export async function getPaperForViewing(paperId) {
+  const item = loadUserQuestions().find((entry) => entry.id === paperId);
+  if (!item || !paperHasStoredFile(item)) {
+    throw new Error('Question paper not found.');
+  }
+
+  const fileData = await resolvePaperFileData(item);
+  if (!fileData) {
+    throw new Error('Paper file is missing. Upload it again.');
+  }
+
+  return { ...item, fileData };
+}
+
+/** @deprecated Use getPaperForViewing */
+export const getProtectedPaperForViewing = getPaperForViewing;
+
+export async function addQuestionPaper(payload) {
   const type = String(payload.type || '').trim();
-  const questions = Number(payload.questions);
+  const paperNo = Number(payload.paperNo ?? payload.questions);
   const fileData = String(payload.fileData || '').trim();
   const fileName = String(payload.fileName || '').trim();
+  const fileType = payload.fileType || 'pdf';
 
-  if (!['Mid', 'Final', 'Quiz'].includes(type)) {
+  if (!VALID_EXAM_TYPES.includes(type)) {
     throw new Error('Select a valid exam type.');
   }
-  if (!Number.isFinite(questions) || questions < 1) {
-    throw new Error('Enter how many questions are in the paper.');
+  if (!Number.isFinite(paperNo) || paperNo < 1) {
+    throw new Error('Enter a valid number (e.g. 1 for Online 1).');
   }
   if (!fileData || !fileName) {
     throw new Error('Upload a PDF or image of the question paper.');
   }
 
-  const profile = loadUserProfile();
+  if (fileType === 'pdf') {
+    const bytes = await loadFileDataAsBytes(fileData);
+    if (!isPdfBytes(bytes)) {
+      throw new Error('That file is not a valid PDF. Choose another file.');
+    }
+  }
+
+  const account = getAccountById(getCurrentUserId() || '');
+  const profile = account ? accountToUser(account) : null;
   const entry = {
     id: `user-${crypto.randomUUID()}`,
     isUserUpload: true,
@@ -72,20 +155,21 @@ export function addQuestionPaper(payload) {
     type,
     year: payload.year,
     semester: payload.semester,
-    questions: Math.round(questions),
+    paperNo: Math.round(paperNo),
     solved: Boolean(payload.solved),
     fileName,
-    fileData,
-    fileType: payload.fileType || 'pdf',
+    fileType,
+    hasFile: true,
     uploadedAt: new Date().toISOString(),
   };
 
+  await saveQuestionPaperFile(entry.id, fileData);
   const nextItems = [entry, ...loadUserQuestions()];
   saveUserQuestions(nextItems);
   return entry;
 }
 
-export function deleteQuestionPaper(id, userId, isAdmin = false) {
+export async function deleteQuestionPaper(id, userId, isAdmin = false) {
   const items = loadUserQuestions();
   const target = items.find((item) => item.id === id);
   if (!target) throw new Error('Question paper not found.');
@@ -93,21 +177,9 @@ export function deleteQuestionPaper(id, userId, isAdmin = false) {
     throw new Error('You can only delete your own uploads.');
   }
 
+  await deleteQuestionPaperFile(id).catch(() => {});
   const nextItems = items.filter((item) => item.id !== id);
   saveUserQuestions(nextItems);
-}
-
-export function downloadQuestionPaper(item) {
-  if (!item.fileData) {
-    throw new Error('No file attached to this paper.');
-  }
-
-  const link = document.createElement('a');
-  link.href = item.fileData;
-  link.download = item.fileName || `${item.course}-${item.type}-${item.year}.pdf`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
 }
 
 export async function readQuestionPaperFile(file, maxBytes = MAX_QUESTION_PAPER_BYTES) {
@@ -128,9 +200,33 @@ export async function readQuestionPaperFile(file, maxBytes = MAX_QUESTION_PAPER_
     reader.readAsDataURL(file);
   });
 
+  if (file.type === 'application/pdf') {
+    const bytes = await loadFileDataAsBytes(dataUrl);
+    if (!isPdfBytes(bytes)) {
+      throw new Error('That file is not a valid PDF. Choose another file.');
+    }
+  }
+
   return {
     fileData: dataUrl,
     fileName: file.name,
     fileType: file.type === 'application/pdf' ? 'pdf' : 'image',
   };
+}
+
+export async function migrateQuestionBankFilesToIndexedDb() {
+  const items = loadUserQuestions();
+  let changed = false;
+
+  const migrated = await Promise.all(
+    items.map(async (item) => {
+      if (!item.fileData) return item;
+      changed = true;
+      return migrateInlineFileToIndexedDb(item);
+    }),
+  );
+
+  if (changed) {
+    saveUserQuestions(migrated);
+  }
 }

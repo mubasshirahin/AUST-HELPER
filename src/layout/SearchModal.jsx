@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, BookOpen, GraduationCap, Library, Users, ShoppingBag, Settings, LayoutDashboard, FileText, X } from 'lucide-react';
+import { Search, BookOpen, GraduationCap, Library, Users, ShoppingBag, Settings, LayoutDashboard, FileText, X, Map, ScrollText } from 'lucide-react';
 import './SearchModal.css';
 
 const searchItems = [
@@ -11,6 +11,8 @@ const searchItems = [
   { label: 'Campus', path: '/campus', icon: BookOpen, keywords: 'campus map canteen library seat' },
   { label: 'Community', path: '/community', icon: Users, keywords: 'community alumni clubs stories' },
   { label: 'Marketplace', path: '/marketplace', icon: ShoppingBag, keywords: 'marketplace buy sell exchange mentor' },
+  { label: 'Career Roadmaps', path: '/career-roadmaps', icon: Map, keywords: 'career roadmaps skills paths' },
+  { label: 'Cheatsheets', path: '/cheatsheets', icon: ScrollText, keywords: 'cheatsheets formulas quick reference' },
   { label: 'Settings', path: '/settings', icon: Settings, keywords: 'settings profile theme notifications' },
   { label: 'Admin Panel', path: '/admin', icon: LayoutDashboard, keywords: 'admin panel users notice board' },
 ];

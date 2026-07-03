@@ -3,18 +3,151 @@
   flex-direction: column;
   gap: var(--sp-5);
   width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.analytics-header {
-  margin-bottom: var(--sp-1);
+/* ─── Hero Header ─── */
+.grade-hero {
+  position: relative;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-primary);
+  background: var(--bg-card);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  animation: gradeHeroIn 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
-.analytics-tabs {
-  margin-bottom: 0;
+@keyframes gradeHeroIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
+.grade-hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.grade-hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(168, 85, 247, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 85, 247, 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(to bottom, black 35%, transparent 100%);
+}
+
+.grade-hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.48;
+  animation: gradeFloat 8s ease-in-out infinite;
+}
+
+.grade-hero-orb-1 {
+  width: 220px;
+  height: 220px;
+  top: -80px;
+  right: -30px;
+  background: radial-gradient(circle, var(--accent-purple) 0%, transparent 70%);
+}
+
+.grade-hero-orb-2 {
+  width: 180px;
+  height: 180px;
+  bottom: -60px;
+  left: 12%;
+  background: radial-gradient(circle, var(--accent-rose) 0%, transparent 70%);
+  animation-delay: -3.5s;
+}
+
+@keyframes gradeFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-10px, -8px) scale(1.05); }
+}
+
+.grade-hero-content {
+  position: relative;
+  padding: var(--sp-6) var(--sp-6) var(--sp-5);
+  z-index: 1;
+}
+
+.grade-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-purple);
+  background: var(--accent-purple-glow);
+  border: 1px solid color-mix(in srgb, var(--accent-purple) 25%, transparent);
+  margin-bottom: var(--sp-4);
+  animation: fadeInUp 0.5s ease 0.1s both;
+}
+
+.grade-hero-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+}
+
+.grade-hero-icon {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-rose));
+  color: #fff;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent-purple) 35%, transparent);
+  animation: gradeIconPulse 3.5s ease-in-out infinite;
+}
+
+@keyframes gradeIconPulse {
+  0%, 100% { box-shadow: 0 8px 24px color-mix(in srgb, var(--accent-purple) 35%, transparent); }
+  50% { box-shadow: 0 8px 32px color-mix(in srgb, var(--accent-rose) 40%, transparent); }
+}
+
+.grade-hero-title {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin: 0 0 6px;
+  background: linear-gradient(135deg, var(--text-primary) 60%, var(--accent-purple));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: fadeInUp 0.5s ease 0.15s both;
+}
+
+.grade-hero-subtitle {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 520px;
+  line-height: 1.5;
+  animation: fadeInUp 0.5s ease 0.2s both;
+}
+
+/* ─── Content swap animation ─── */
 .analytics-content-area {
-  animation: fadeInUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: gradeContentSwap 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes gradeContentSwap {
+  from { opacity: 0; transform: translateY(12px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* ─── CGPA Graph ─── */
@@ -31,12 +164,35 @@
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-base), transform var(--transition-base);
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.3s cubic-bezier(0.34, 1.3, 0.64, 1),
+    border-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.cgpa-summary-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
 }
 
 .cgpa-summary-card:hover {
   box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--accent-purple) 25%, var(--border-primary));
+}
+
+.cgpa-summary-card:hover::after {
+  transform: scaleX(1);
 }
 
 .cgpa-summary-label {
@@ -53,6 +209,7 @@
   font-weight: var(--fw-bold);
   letter-spacing: -0.025em;
   line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 
 .cgpa-summary-sub {
@@ -75,6 +232,12 @@
   border-radius: var(--radius-lg);
   text-align: center;
   box-shadow: var(--shadow-sm);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.target-result-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 /* ─── Syllabus Progress ─── */
@@ -90,12 +253,16 @@
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+  transition:
+    box-shadow 0.3s ease,
+    border-color 0.3s ease,
+    transform 0.3s cubic-bezier(0.34, 1.3, 0.64, 1);
 }
 
 .syllabus-course-card:hover {
   box-shadow: var(--shadow-md);
   border-color: var(--border-focus);
+  transform: translateY(-2px);
 }
 
 /* ─── Result Table ─── */
@@ -159,16 +326,28 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
-  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+  transition:
+    box-shadow 0.3s ease,
+    border-color 0.3s ease,
+    transform 0.3s cubic-bezier(0.34, 1.3, 0.64, 1);
 }
 
 .review-card:hover {
   box-shadow: var(--shadow-md);
   border-color: var(--border-focus);
+  transform: translateY(-2px);
 }
 
 /* ─── Responsive ─── */
 @media (max-width: 768px) {
+  .grade-hero-content {
+    padding: var(--sp-5);
+  }
+
+  .grade-hero-title {
+    font-size: var(--fs-xl);
+  }
+
   .cgpa-summary-cards {
     grid-template-columns: 1fr;
   }

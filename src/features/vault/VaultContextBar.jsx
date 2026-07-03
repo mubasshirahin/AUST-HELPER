@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronRight } from 'lucide-react';
 import {
   heatmapDepartments,
   departmentLabels,
@@ -24,74 +24,66 @@ export default function VaultContextBar({
   );
 
   return (
-    <div className="vault-context-bar glass-card-static">
+    <div className="vault-context-bar">
       <button
         type="button"
-        className="btn btn-ghost btn-sm qb-back-btn"
+        className="vault-back-btn"
         onClick={onBackToCourses}
         title="Change course"
       >
-        <ArrowLeft size={14} />
+        <ArrowLeft size={16} />
       </button>
 
-      <div className="vault-context-info">
-        <h2 className="section-title" style={{ fontSize: 'var(--fs-md)', margin: 0 }}>
-          {courseName}
-        </h2>
-        <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', margin: 0 }}>
-          {department} · Semester {yearSem} · {course}
-        </p>
+      <div className="vault-context-breadcrumb">
+        <span className="vault-crumb">{department}</span>
+        <ChevronRight size={12} className="vault-crumb-sep" />
+        <span className="vault-crumb">{yearSem}</span>
+        <ChevronRight size={12} className="vault-crumb-sep" />
+        <span className="vault-crumb vault-crumb-active">{course}</span>
       </div>
 
-      <div className="qb-selection-bar vault-context-selects">
-        <label className="flex items-center gap-2" style={{ fontSize: 'var(--fs-sm)' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Dept</span>
+      <div className="vault-context-info">
+        <h2 className="vault-context-title">{courseName}</h2>
+        <p className="vault-context-sub">{departmentLabels[department]}</p>
+      </div>
+
+      <div className="vault-context-pills">
+        <label className="vault-pill-select vault-pill-select-compact">
+          <span className="vault-pill-select-label">Dept</span>
           <select
-            className="input"
+            className="vault-pill-select-input"
             value={department}
             onChange={(e) => onDepartmentChange(e.target.value)}
-            style={{ minWidth: '100px' }}
           >
             {heatmapDepartments.map((dept) => (
-              <option key={dept} value={dept}>
-                {dept}
-              </option>
+              <option key={dept} value={dept}>{dept}</option>
             ))}
           </select>
         </label>
-        <label className="flex items-center gap-2" style={{ fontSize: 'var(--fs-sm)' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Sem</span>
+        <label className="vault-pill-select vault-pill-select-compact">
+          <span className="vault-pill-select-label">Sem</span>
           <select
-            className="input"
+            className="vault-pill-select-input"
             value={yearSem}
             onChange={(e) => onYearSemChange(e.target.value)}
-            style={{ minWidth: '72px' }}
           >
             {yearSemOptions.map((sem) => (
-              <option key={sem} value={sem}>
-                {sem}
-              </option>
+              <option key={sem} value={sem}>{sem}</option>
             ))}
           </select>
         </label>
-        <label className="flex items-center gap-2" style={{ fontSize: 'var(--fs-sm)' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Course</span>
+        <label className="vault-pill-select vault-pill-select-compact vault-pill-select-wide">
+          <span className="vault-pill-select-label">Course</span>
           <select
-            className="input"
+            className="vault-pill-select-input"
             value={course}
             onChange={(e) => onCourseChange(e.target.value)}
-            style={{ minWidth: '140px' }}
           >
             {courseOptions.map((item) => (
-              <option key={item.course} value={item.course}>
-                {item.name}
-              </option>
+              <option key={item.course} value={item.course}>{item.name}</option>
             ))}
           </select>
         </label>
-        <span className="badge badge-blue" style={{ fontSize: '10px' }}>
-          {departmentLabels[department]}
-        </span>
       </div>
     </div>
   );

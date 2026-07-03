@@ -5,7 +5,9 @@ import { skillRoadmaps } from '../../data/mockData';
 export default function SkillRoadmap({ vaultContext }) {
   const { course, courseName } = vaultContext;
   const filteredRoadmaps = useMemo(
-    () => skillRoadmaps.filter((roadmap) => !roadmap.course || roadmap.course === course),
+    () => (course
+      ? skillRoadmaps.filter((roadmap) => !roadmap.course || roadmap.course === course)
+      : skillRoadmaps),
     [course],
   );
   const [roadmaps, setRoadmaps] = useState(filteredRoadmaps);

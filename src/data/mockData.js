@@ -36,31 +36,7 @@ export const semesterResults = [];
 
 export const syllabusData = [];
 
-export const questionBank = [
-  { id: 1, department: 'CSE', yearSem: '3.1', course: 'CSE 3101', name: 'Database Systems', type: 'Mid', year: 2025, semester: 'Fall', questions: 8, solved: true },
-  { id: 2, department: 'CSE', yearSem: '3.1', course: 'CSE 3101', name: 'Database Systems', type: 'Mid', year: 2025, semester: 'Spring', questions: 7, solved: true },
-  { id: 3, department: 'CSE', yearSem: '3.1', course: 'CSE 3101', name: 'Database Systems', type: 'Final', year: 2024, semester: 'Spring', questions: 10, solved: false },
-  { id: 4, department: 'CSE', yearSem: '3.2', course: 'CSE 3101', name: 'Database Systems', type: 'Final', year: 2024, semester: 'Fall', questions: 9, solved: true },
-  { id: 5, department: 'CSE', yearSem: '3.1', course: 'CSE 3103', name: 'Computer Networks', type: 'Mid', year: 2025, semester: 'Spring', questions: 6, solved: false },
-  { id: 6, department: 'CSE', yearSem: '3.1', course: 'CSE 3103', name: 'Computer Networks', type: 'Mid', year: 2024, semester: 'Spring', questions: 7, solved: true },
-  { id: 7, department: 'CSE', yearSem: '3.2', course: 'CSE 3103', name: 'Computer Networks', type: 'Final', year: 2024, semester: 'Spring', questions: 8, solved: false },
-  { id: 8, department: 'CSE', yearSem: '3.2', course: 'CSE 3111', name: 'Software Engineering', type: 'Mid', year: 2025, semester: 'Spring', questions: 5, solved: true },
-  { id: 9, department: 'CSE', yearSem: '3.2', course: 'CSE 3111', name: 'Software Engineering', type: 'Final', year: 2024, semester: 'Spring', questions: 8, solved: true },
-  { id: 10, department: 'CSE', yearSem: '3.1', course: 'CSE 3101', name: 'Database Systems', type: 'Quiz', year: 2025, semester: 'Spring', questions: 3, solved: true },
-  { id: 22, department: 'CSE', yearSem: '3.1', course: 'CSE 3101', name: 'Database Systems', type: 'Final', year: 2025, semester: 'Fall', questions: 9, solved: false },
-  { id: 23, department: 'CSE', yearSem: '3.1', course: 'CSE 3101', name: 'Database Systems', type: 'Mid', year: 2023, semester: 'Fall', questions: 6, solved: true },
-  { id: 11, department: 'EEE', yearSem: '3.1', course: 'EEE 3101', name: 'Power Systems', type: 'Mid', year: 2025, semester: 'Spring', questions: 6, solved: true },
-  { id: 12, department: 'EEE', yearSem: '3.2', course: 'EEE 3101', name: 'Power Systems', type: 'Final', year: 2024, semester: 'Spring', questions: 8, solved: false },
-  { id: 13, department: 'EEE', yearSem: '3.1', course: 'EEE 3203', name: 'Digital Signal Processing', type: 'Mid', year: 2024, semester: 'Fall', questions: 5, solved: true },
-  { id: 14, department: 'CE', yearSem: '3.1', course: 'CE 3101', name: 'Structural Analysis', type: 'Mid', year: 2025, semester: 'Spring', questions: 7, solved: false },
-  { id: 15, department: 'CE', yearSem: '3.2', course: 'CE 3101', name: 'Structural Analysis', type: 'Final', year: 2024, semester: 'Spring', questions: 9, solved: true },
-  { id: 16, department: 'ME', yearSem: '3.1', course: 'ME 3101', name: 'Thermodynamics', type: 'Mid', year: 2025, semester: 'Spring', questions: 6, solved: true },
-  { id: 17, department: 'IPE', yearSem: '3.2', course: 'IPE 3101', name: 'Production Planning', type: 'Final', year: 2024, semester: 'Spring', questions: 7, solved: false },
-  { id: 18, department: 'TE', yearSem: '2.2', course: 'TE 3101', name: 'Yarn Manufacturing', type: 'Mid', year: 2025, semester: 'Spring', questions: 5, solved: true },
-  { id: 19, department: 'ARCH', yearSem: '4.1', course: 'ARCH 3101', name: 'Building Design', type: 'Mid', year: 2024, semester: 'Fall', questions: 6, solved: true },
-  { id: 20, department: 'ARCH', yearSem: '5.2', course: 'ARCH 4101', name: 'Urban Planning', type: 'Final', year: 2025, semester: 'Spring', questions: 8, solved: false },
-  { id: 21, department: 'BBA', yearSem: '3.1', course: 'BBA 3101', name: 'Financial Management', type: 'Final', year: 2025, semester: 'Spring', questions: 8, solved: false },
-];
+export const questionBank = [];
 
 export const topicFrequency = {};
 
@@ -73,12 +49,14 @@ export const skillRoadmaps = [];
 export const cheatsheets = [];
 
 export const campusFloors = [
-  { floor: 'Ground', rooms: [
-    { id: 'G-01', name: 'Main Office', type: 'admin', x: 20, y: 30 },
-    { id: 'G-02', name: 'Registrar', type: 'admin', x: 40, y: 30 },
-    { id: 'G-03', name: 'Auditorium', type: 'hall', x: 70, y: 50 },
-    { id: 'G-04', name: 'Canteen', type: 'facility', x: 30, y: 70 },
-    { id: 'G-05', name: 'Library (Ground)', type: 'library', x: 60, y: 70 },
+  { floor: 'Ground', mapImage: '/campus/ground-floor.png', rooms: [
+    { id: 'G-01', name: 'M.H Khan Auditorium', type: 'hall', hotspot: { left: 18, top: 20, width: 12, height: 15 } },
+    { id: 'G-02', name: 'Redex Photocopy', type: 'admin', hotspot: { left: 30, top: 20, width: 15, height: 15 } },
+    { id: 'G-03', name: "Girl's Common Room", type: 'facility', hotspot: { left: 45, top: 15, width: 33, height: 10 } },
+    { id: 'G-04', name: 'Badamtola', type: 'hall', hotspot: { left: 40, top: 35, width: 33, height: 30 } },
+    { id: 'G-05', name: 'RedX', type: 'facility', hotspot: { left: 20, top: 40, width: 17, height: 40 } },
+    { id: 'G-06', name: 'Canteen', type: 'facility', hotspot: { left: 73, top: 30, width: 16, height: 40 } },
+    { id: 'G-07', name: 'TT Ground', type: 'facility', hotspot: { left: 42, top: 68, width: 45, height: 27 } },
   ]},
   { floor: '1st', rooms: [
     { id: '1A-01', name: 'Room 1A-01', type: 'classroom', x: 15, y: 25 },

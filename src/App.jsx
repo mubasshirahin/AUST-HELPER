@@ -14,6 +14,8 @@ const RoutineTemplatesPage = lazy(() => import('./features/dashboard/RoutineTemp
 const TranscriptTemplatesPage = lazy(() => import('./features/dashboard/TranscriptTemplatesPage'));
 const AnalyticsPage = lazy(() => import('./features/analytics/AnalyticsPage'));
 const VaultPage = lazy(() => import('./features/vault/VaultPage'));
+const CareerRoadmapsPage = lazy(() => import('./features/vault/CareerRoadmapsPage'));
+const CheatsheetsPage = lazy(() => import('./features/vault/CheatsheetsPage'));
 const CampusPage = lazy(() => import('./features/campus/CampusPage'));
 const CommunityPage = lazy(() => import('./features/community/CommunityPage'));
 const MarketplacePage = lazy(() => import('./features/marketplace/index.jsx'));
@@ -53,6 +55,8 @@ function AppContent() {
                 <Route path="/admin/transcript-templates" element={<TranscriptTemplatesPage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/vault" element={<VaultPage />} />
+                <Route path="/career-roadmaps" element={<CareerRoadmapsPage />} />
+                <Route path="/cheatsheets" element={<CheatsheetsPage />} />
                 <Route path="/campus" element={<CampusPage />} />
                 <Route path="/community" element={<CommunityPage />} />
                 <Route path="/marketplace" element={<MarketplacePage />} />

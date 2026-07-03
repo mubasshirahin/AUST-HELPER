@@ -1,29 +1,30 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Plus, X, Upload, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { addQuestionPaper, readQuestionPaperFile, MAX_QUESTION_PAPER_BYTES } from '../../utils/questionBankStorage';
+import { getExamTypesForCourseType } from './vaultUtils';
 
-const defaultForm = {
-  type: 'Mid',
-  questions: '',
+const createDefaultForm = (courseType) => ({
+  type: getExamTypesForCourseType(courseType)[0],
+  paperNo: '',
   solved: false,
   fileName: '',
   fileData: '',
   fileType: 'pdf',
-};
+});
 
 export default function AddQuestionPaper({ vaultContext, selectedTerm, onAdded }) {
   const { user, isAuthenticated } = useAuth();
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ ...defaultForm });
+  const { department, yearSem, course, courseName, courseType = 'Theory' } = vaultContext;
+  const examTypes = useMemo(() => getExamTypesForCourseType(courseType), [courseType]);
+  const [form, setForm] = useState(() => createDefaultForm(courseType));
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const fileInputRef = useRef(null);
 
-  const { department, yearSem, course, courseName } = vaultContext;
-
   const resetForm = () => {
-    setForm({ ...defaultForm });
+    setForm(createDefaultForm(courseType));
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -65,7 +66,7 @@ export default function AddQuestionPaper({ vaultContext, selectedTerm, onAdded }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
     setMessage('');
@@ -76,7 +77,7 @@ export default function AddQuestionPaper({ vaultContext, selectedTerm, onAdded }
     }
 
     try {
-      addQuestionPaper({
+      await addQuestionPaper({
         department,
         yearSem,
         course,
@@ -84,7 +85,7 @@ export default function AddQuestionPaper({ vaultContext, selectedTerm, onAdded }
         type: form.type,
         year: selectedTerm.year,
         semester: selectedTerm.season,
-        questions: form.questions,
+        paperNo: form.paperNo,
         solved: form.solved,
         fileName: form.fileName,
         fileData: form.fileData,
@@ -136,21 +137,23 @@ export default function AddQuestionPaper({ vaultContext, selectedTerm, onAdded }
                   value={form.type}
                   onChange={(e) => setForm((current) => ({ ...current, type: e.target.value }))}
                 >
-                  <option value="Mid">Mid Term</option>
-                  <option value="Final">Final Term</option>
-                  <option value="Quiz">Quiz</option>
+                  {examTypes.map((examType) => (
+                    <option key={examType} value={examType}>
+                      {examType}
+                    </option>
+                  ))}
                 </select>
               </label>
 
               <label className="qb-add-field">
-                <span>Total Questions</span>
+                <span>No.</span>
                 <input
                   className="input"
                   type="number"
                   min="1"
-                  placeholder="e.g. 8"
-                  value={form.questions}
-                  onChange={(e) => setForm((current) => ({ ...current, questions: e.target.value }))}
+                  placeholder={form.type ? `e.g. 1 → ${form.type} 1` : 'e.g. 1'}
+                  value={form.paperNo}
+                  onChange={(e) => setForm((current) => ({ ...current, paperNo: e.target.value }))}
                   required
                 />
               </label>

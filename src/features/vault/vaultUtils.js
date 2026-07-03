@@ -1,8 +1,21 @@
 import { getAllQuestionBankItems } from '../../utils/questionBankStorage';
+import { getVaultCourses } from '../../utils/vaultCourseStorage';
 import { heatmapDepartments } from '../../utils/deptHeatmapStorage';
 import { getYearSemOptions } from '../../utils/semester';
+import { inferCourseTypeFromCode } from './vaultExamTypes';
 
 export { heatmapDepartments, getYearSemOptions };
+export {
+  THEORY_EXAM_TYPES,
+  LAB_EXAM_TYPES,
+  ALL_EXAM_TYPES,
+  inferCourseTypeFromCode,
+  getExamTypesForCourseType,
+  getQuestionBankSubtitle,
+  getPaperTypeHeading,
+  getPaperNo,
+  formatPaperLabel,
+} from './vaultExamTypes';
 
 export const departmentLabels = {
   CSE: 'Computer Science & Engineering',
@@ -20,8 +33,6 @@ export const vaultResourceTabs = [
   { id: 'heatmap', label: 'Topic Analysis' },
   { id: 'materials', label: 'Lecture Notes' },
   { id: 'playlists', label: 'YouTube Playlists' },
-  { id: 'roadmap', label: 'Career Roadmaps' },
-  { id: 'cheatsheets', label: 'Cheatsheets' },
 ];
 
 export function getDepartmentPaperCount(department) {
@@ -40,11 +51,21 @@ export function getCourseCategories(department, yearSem) {
   );
   const map = new Map();
 
+  getVaultCourses(department, yearSem).forEach((item) => {
+    map.set(item.course, {
+      course: item.course,
+      name: item.name,
+      courseType: inferCourseTypeFromCode(item.course),
+      paperCount: 0,
+    });
+  });
+
   items.forEach((item) => {
     if (!map.has(item.course)) {
       map.set(item.course, {
         course: item.course,
         name: item.name,
+        courseType: inferCourseTypeFromCode(item.course),
         paperCount: 0,
       });
     }
@@ -61,13 +82,13 @@ export function getQuestionBankTerms() {
     terms.push({
       season: 'Fall',
       year: 2000 + shortYear,
-      label: `Fall ${shortYear}`,
+      label: `Fall '${shortYear}`,
       key: `Fall-${2000 + shortYear}`,
     });
     terms.push({
       season: 'Spring',
       year: 2000 + shortYear,
-      label: `Spring ${shortYear}`,
+      label: `Spring '${shortYear}`,
       key: `Spring-${2000 + shortYear}`,
     });
   }

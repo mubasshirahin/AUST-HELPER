@@ -9,7 +9,7 @@ export default function Cheatsheets({ vaultContext }) {
 
   const filteredCheatsheets = useMemo(() => {
     return cheatsheets
-      .filter((cs) => !cs.course || cs.course === course)
+      .filter((cs) => !course || !cs.course || cs.course === course)
       .filter(
         (cs) =>
           cs.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

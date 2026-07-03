@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { BookOpen, Building2, GraduationCap, Library, ArrowLeft } from 'lucide-react';
+import React, { useMemo, useState, useCallback } from 'react';
+import { BookOpen, Building2, GraduationCap, Library, ArrowLeft, ChevronRight } from 'lucide-react';
 import {
   heatmapDepartments,
   departmentLabels,
@@ -8,16 +8,35 @@ import {
   getCourseCategories,
   getYearSemOptions,
 } from './vaultUtils';
+import AddVaultCourse from './AddVaultCourse';
+
+const deptAccents = {
+  CSE: 'vault-dept-cse',
+  EEE: 'vault-dept-eee',
+  CE: 'vault-dept-ce',
+  ME: 'vault-dept-me',
+  IPE: 'vault-dept-ipe',
+  TE: 'vault-dept-te',
+  ARCH: 'vault-dept-arch',
+  BBA: 'vault-dept-bba',
+};
 
 export default function VaultSelection({
   department,
   yearSem,
+  selectionStep,
   onSelectDepartment,
   onSelectYearSem,
   onSelectCourse,
   onBackToDepartments,
   onBackToSemesters,
 }) {
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refreshCourses = useCallback(() => {
+    setRefreshKey((key) => key + 1);
+  }, []);
+
   const yearSemOptions = useMemo(
     () => (department ? getYearSemOptions(department) : []),
     [department],
@@ -26,223 +45,206 @@ export default function VaultSelection({
   const courseCategories = useMemo(() => {
     if (!department || !yearSem) return [];
     return getCourseCategories(department, yearSem);
-  }, [department, yearSem]);
+  }, [department, yearSem, refreshKey]);
 
   if (!department) {
     return (
-      <div className="glass-card-static question-bank-container animate-fadeInUp">
-        <div className="qb-dept-picker-header">
-          <div className="flex items-center gap-2">
-            <div
-              className="icon"
-              style={{
-                backgroundColor: 'var(--accent-purple-glow)',
-                color: 'var(--accent-purple)',
-                padding: '6px',
-                borderRadius: '8px',
-              }}
-            >
-              <Building2 size={18} />
+      <section className="vault-panel vault-panel-enter">
+        <div className="vault-panel-header">
+          <div className="vault-panel-heading">
+            <div className="vault-panel-icon vault-panel-icon-purple">
+              <Building2 size={20} />
             </div>
             <div>
-              <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>
-                Select Department
-              </h2>
-              <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', margin: 0 }}>
-                Start by choosing your department to browse resources
-              </p>
+              <h2 className="vault-panel-title">Select Department</h2>
+              <p className="vault-panel-desc">Choose where you study — resources load by department</p>
             </div>
           </div>
         </div>
 
-        <div className="qb-dept-grid">
-          {heatmapDepartments.map((dept) => {
+        <div className="vault-dept-grid">
+          {heatmapDepartments.map((dept, index) => {
             const paperCount = getDepartmentPaperCount(dept);
             return (
               <button
                 key={dept}
                 type="button"
-                className="qb-dept-card"
+                className={`vault-dept-card ${deptAccents[dept] || ''}`}
+                style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => onSelectDepartment(dept)}
               >
-                <span className="qb-dept-code">{dept}</span>
-                <span className="qb-dept-name">{departmentLabels[dept] || dept}</span>
-                <span className="qb-dept-count">
+                <span className="vault-dept-card-glow" aria-hidden="true" />
+                <span className="vault-dept-code">{dept}</span>
+                <span className="vault-dept-name">{departmentLabels[dept] || dept}</span>
+                <span className="vault-dept-meta">
                   {paperCount > 0 ? `${paperCount} papers` : 'Coming soon'}
+                  <ChevronRight size={14} />
                 </span>
               </button>
             );
           })}
         </div>
-      </div>
+      </section>
     );
   }
 
   if (!yearSem) {
     return (
-      <div className="glass-card-static question-bank-container animate-fadeInUp">
-        <div className="qb-dept-picker-header">
-          <div className="flex justify-between items-start flex-wrap gap-4">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm qb-back-btn"
-                onClick={onBackToDepartments}
-                title="Back to departments"
-              >
-                <ArrowLeft size={14} />
-              </button>
-              <div
-                className="icon"
-                style={{
-                  backgroundColor: 'var(--accent-blue-glow)',
-                  color: 'var(--accent-blue)',
-                  padding: '6px',
-                  borderRadius: '8px',
-                }}
-              >
-                <GraduationCap size={18} />
-              </div>
-              <div>
-                <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>
-                  Select Semester
-                </h2>
-                <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', margin: 0 }}>
-                  {department} — {departmentLabels[department]}
-                </p>
-              </div>
-            </div>
-
-            <label className="flex items-center gap-2" style={{ fontSize: 'var(--fs-sm)' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Department</span>
-              <select
-                className="input"
-                value={department}
-                onChange={(e) => onSelectDepartment(e.target.value)}
-                style={{ minWidth: '120px' }}
-              >
-                {heatmapDepartments.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        </div>
-
-        <div className={`qb-sem-grid ${department === 'ARCH' ? 'qb-sem-grid-arch' : ''}`}>
-          {yearSemOptions.map((sem) => {
-            const paperCount = getSemesterPaperCount(department, sem);
-            return (
-              <button
-                key={sem}
-                type="button"
-                className="qb-sem-card"
-                onClick={() => onSelectYearSem(sem)}
-              >
-                <span className="qb-sem-label">{sem}</span>
-                <span className="qb-sem-count">
-                  {paperCount > 0 ? `${paperCount} papers` : 'No papers'}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="glass-card-static question-bank-container animate-fadeInUp">
-      <div className="qb-dept-picker-header">
-        <div className="flex justify-between items-start flex-wrap gap-4">
-          <div className="flex items-center gap-2">
+      <section className="vault-panel vault-panel-enter">
+        <div className="vault-panel-header">
+          <div className="vault-panel-heading">
             <button
               type="button"
-              className="btn btn-ghost btn-sm qb-back-btn"
-              onClick={onBackToSemesters}
-              title="Back to semesters"
+              className="vault-back-btn"
+              onClick={onBackToDepartments}
+              title="Back to departments"
             >
-              <ArrowLeft size={14} />
+              <ArrowLeft size={16} />
             </button>
-            <div
-              className="icon"
-              style={{
-                backgroundColor: 'var(--accent-emerald-glow)',
-                color: 'var(--accent-emerald)',
-                padding: '6px',
-                borderRadius: '8px',
-              }}
-            >
-              <Library size={18} />
+            <div className="vault-panel-icon vault-panel-icon-blue">
+              <GraduationCap size={20} />
             </div>
             <div>
-              <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>
-                Select Course
-              </h2>
-              <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', margin: 0 }}>
-                Semester {yearSem} — pick a course to open resources
+              <h2 className="vault-panel-title">Select Semester</h2>
+              <p className="vault-panel-desc">
+                <span className={`vault-inline-badge ${deptAccents[department]}`}>{department}</span>
+                {departmentLabels[department]}
               </p>
             </div>
           </div>
 
-          <div className="qb-selection-bar">
-            <label className="flex items-center gap-2" style={{ fontSize: 'var(--fs-sm)' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Department</span>
-              <select
-                className="input"
-                value={department}
-                onChange={(e) => onSelectDepartment(e.target.value)}
-                style={{ minWidth: '120px' }}
-              >
-                {heatmapDepartments.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex items-center gap-2" style={{ fontSize: 'var(--fs-sm)' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Semester</span>
-              <select
-                className="input"
-                value={yearSem}
-                onChange={(e) => onSelectYearSem(e.target.value)}
-                style={{ minWidth: '80px' }}
-              >
-                {yearSemOptions.map((sem) => (
-                  <option key={sem} value={sem}>
-                    {sem}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="vault-pill-select">
+            <span className="vault-pill-select-label">Dept</span>
+            <select
+              className="vault-pill-select-input"
+              value={department}
+              onChange={(e) => onSelectDepartment(e.target.value)}
+            >
+              {heatmapDepartments.map((dept) => (
+                <option key={dept} value={dept}>{dept}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="vault-sem-slider-wrap">
+          <div className="vault-sem-slider">
+            {yearSemOptions.map((sem, index) => {
+              const paperCount = getSemesterPaperCount(department, sem);
+              const [year, term] = sem.split('.');
+              return (
+                <button
+                  key={sem}
+                  type="button"
+                  className="vault-sem-slide"
+                  style={{ animationDelay: `${index * 40}ms` }}
+                  onClick={() => onSelectYearSem(sem)}
+                >
+                  <span className="vault-sem-year">Y{year}</span>
+                  <span className="vault-sem-term">{term}</span>
+                  <span className="vault-sem-label">{sem}</span>
+                  <span className="vault-sem-count">
+                    {paperCount > 0 ? `${paperCount} papers` : 'Empty'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="vault-panel vault-panel-enter">
+      <div className="vault-panel-header">
+        <div className="vault-panel-heading">
+          <button
+            type="button"
+            className="vault-back-btn"
+            onClick={onBackToSemesters}
+            title="Back to semesters"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <div className="vault-panel-icon vault-panel-icon-emerald">
+            <Library size={20} />
+          </div>
+          <div>
+            <h2 className="vault-panel-title">Select Course</h2>
+            <p className="vault-panel-desc">
+              Semester <strong>{yearSem}</strong> — tap a course to open the vault
+            </p>
+          </div>
+        </div>
+
+        <div className="vault-pill-select-row">
+          <div className="vault-pill-select">
+            <span className="vault-pill-select-label">Dept</span>
+            <select
+              className="vault-pill-select-input"
+              value={department}
+              onChange={(e) => onSelectDepartment(e.target.value)}
+            >
+              {heatmapDepartments.map((dept) => (
+                <option key={dept} value={dept}>{dept}</option>
+              ))}
+            </select>
+          </div>
+          <div className="vault-pill-select">
+            <span className="vault-pill-select-label">Sem</span>
+            <select
+              className="vault-pill-select-input"
+              value={yearSem}
+              onChange={(e) => onSelectYearSem(e.target.value)}
+            >
+              {yearSemOptions.map((sem) => (
+                <option key={sem} value={sem}>{sem}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
 
       {courseCategories.length === 0 ? (
-        <div className="empty-state" style={{ padding: '32px 16px', textAlign: 'center' }}>
-          <BookOpen size={32} style={{ color: 'var(--text-tertiary)', marginBottom: '12px' }} />
-          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-sm)', margin: 0 }}>
-            No courses found for {department} — Semester {yearSem}.
-          </p>
+        <div className="vault-empty-state">
+          <BookOpen size={36} />
+          <p>No courses for {department} — Semester {yearSem}</p>
+          <span>Tap + below to add your first course</span>
         </div>
       ) : (
-        <div className="qb-course-grid">
-          {courseCategories.map((course) => (
+        <div className="vault-course-grid">
+          {courseCategories.map((courseItem, index) => (
             <button
-              key={course.course}
+              key={courseItem.course}
               type="button"
-              className="qb-course-card"
-              onClick={() => onSelectCourse(course.course, course.name)}
+              className="vault-course-card"
+              style={{ animationDelay: `${index * 55}ms` }}
+              onClick={() => onSelectCourse(courseItem.course, courseItem.name, courseItem.courseType)}
             >
-              <span className="qb-course-name">{course.name}</span>
+              <div className="vault-course-card-top">
+                <span className="vault-course-code">{courseItem.course}</span>
+                <span className={`vault-course-type ${courseItem.courseType === 'Lab' ? 'lab' : 'theory'}`}>
+                  {courseItem.courseType || 'Theory'}
+                </span>
+              </div>
+              <span className="vault-course-name">{courseItem.name}</span>
+              {courseItem.paperCount > 0 && (
+                <span className="vault-course-count">{courseItem.paperCount} papers uploaded</span>
+              )}
+              <span className="vault-course-arrow">
+                <ChevronRight size={16} />
+              </span>
             </button>
           ))}
         </div>
       )}
-    </div>
+
+      <AddVaultCourse
+        department={department}
+        yearSem={yearSem}
+        onAdded={refreshCourses}
+      />
+    </section>
   );
 }
