@@ -223,6 +223,41 @@ body {
   transition: background var(--transition-slow), color var(--transition-slow);
 }
 
+html,
+body,
+#root,
+.app-layout,
+.main-content,
+.page-wrapper,
+.sidebar {
+  cursor: default !important;
+}
+
+a,
+button,
+[role="button"],
+.nav-item,
+.tab,
+.tag,
+.card-list-item,
+.toggle-switch,
+.heatmap-cell,
+select,
+label[for] {
+  cursor: pointer !important;
+}
+
+button:disabled,
+[aria-disabled="true"],
+.disabled {
+  cursor: not-allowed !important;
+}
+
+input,
+textarea {
+  cursor: text !important;
+}
+
 #root {
   min-height: 100vh;
   width: 100%;

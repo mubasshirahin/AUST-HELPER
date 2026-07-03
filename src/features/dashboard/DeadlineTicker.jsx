@@ -1,48 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Hourglass, AlertTriangle, CalendarRange, Plus, Trash2 } from 'lucide-react';
+import { Hourglass, AlertTriangle, CalendarRange } from 'lucide-react';
 import { deadlines } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
-import { useRoutine } from '../../context/RoutineContext';
-import CourseAutocomplete from '../../components/CourseAutocomplete';
 
 export default function DeadlineTicker() {
   const { user } = useAuth();
-  const { routine } = useRoutine();
   const [timers, setTimers] = useState([]);
   const [calendarTasks, setCalendarTasks] = useState([]);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newDeadline, setNewDeadline] = useState({
-    title: '',
-    course: '',
-    dueDate: '',
-    dueTime: '',
-    type: '',
-    customType: '',
-    priority: 'medium',
-    color: '#3b82f6'
-  });
-
-  // Get unique courses from routine
-  const routineCourses = (() => {
-    const courses = new Set();
-    Object.values(routine || {}).forEach(dayClasses => {
-      (dayClasses || []).forEach(cls => {
-        if (cls.course) courses.add(cls.course);
-      });
-    });
-    return Array.from(courses);
-  })();
-
-  // Get CR group info
-  const crGroup = (() => {
-    if (user?.role === 'cr') {
-      return user?.section ? `Section ${user.section}` : user?.batch ? `Batch ${user.batch}` : '';
-    }
-    return '';
-  })();
-
-  // Check if user can add deadlines (admin, CR, SR only)
-  const canAddDeadline = user?.role === 'admin' || user?.role === 'cr' || user?.role === 'sr';
 
   // Get user's batch group (A1, A2, B1, B2, C1, C2)
   const userBatchGroup = (() => {
@@ -60,8 +24,6 @@ export default function DeadlineTicker() {
     }
     return 'A1';
   })();
-
-  const deadlineTypes = ['Quiz', 'Online', 'Lab Report', 'Assignment', 'Viva', 'Project Submission', 'Mid', 'Semester Final', 'Manual'];
 
   useEffect(() => {
     // Load deadlines from localStorage or use empty array
@@ -156,51 +118,6 @@ export default function DeadlineTicker() {
     const interval = setInterval(calculateTimeRemaining, 1000);
     return () => clearInterval(interval);
   }, [combinedDeadlines.length, calendarTasks.length, timers.length]);
-
-  const saveDeadlines = (updatedDeadlines) => {
-    setTimers(updatedDeadlines);
-    localStorage.setItem('aust-deadlines', JSON.stringify(updatedDeadlines));
-  };
-
-  const handleAddDeadline = (e) => {
-    e.preventDefault();
-    if (!newDeadline.title.trim() || !newDeadline.dueDate) return;
-
-    // Combine date and time
-    let dueDateTime;
-    if (newDeadline.dueDate && newDeadline.dueTime) {
-      dueDateTime = new Date(`${newDeadline.dueDate}T${newDeadline.dueTime}`);
-    } else if (newDeadline.dueDate) {
-      dueDateTime = new Date(newDeadline.dueDate);
-      dueDateTime.setHours(23, 59, 59);
-    } else {
-      return;
-    }
-
-    const typeLabel = newDeadline.type === 'Manual' ? (newDeadline.customType || 'Manual') : newDeadline.type;
-
-    const deadline = {
-      id: Date.now(),
-      title: newDeadline.title.trim(),
-      course: newDeadline.course.trim() || 'General',
-      dueDate: dueDateTime,
-      type: typeLabel,
-      priority: newDeadline.priority,
-      crGroup: crGroup || undefined,
-      color: newDeadline.priority === 'high' ? '#ef4444' : newDeadline.priority === 'medium' ? '#f59e0b' : '#3b82f6'
-    };
-
-    const updated = [...timers, deadline];
-    saveDeadlines(updated);
-    setNewDeadline({ title: '', course: '', dueDate: '', dueTime: '', type: '', customType: '', priority: 'medium', color: '#3b82f6' });
-    setShowAddModal(false);
-  };
-
-  const handleDeleteDeadline = (id) => {
-    if (!canAddDeadline) return;
-    const updated = timers.filter(dl => dl.id !== id);
-    saveDeadlines(updated);
-  };
 
   return (
     <div className="glass-card-static deadline-ticker animate-fadeInUp">
