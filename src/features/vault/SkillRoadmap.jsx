@@ -1,10 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Route, Milestone, Award, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { skillRoadmaps } from '../../data/mockData';
 
-export default function SkillRoadmap() {
-  const [roadmaps, setRoadmaps] = useState(skillRoadmaps);
+export default function SkillRoadmap({ vaultContext }) {
+  const { course, courseName } = vaultContext;
+  const filteredRoadmaps = useMemo(
+    () => skillRoadmaps.filter((roadmap) => !roadmap.course || roadmap.course === course),
+    [course],
+  );
+  const [roadmaps, setRoadmaps] = useState(filteredRoadmaps);
   const [expandedId, setExpandedId] = useState(null);
+
+  React.useEffect(() => {
+    setRoadmaps(filteredRoadmaps);
+    setExpandedId(null);
+  }, [filteredRoadmaps]);
 
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
@@ -45,11 +55,21 @@ export default function SkillRoadmap() {
     <div className="glass-card-static skill-roadmaps animate-fadeInUp">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Skill & Career Roadmaps</h2>
-          <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>Track your career trajectory milestones</p>
+          <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Career Roadmaps</h2>
+          <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
+            {courseName} — track skills and career milestones
+          </p>
         </div>
       </div>
 
+      {roadmaps.length === 0 ? (
+        <div className="empty-state" style={{ padding: '32px 16px', textAlign: 'center' }}>
+          <Route size={32} style={{ color: 'var(--text-tertiary)', marginBottom: '12px' }} />
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-sm)', margin: 0 }}>
+            No career roadmaps linked to {courseName} yet.
+          </p>
+        </div>
+      ) : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {roadmaps.map(rm => {
           const isExpanded = expandedId === rm.id;
@@ -161,6 +181,7 @@ export default function SkillRoadmap() {
           );
         })}
       </div>
+      )}
     </div>
   );
 }

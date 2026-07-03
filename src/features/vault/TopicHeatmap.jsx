@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
-import { Eye, TrendingUp, AlertTriangle } from 'lucide-react';
+import React from 'react';
+import { TrendingUp, AlertTriangle } from 'lucide-react';
 import { topicFrequency } from '../../data/mockData';
 
-export default function TopicHeatmap() {
-  const coursesList = Object.keys(topicFrequency);
-  const [selectedCourse, setSelectedCourse] = useState(coursesList[0] || '');
-
-  const currentData = selectedCourse ? topicFrequency[selectedCourse] : null;
+export default function TopicHeatmap({ vaultContext }) {
+  const { course, courseName } = vaultContext;
+  const currentData = topicFrequency[course] || null;
 
   const getHeatColor = (freq) => {
     switch (freq) {
@@ -36,7 +34,7 @@ export default function TopicHeatmap() {
     // Sort descending
     list.sort((a, b) => b.totalFreq - a.totalFreq);
     return list.slice(0, 3);
-  }, [selectedCourse, currentData]);
+  }, [course, currentData]);
 
   return (
     <div className="glass-card-static topic-heatmap-container animate-fadeInUp">
@@ -46,38 +44,17 @@ export default function TopicHeatmap() {
             <TrendingUp size={18} />
           </div>
           <div>
-            <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Topic Analysis Heatmap</h2>
-            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>Exam topic occurrence frequency analysis over the years</p>
+            <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Topic Analysis</h2>
+            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
+              {courseName} — exam topic frequency over the years
+            </p>
           </div>
         </div>
-
-        {coursesList.length > 0 && (
-          <div>
-            <select 
-              value={selectedCourse}
-              onChange={(e) => setSelectedCourse(e.target.value)}
-              style={{
-                background: 'var(--bg-input)',
-                border: '1px solid var(--border-primary)',
-                borderRadius: 'var(--radius-md)',
-                padding: '8px 16px',
-                color: 'var(--text-primary)',
-                outline: 'none',
-                fontSize: 'var(--fs-sm)',
-                cursor: 'pointer'
-              }}
-            >
-              {coursesList.map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
       {!currentData ? (
         <div className="glass-card-static" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)', background: 'var(--bg-input)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-lg)' }}>
-          <p style={{ margin: 0, fontSize: 'var(--fs-sm)' }}>No topic frequency analysis data available.</p>
+          <p style={{ margin: 0, fontSize: 'var(--fs-sm)' }}>No topic analysis available for {courseName} yet.</p>
         </div>
       ) : (
         <div className="grid-2" style={{ gridTemplateColumns: '2fr 1fr' }}>
