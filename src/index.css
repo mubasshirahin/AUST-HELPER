@@ -1,7 +1,12 @@
 /* ============================================
    AUST Student Helper — Design System
    Professional Minimalist Edition
+   + Newsprint theme (editorial / ink-on-paper)
    ============================================ */
+
+/* Newsprint theme typefaces. Inter is already the primary UI font; the rest
+   only load-in when the newsprint theme (or a .font-* helper) uses them. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Orbitron:wght@400;500;700;800;900&family=Share+Tech+Mono&family=Outfit:wght@400;500;700;800;900&family=DM+Sans:wght@400;500;700&family=Bungee&display=swap');
 
 /* ─── CSS Custom Properties ─── */
 :root {
@@ -191,6 +196,296 @@
   --warning: #9a6f32;
   --success: #3f7b63;
   --info: #5d7780;
+}
+
+/* ─── Newsprint Theme (editorial / ink-on-paper) ─────────────────────────────
+   Light-only broadsheet aesthetic. Because the whole app reads from these
+   tokens, remapping them here flips every feature to ink-on-paper. Zero
+   radius, solid ink borders (the "grid"), flat surfaces, editorial red used
+   sparingly. Component-level personality lives in the scoped block further
+   down. */
+[data-theme="newsprint"] {
+  /* Fonts — serif display, serif body, mono data */
+  --font-serif: 'Playfair Display', 'Times New Roman', serif;
+  --font-body: 'Lora', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* Surfaces — warm off-white "paper" */
+  --bg-primary: #f9f9f7;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f5f5f5;
+  --bg-card: #f9f9f7;
+  --bg-card-hover: #f5f5f5;
+  --bg-glass: #f9f9f7;
+  --bg-glass-heavy: #ffffff;
+  --bg-input: #f0f0f0;
+
+  /* Type — ink black, never pure #000 */
+  --text-primary: #111111;
+  --text-secondary: #525252;
+  --text-tertiary: #737373;
+  --text-inverse: #f9f9f7;
+
+  /* Borders — solid ink is what draws the newspaper grid */
+  --border-primary: #111111;
+  --border-secondary: #e5e5e0;
+  --border-focus: #111111;
+
+  /* Accent — editorial red, used extremely sparingly. Every other accent hue
+     collapses toward ink so the design stays ~99% black & white. */
+  --accent-blue: #cc0000;
+  --accent-blue-glow: rgba(204, 0, 0, 0.08);
+  --accent-purple: #111111;
+  --accent-purple-glow: #e5e5e0;
+  --accent-amber: #111111;
+  --accent-amber-glow: #e5e5e0;
+  --accent-emerald: #111111;
+  --accent-emerald-glow: #e5e5e0;
+  --accent-rose: #cc0000;
+  --accent-rose-glow: rgba(204, 0, 0, 0.08);
+  --accent-cyan: #111111;
+  --accent-cyan-glow: #e5e5e0;
+  --accent-orange: #cc0000;
+  --accent-orange-glow: rgba(204, 0, 0, 0.08);
+
+  /* Gradients flatten to solids — no soft blends in print */
+  --gradient-primary: linear-gradient(0deg, #111111, #111111);
+  --gradient-secondary: linear-gradient(0deg, #f5f5f5, #f5f5f5);
+  --gradient-accent: linear-gradient(0deg, #cc0000, #cc0000);
+  --gradient-warm: linear-gradient(0deg, #cc0000, #cc0000);
+  --gradient-success: linear-gradient(0deg, #111111, #111111);
+  --gradient-glass: linear-gradient(0deg, transparent, transparent);
+
+  /* Radius — sharp 90° corners everywhere (keep --radius-full for dots/toggles) */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+
+  /* Shadows — flat. Depth comes from borders and the hard-offset hover, not blur */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: 4px 4px 0 0 #111111;
+  --shadow-glow-blue: none;
+  --shadow-glow-purple: none;
+  --shadow-glow-amber: none;
+
+  --scrollbar-track: #f5f5f5;
+  --scrollbar-thumb: #111111;
+  --scrollbar-thumb-hover: #cc0000;
+
+  --status-online: #111111;
+  --status-away: #737373;
+  --status-offline: #a3a3a3;
+  --status-busy: #cc0000;
+
+  --danger: #cc0000;
+  --warning: #111111;
+  --success: #111111;
+  --info: #111111;
+}
+
+/* ─── Cyberpunk / Glitch Theme (High-Tech, Low-Life) ─────────────────────────
+   Dark-only neon-noir. Same contract as Newsprint: remap every token so all 9
+   feature areas flip at once, then a scoped personality block below adds the
+   character (neon glow, chamfered corners, scanlines, glitch). The void black
+   background makes neon light *illuminate* elements. Primary accent = electric
+   green; magenta + cyan distributed across the other accent slots for the
+   HUD-schematic variety the system calls for. */
+[data-theme="cyberpunk"] {
+  /* Fonts — geometric display, mono body, techy labels */
+  --font-display: 'Orbitron', 'Share Tech Mono', monospace;
+  --font-code: 'JetBrains Mono', 'Share Tech Mono', 'Consolas', monospace;
+  --font-label: 'Share Tech Mono', 'JetBrains Mono', monospace;
+
+  /* Surfaces — the void and its faint elevations */
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-tertiary: #1c1c2e;
+  --bg-card: #12121a;
+  --bg-card-hover: #16162280;
+  --bg-glass: rgba(18, 18, 26, 0.72);
+  --bg-glass-heavy: rgba(10, 10, 15, 0.88);
+  --bg-input: #12121a;
+
+  /* Type — never pure white against the void */
+  --text-primary: #e0e0e0;
+  --text-secondary: #8b8ba7;
+  --text-tertiary: #6b7280;
+  --text-inverse: #0a0a0f;
+
+  /* Borders — subtle by default; personality layer lights them up on interaction */
+  --border-primary: #2a2a3a;
+  --border-secondary: rgba(42, 42, 58, 0.55);
+  --border-focus: #00ff88;
+
+  /* Accents mapped onto the neon triad. Blue slot = primary electric green so
+     every "primary" surface in the app glows green; the rest fan across the
+     magenta/cyan/green spectrum. Glows are real color at low alpha. */
+  --accent-blue: #00ff88;
+  --accent-blue-glow: rgba(0, 255, 136, 0.13);
+  --accent-purple: #ff00ff;
+  --accent-purple-glow: rgba(255, 0, 255, 0.13);
+  --accent-amber: #00d4ff;
+  --accent-amber-glow: rgba(0, 212, 255, 0.13);
+  --accent-emerald: #00ff88;
+  --accent-emerald-glow: rgba(0, 255, 136, 0.13);
+  --accent-rose: #ff3366;
+  --accent-rose-glow: rgba(255, 51, 102, 0.14);
+  --accent-cyan: #00d4ff;
+  --accent-cyan-glow: rgba(0, 212, 255, 0.13);
+  --accent-orange: #ff00ff;
+  --accent-orange-glow: rgba(255, 0, 255, 0.13);
+
+  /* Gradients — neon light bleeding across the panel */
+  --gradient-primary: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%);
+  --gradient-secondary: linear-gradient(135deg, #1c1c2e 0%, #12121a 100%);
+  --gradient-accent: linear-gradient(135deg, #00ff88 0%, #ff00ff 100%);
+  --gradient-warm: linear-gradient(135deg, #ff00ff 0%, #ff3366 100%);
+  --gradient-success: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(0, 255, 136, 0.06) 0%, rgba(255, 0, 255, 0.03) 100%);
+
+  /* Radius — sharp is the default; chamfer is done via clip-path, not radius.
+     Keep --radius-full for dots/toggles/avatars. */
+  --radius-sm: 0px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 4px;
+  --radius-2xl: 4px;
+
+  /* Shadows — depth is neon glow, not soft blur */
+  --shadow-sm: 0 0 0 1px rgba(0, 255, 136, 0.04);
+  --shadow-md: 0 0 12px rgba(0, 255, 136, 0.14);
+  --shadow-lg: 0 0 20px rgba(0, 255, 136, 0.2);
+  --shadow-xl: 0 0 40px rgba(0, 255, 136, 0.25);
+  --shadow-glow-blue: 0 0 5px #00ff88, 0 0 20px rgba(0, 255, 136, 0.38);
+  --shadow-glow-purple: 0 0 5px #ff00ff, 0 0 20px rgba(255, 0, 255, 0.38);
+  --shadow-glow-amber: 0 0 5px #00d4ff, 0 0 20px rgba(0, 212, 255, 0.38);
+
+  /* Neon glow tokens (system spec) — used by personality layer */
+  --box-shadow-neon-sm: 0 0 3px #00ff88, 0 0 6px rgba(0, 255, 136, 0.19);
+  --box-shadow-neon: 0 0 5px #00ff88, 0 0 10px rgba(0, 255, 136, 0.25);
+  --box-shadow-neon-lg: 0 0 10px #00ff88, 0 0 20px rgba(0, 255, 136, 0.38), 0 0 40px rgba(0, 255, 136, 0.19);
+  --box-shadow-neon-secondary: 0 0 5px #ff00ff, 0 0 20px rgba(255, 0, 255, 0.38);
+  --box-shadow-neon-tertiary: 0 0 5px #00d4ff, 0 0 20px rgba(0, 212, 255, 0.38);
+
+  --scrollbar-track: #0a0a0f;
+  --scrollbar-thumb: #2a2a3a;
+  --scrollbar-thumb-hover: #00ff88;
+
+  --status-online: #00ff88;
+  --status-away: #00d4ff;
+  --status-offline: #6b7280;
+  --status-busy: #ff3366;
+
+  --danger: #ff3366;
+  --warning: #00d4ff;
+  --success: #00ff88;
+  --info: #00d4ff;
+}
+
+/* ─── Maximalism / Dopamine Theme (MORE IS MORE) ─────────────────────────────
+   Dark-only Y2K-meets-hyperpop. Same contract as Newsprint/Cyberpunk: remap
+   every token so all 9 feature areas flip at once, then a scoped personality
+   block below adds the character (clashing thick borders, stacked hard+glow
+   shadows, layered patterns, oversized type, animation).
+
+   The app rotates accents by index (badges, stat cards, section colors). The 7
+   accent slots are therefore filled with the FIVE dopamine accents in a
+   deliberate order so that any `index % n` rotation renders the rainbow with no
+   component changes: magenta → purple → yellow → cyan → orange → cyan → orange.
+   Intensity target: loud on chrome, legible on data (tables/charts stay calm). */
+[data-theme="maximalism"] {
+  /* Fonts — geometric black display, clean body, comic accent */
+  --font-heading: 'Outfit', 'Inter', sans-serif;
+  --font-body: 'DM Sans', 'Inter', sans-serif;
+  --font-display: 'Bungee', 'Outfit', sans-serif;
+
+  /* Surfaces — the cosmic void that makes everything scream */
+  --bg-primary: #0D0D1A;
+  --bg-secondary: #16112b;
+  --bg-tertiary: #2D1B4E;
+  --bg-card: rgba(45, 27, 78, 0.8);
+  --bg-card-hover: rgba(45, 27, 78, 0.95);
+  --bg-glass: rgba(45, 27, 78, 0.72);
+  --bg-glass-heavy: rgba(13, 13, 26, 0.9);
+  --bg-input: rgba(45, 27, 78, 0.5);
+
+  /* Type — pure white for maximum contrast (19.5:1 AAA over the void) */
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --text-tertiary: rgba(255, 255, 255, 0.55);
+  --text-inverse: #0D0D1A;
+
+  /* Borders — hot magenta by default; the personality layer makes them clash */
+  --border-primary: #FF3AF2;
+  --border-secondary: rgba(255, 58, 242, 0.35);
+  --border-focus: #FFE600;
+
+  /* The five accents distributed across seven slots (see note above). Glows are
+     real color at high alpha so elements actually luminesce. */
+  --accent-blue: #FF3AF2;    /* magenta — primary */
+  --accent-blue-glow: rgba(255, 58, 242, 0.45);
+  --accent-purple: #7B2FFF;  /* vivid purple */
+  --accent-purple-glow: rgba(123, 47, 255, 0.42);
+  --accent-amber: #FFE600;   /* screaming yellow */
+  --accent-amber-glow: rgba(255, 230, 0, 0.4);
+  --accent-emerald: #00F5D4; /* electric cyan */
+  --accent-emerald-glow: rgba(0, 245, 212, 0.4);
+  --accent-rose: #FF6B35;    /* electric orange */
+  --accent-rose-glow: rgba(255, 107, 53, 0.42);
+  --accent-cyan: #00F5D4;    /* cyan (repeat for rotation) */
+  --accent-cyan-glow: rgba(0, 245, 212, 0.4);
+  --accent-orange: #FF6B35;  /* orange (repeat for rotation) */
+  --accent-orange-glow: rgba(255, 107, 53, 0.42);
+
+  /* Gradients — multi-accent chaos */
+  --gradient-primary: linear-gradient(90deg, #FF3AF2, #7B2FFF, #00F5D4);
+  --gradient-secondary: linear-gradient(135deg, #2D1B4E 0%, #16112b 100%);
+  --gradient-accent: linear-gradient(90deg, #FF3AF2, #00F5D4, #FFE600, #FF3AF2);
+  --gradient-warm: linear-gradient(90deg, #FF6B35, #FF3AF2);
+  --gradient-success: linear-gradient(90deg, #00F5D4, #7B2FFF);
+  --gradient-glass: linear-gradient(135deg, rgba(255, 58, 242, 0.1) 0%, rgba(0, 245, 212, 0.05) 100%);
+
+  /* Radius — generous curves (keep --radius-full for pills/dots/avatars) */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+  --radius-2xl: 32px;
+
+  /* Shadows — never single. Stacked hard offsets in clashing accents + glow. */
+  --shadow-sm: 4px 4px 0 rgba(123, 47, 255, 0.9);
+  --shadow-md: 6px 6px 0 #7B2FFF, 12px 12px 0 rgba(255, 58, 242, 0.55);
+  --shadow-lg: 8px 8px 0 #FFE600, 16px 16px 0 #FF3AF2;
+  --shadow-xl: 0 0 30px rgba(255, 58, 242, 0.6), 8px 8px 0 #FFE600, 16px 16px 0 #FF3AF2;
+  --shadow-glow-blue: 0 0 20px rgba(255, 58, 242, 0.6), 0 0 40px rgba(0, 245, 212, 0.35);
+  --shadow-glow-purple: 0 0 20px rgba(123, 47, 255, 0.6), 0 0 40px rgba(255, 58, 242, 0.3);
+  --shadow-glow-amber: 0 0 20px rgba(255, 230, 0, 0.6), 0 0 40px rgba(255, 107, 53, 0.3);
+
+  /* Maximalism-only extras used by the personality layer */
+  --max-text-shadow-1: 2px 2px 0 #7B2FFF;
+  --max-text-shadow-2: 2px 2px 0 #7B2FFF, 4px 4px 0 #FF3AF2;
+  --max-text-shadow-3: 2px 2px 0 #7B2FFF, 4px 4px 0 #FF3AF2, 6px 6px 0 #00F5D4;
+  --max-text-shadow-mega: 4px 4px 0 #7B2FFF, 8px 8px 0 #FF3AF2, 12px 12px 0 #00F5D4;
+  --max-glow: 0 0 20px rgba(255, 58, 242, 0.5), 0 0 40px rgba(0, 245, 212, 0.3);
+  --max-glow-lg: 0 0 40px rgba(255, 58, 242, 0.6), 0 0 80px rgba(255, 230, 0, 0.35), 0 0 120px rgba(123, 47, 255, 0.3);
+
+  --scrollbar-track: #0D0D1A;
+  --scrollbar-thumb: #FF3AF2;
+  --scrollbar-thumb-hover: #00F5D4;
+
+  --status-online: #00F5D4;
+  --status-away: #FFE600;
+  --status-offline: rgba(255, 255, 255, 0.4);
+  --status-busy: #FF6B35;
+
+  --danger: #FF6B35;
+  --warning: #FFE600;
+  --success: #00F5D4;
+  --info: #7B2FFF;
 }
 
 /* ─── Global Resets ─── */
@@ -1259,4 +1554,941 @@ select.input {
 
 .page-section + .page-section {
   margin-top: var(--sp-6);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   NEWSPRINT THEME — component personality & utilities
+   All rules are scoped to [data-theme="newsprint"] so dark/light are untouched.
+   Token remap above already handles color/radius/shadow; this layer adds the
+   editorial *character*: serif type, uppercase labels, ink borders, inversions.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Font helpers (theme-agnostic) ─── */
+.font-serif { font-family: 'Playfair Display', 'Times New Roman', serif; }
+.font-body  { font-family: 'Lora', Georgia, serif; }
+.font-mono  { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+.font-sans  { font-family: var(--font-primary); }
+
+/* ─── Base typography ─── */
+[data-theme="newsprint"] body {
+  font-family: 'Lora', Georgia, serif;
+  /* Fine dot-grid on the paper — mimics newsprint halftone */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%23111111' fill-opacity='0.04' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+[data-theme="newsprint"] .page-title,
+[data-theme="newsprint"] .section-title,
+[data-theme="newsprint"] h1,
+[data-theme="newsprint"] h2,
+[data-theme="newsprint"] h3 {
+  font-family: 'Playfair Display', 'Times New Roman', serif;
+  letter-spacing: -0.01em;
+}
+
+[data-theme="newsprint"] .page-title { font-weight: var(--fw-black); }
+
+[data-theme="newsprint"] .page-description {
+  font-family: 'Lora', Georgia, serif;
+}
+
+/* Metadata / labels read as uppercase mono, newspaper-style */
+[data-theme="newsprint"] .stat-label,
+[data-theme="newsprint"] .countdown-label,
+[data-theme="newsprint"] .badge {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ─── Cards & containers → flat ink-bordered rectangles ─── */
+[data-theme="newsprint"] .glass-card,
+[data-theme="newsprint"] .glass-card-static,
+[data-theme="newsprint"] .card-list-item {
+  border: 1px solid var(--border-primary);
+  box-shadow: none;
+}
+
+[data-theme="newsprint"] .glass-card:hover,
+[data-theme="newsprint"] .card-list-item:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--border-primary);
+  box-shadow: none;
+  transform: none;
+}
+
+/* ─── Buttons → high-contrast color inversion on hover ─── */
+[data-theme="newsprint"] .btn {
+  border-radius: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: var(--fw-semibold);
+  font-family: var(--font-primary);
+}
+
+[data-theme="newsprint"] .btn-primary {
+  background: #111111;
+  color: #f9f9f7;
+  border: 1px solid #111111;
+  box-shadow: none;
+}
+
+[data-theme="newsprint"] .btn-primary:hover {
+  background: #f9f9f7;
+  color: #111111;
+  border-color: #111111;
+  filter: none;
+  box-shadow: none;
+}
+
+[data-theme="newsprint"] .btn-secondary {
+  background: transparent;
+  border: 1px solid #111111;
+  color: #111111;
+}
+
+[data-theme="newsprint"] .btn-secondary:hover {
+  background: #111111;
+  color: #f9f9f7;
+}
+
+[data-theme="newsprint"] .btn-ghost:hover {
+  background: var(--bg-tertiary);
+}
+
+/* ─── Inputs → transparent, bottom-rule only, monospace ─── */
+[data-theme="newsprint"] .input,
+[data-theme="newsprint"] .search-box input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #111111;
+  border-radius: 0;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+[data-theme="newsprint"] .input:focus,
+[data-theme="newsprint"] .search-box input:focus {
+  background: #f0f0f0;
+  border-color: #111111;
+  box-shadow: none;
+}
+
+/* ─── Tabs → newspaper section navigation ─── */
+[data-theme="newsprint"] .tabs {
+  background: transparent;
+  border-bottom: 2px solid #111111;
+  border-radius: 0;
+  padding: 0;
+  gap: 0;
+}
+
+[data-theme="newsprint"] .tab {
+  border-radius: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-primary);
+  font-weight: var(--fw-semibold);
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+[data-theme="newsprint"] .tab:hover {
+  background: transparent;
+  color: #cc0000;
+}
+
+[data-theme="newsprint"] .tab.active {
+  background: transparent;
+  color: #111111;
+  border-bottom-color: #111111;
+  box-shadow: none;
+}
+
+/* ─── Badges / tags → square ink chips ─── */
+[data-theme="newsprint"] .badge,
+[data-theme="newsprint"] .tag {
+  border-radius: 0;
+}
+
+[data-theme="newsprint"] .tag {
+  border: 1px solid #111111;
+  color: #111111;
+}
+
+[data-theme="newsprint"] .tag:hover,
+[data-theme="newsprint"] .tag.active {
+  background: #111111;
+  color: #f9f9f7;
+  border-color: #111111;
+}
+
+/* ─── Progress, toggle, modal, banner ─── */
+[data-theme="newsprint"] .progress-bar,
+[data-theme="newsprint"] .progress-bar-fill { border-radius: 0; }
+[data-theme="newsprint"] .progress-bar-fill { background: #111111; }
+
+[data-theme="newsprint"] .toggle-switch { border-radius: 0; }
+[data-theme="newsprint"] .toggle-switch::after { border-radius: 0; }
+[data-theme="newsprint"] .toggle-switch.active { background: #111111; border-color: #111111; }
+
+[data-theme="newsprint"] .modal {
+  border: 2px solid #111111;
+  border-radius: 0;
+  box-shadow: 6px 6px 0 0 #111111;
+}
+
+[data-theme="newsprint"] .info-banner { border-radius: 0; border-width: 1px; }
+
+/* Keyboard focus → thick ink ring */
+[data-theme="newsprint"] :focus-visible {
+  outline: 2px solid #111111;
+  outline-offset: 2px;
+}
+
+/* ─── Newsprint utilities ─── */
+
+/* Fine graph-paper overlay for major sections */
+.newsprint-texture { position: relative; }
+.newsprint-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(0deg, transparent 98%, rgba(0, 0, 0, 0.02) 100%),
+    linear-gradient(90deg, transparent 98%, rgba(0, 0, 0, 0.02) 100%);
+  background-size: 3px 3px;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Hard offset "cutout" shadow on hover — snaps, doesn't float */
+.hard-shadow-hover {
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+.hard-shadow-hover:hover {
+  box-shadow: 4px 4px 0 0 #111111;
+  transform: translate(-2px, -2px);
+}
+
+/* Oversized editorial drop cap on the first letter */
+.drop-cap::first-letter {
+  float: left;
+  font-family: 'Playfair Display', 'Times New Roman', serif;
+  font-size: 3.6em;
+  line-height: 0.72;
+  font-weight: var(--fw-black);
+  padding: 4px 8px 0 0;
+  color: #111111;
+}
+
+/* Heavy section rule */
+.edition-rule { border-bottom: 4px solid #111111; }
+
+@media (max-width: 768px) {
+  .drop-cap::first-letter { font-size: 2.8em; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CYBERPUNK THEME — component personality & utilities
+   Scoped to [data-theme="cyberpunk"] so dark/light/newsprint are untouched.
+   Token remap above handles color/radius/shadow; this layer adds the *character*:
+   Orbitron display type, neon glow on interaction, chamfered corners, a subtle
+   page-wide scanline overlay, and glitch reserved for headings + hover.
+   Intensity target: bold but restrained — data-dense screens stay readable.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Reusable primitives (theme-agnostic, like .font-serif) ─── */
+
+/* Chamfered / cut corners — the militaristic tech-panel signature */
+.cyber-chamfer {
+  clip-path: polygon(
+    0 10px, 10px 0,
+    calc(100% - 10px) 0, 100% 10px,
+    100% calc(100% - 10px), calc(100% - 10px) 100%,
+    10px 100%, 0 calc(100% - 10px)
+  );
+}
+.cyber-chamfer-sm {
+  clip-path: polygon(
+    0 5px, 5px 0,
+    calc(100% - 5px) 0, 100% 5px,
+    100% calc(100% - 5px), calc(100% - 5px) 100%,
+    5px 100%, 0 calc(100% - 5px)
+  );
+}
+
+/* Neon light — text + box variants across the triad */
+.neon-text        { text-shadow: 0 0 4px currentColor, 0 0 10px currentColor; }
+.neon-glow        { box-shadow: var(--box-shadow-neon); }
+.neon-glow-sm     { box-shadow: var(--box-shadow-neon-sm); }
+.neon-glow-lg     { box-shadow: var(--box-shadow-neon-lg); }
+.neon-glow-magenta{ box-shadow: var(--box-shadow-neon-secondary); }
+.neon-glow-cyan   { box-shadow: var(--box-shadow-neon-tertiary); }
+
+/* Font helpers */
+.font-display { font-family: 'Orbitron', 'Share Tech Mono', monospace; }
+.font-code    { font-family: 'JetBrains Mono', 'Share Tech Mono', monospace; }
+.font-label   { font-family: 'Share Tech Mono', 'JetBrains Mono', monospace; }
+
+/* Blinking terminal cursor — append after mid-type text */
+.blink-cursor::after {
+  content: '_';
+  color: var(--accent-blue);
+  animation: blink 1s step-end infinite;
+}
+
+/* CRT scanline texture for a specific surface (opt-in; page overlay is separate) */
+.cyber-scanlines { position: relative; }
+.cyber-scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent, transparent 2px,
+    rgba(0, 0, 0, 0.28) 2px, rgba(0, 0, 0, 0.28) 4px
+  );
+}
+
+/* PCB / circuit grid background for hero-ish sections */
+.cyber-grid {
+  background-image:
+    linear-gradient(rgba(0, 255, 136, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* Chromatic-aberration glitch. Needs position + a data-text mirror:
+   <span class="cyber-glitch" data-text="SYSTEM">SYSTEM</span> */
+.cyber-glitch { position: relative; display: inline-block; }
+.cyber-glitch::before,
+.cyber-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: inherit;
+}
+.cyber-glitch::before { left: -1px; text-shadow: -1px 0 #ff00ff; clip-path: inset(0 0 0 0); animation: glitchTop 2.6s infinite steps(2, end); }
+.cyber-glitch::after  { left:  1px; text-shadow:  1px 0 #00d4ff; clip-path: inset(0 0 0 0); animation: glitchBottom 3.4s infinite steps(2, end); }
+
+@keyframes blink { 50% { opacity: 0; } }
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(2px, -2px); }
+  60% { transform: translate(-1px, -1px); }
+  80% { transform: translate(1px, 1px); }
+}
+@keyframes glitchTop {
+  0%, 92%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); }
+  94% { clip-path: inset(0 0 60% 0);  transform: translate(-2px, -1px); }
+  97% { clip-path: inset(40% 0 30% 0); transform: translate(2px, 1px); }
+}
+@keyframes glitchBottom {
+  0%, 90%, 100% { clip-path: inset(100% 0 0 0); transform: translate(0); }
+  93% { clip-path: inset(65% 0 0 0);  transform: translate(2px, 1px); }
+  96% { clip-path: inset(30% 0 40% 0); transform: translate(-2px, -1px); }
+}
+
+/* ─── Base surface: void + circuit grid + full-page scanline overlay ─── */
+[data-theme="cyberpunk"] body {
+  font-family: var(--font-code);
+  letter-spacing: 0.01em;
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(circle at 15% 0%, rgba(0, 255, 136, 0.05), transparent 42%),
+    radial-gradient(circle at 85% 100%, rgba(255, 0, 255, 0.045), transparent 45%),
+    linear-gradient(rgba(0, 255, 136, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.022) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 50px 50px, 50px 50px;
+  background-attachment: fixed;
+}
+
+/* Subtle CRT scanlines over the whole app (below modals/toasts) */
+[data-theme="cyberpunk"] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent, transparent 2px,
+    rgba(0, 0, 0, 0.14) 2px, rgba(0, 0, 0, 0.14) 3px
+  );
+}
+
+/* ─── Typography ─── */
+[data-theme="cyberpunk"] .page-title,
+[data-theme="cyberpunk"] .section-title,
+[data-theme="cyberpunk"] .stat-value,
+[data-theme="cyberpunk"] h1,
+[data-theme="cyberpunk"] h2,
+[data-theme="cyberpunk"] h3 {
+  font-family: 'Orbitron', 'Share Tech Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+[data-theme="cyberpunk"] .page-title {
+  font-weight: var(--fw-black);
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.45);
+}
+
+/* UI chrome / metadata reads as techy uppercase mono */
+[data-theme="cyberpunk"] .stat-label,
+[data-theme="cyberpunk"] .countdown-label,
+[data-theme="cyberpunk"] .badge,
+[data-theme="cyberpunk"] .tab,
+[data-theme="cyberpunk"] .stat-change {
+  font-family: 'Share Tech Mono', 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+/* ─── Cards → chamfered tech panels that light up on hover ─── */
+[data-theme="cyberpunk"] .glass-card,
+[data-theme="cyberpunk"] .glass-card-static,
+[data-theme="cyberpunk"] .card-list-item {
+  clip-path: polygon(
+    0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px)
+  );
+  border: 1px solid var(--border-primary);
+}
+
+[data-theme="cyberpunk"] .glass-card:hover,
+[data-theme="cyberpunk"] .card-list-item:hover {
+  border-color: var(--accent-blue);
+  box-shadow: var(--box-shadow-neon);
+  transform: translateY(-1px);
+}
+
+/* Modal → holographic HUD panel */
+[data-theme="cyberpunk"] .modal {
+  border: 1px solid var(--accent-blue);
+  box-shadow: var(--box-shadow-neon-lg);
+  background: var(--bg-glass-heavy);
+  backdrop-filter: blur(6px);
+  clip-path: polygon(
+    0 12px, 12px 0, calc(100% - 12px) 0, 100% 12px,
+    100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px)
+  );
+}
+
+/* ─── Buttons → HUD switches; neon fill + glow on hover ─── */
+[data-theme="cyberpunk"] .btn {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-family: var(--font-code);
+  font-weight: var(--fw-semibold);
+  clip-path: polygon(
+    0 5px, 5px 0, calc(100% - 5px) 0, 100% 5px,
+    100% calc(100% - 5px), calc(100% - 5px) 100%, 5px 100%, 0 calc(100% - 5px)
+  );
+}
+
+[data-theme="cyberpunk"] .btn-primary {
+  background: var(--accent-blue);
+  color: var(--text-inverse);
+  box-shadow: none;
+}
+[data-theme="cyberpunk"] .btn-primary:hover {
+  filter: brightness(1.12);
+  box-shadow: var(--box-shadow-neon);
+}
+
+[data-theme="cyberpunk"] .btn-secondary {
+  background: transparent;
+  border: 1px solid var(--accent-blue);
+  color: var(--accent-blue);
+}
+[data-theme="cyberpunk"] .btn-secondary:hover {
+  background: var(--accent-blue);
+  color: var(--text-inverse);
+  box-shadow: var(--box-shadow-neon);
+}
+
+[data-theme="cyberpunk"] .btn-ghost:hover {
+  background: var(--accent-blue-glow);
+  color: var(--accent-blue);
+}
+
+[data-theme="cyberpunk"] .btn-danger {
+  background: var(--danger);
+  color: #0a0a0f;
+}
+[data-theme="cyberpunk"] .btn-danger:hover {
+  box-shadow: 0 0 5px var(--danger), 0 0 20px rgba(255, 51, 102, 0.5);
+}
+
+/* ─── Inputs → terminal fields with a ">" prompt and neon focus ─── */
+[data-theme="cyberpunk"] .input,
+[data-theme="cyberpunk"] .search-box input {
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  font-family: var(--font-code);
+  color: var(--text-primary);
+  clip-path: polygon(
+    0 4px, 4px 0, calc(100% - 4px) 0, 100% 4px,
+    100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px)
+  );
+}
+[data-theme="cyberpunk"] .input:focus,
+[data-theme="cyberpunk"] .search-box input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: var(--box-shadow-neon-sm);
+  color: var(--accent-blue);
+}
+[data-theme="cyberpunk"] .input::placeholder,
+[data-theme="cyberpunk"] .search-box input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* ─── Tabs → HUD segment selector ─── */
+[data-theme="cyberpunk"] .tabs {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+}
+[data-theme="cyberpunk"] .tab.active {
+  background: var(--accent-blue-glow);
+  color: var(--accent-blue);
+  box-shadow: inset 0 0 0 1px var(--accent-blue);
+  text-shadow: 0 0 6px rgba(0, 255, 136, 0.5);
+}
+
+/* ─── Badges / tags → square neon chips ─── */
+[data-theme="cyberpunk"] .badge { border: 1px solid currentColor; }
+[data-theme="cyberpunk"] .tag {
+  border: 1px solid var(--border-primary);
+  background: transparent;
+}
+[data-theme="cyberpunk"] .tag:hover,
+[data-theme="cyberpunk"] .tag.active {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background: var(--accent-blue-glow);
+  box-shadow: var(--box-shadow-neon-sm);
+}
+
+/* ─── Progress / toggle → glowing energy bars ─── */
+[data-theme="cyberpunk"] .progress-bar-fill {
+  background: var(--gradient-primary);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.55);
+}
+[data-theme="cyberpunk"] .toggle-switch.active {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  box-shadow: var(--box-shadow-neon-sm);
+}
+
+/* ─── Keyboard focus → neon ring ─── */
+[data-theme="cyberpunk"] :focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+  box-shadow: var(--box-shadow-neon-sm);
+}
+
+/* ─── Icon glow on hover (Lucide) — subtle, technical ─── */
+[data-theme="cyberpunk"] a:hover > svg,
+[data-theme="cyberpunk"] .btn:hover > svg,
+[data-theme="cyberpunk"] .nav-item:hover svg {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+/* ─── Accessibility: honor reduced-motion — kill glitch/blink, keep static
+   chromatic aberration + glow so the aesthetic survives ─── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="cyberpunk"] .cyber-glitch::before,
+  [data-theme="cyberpunk"] .cyber-glitch::after {
+    animation: none;
+  }
+  .cyber-glitch::before { clip-path: none; }
+  .cyber-glitch::after  { clip-path: none; }
+  .blink-cursor::after { animation: none; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MAXIMALISM / DOPAMINE THEME — component personality & utilities
+   Scoped to [data-theme="maximalism"] so the other four themes are untouched.
+   Token remap above handles color/radius/shadow; this layer adds the *character*:
+   Outfit-black type with stacked text-shadows, thick clashing borders, layered
+   patterns, hard+glow shadows, playful motion. Guardrail: data-dense surfaces
+   (tables, charts, heatmap) get neon borders but stay flat + still for legibility.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Reusable primitives (theme-agnostic, like .cyber-chamfer / .font-serif) ── */
+
+.font-heading-max { font-family: 'Outfit', 'Inter', sans-serif; }
+.font-display-max { font-family: 'Bungee', 'Outfit', sans-serif; }
+
+/* Pattern overlays — apply to a positioned element; add ::before layers */
+.max-pattern-dots {
+  background-image: radial-gradient(circle, rgba(255, 58, 242, 0.35) 1.5px, transparent 1.5px);
+  background-size: 22px 22px;
+}
+.max-pattern-stripes {
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 230, 0, 0.08) 10px, rgba(255, 230, 0, 0.08) 20px);
+}
+.max-pattern-mesh {
+  background-image:
+    radial-gradient(ellipse at 20% 30%, rgba(255, 58, 242, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(0, 245, 212, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(123, 47, 255, 0.1) 0%, transparent 60%);
+}
+
+/* Shadow / glow helpers */
+.max-shadow-stack { box-shadow: 8px 8px 0 #FFE600, 16px 16px 0 #FF3AF2; }
+.max-glow { box-shadow: 0 0 20px rgba(255, 58, 242, 0.5), 0 0 40px rgba(0, 245, 212, 0.3); }
+.max-glow-lg { box-shadow: 0 0 40px rgba(255, 58, 242, 0.6), 0 0 80px rgba(255, 230, 0, 0.35); }
+.max-text-shadow { text-shadow: 2px 2px 0 #7B2FFF, 4px 4px 0 #FF3AF2, 6px 6px 0 #00F5D4; }
+
+/* Animated multi-color gradient headline text */
+.max-gradient-text {
+  background: linear-gradient(90deg, #FF3AF2, #00F5D4, #FFE600, #FF3AF2);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: max-gradient-shift 4s ease infinite;
+}
+
+/* Namespaced keyframes — deliberately NOT reusing the global float/pulse/spin
+   which other features depend on. */
+@keyframes max-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-20px) rotate(5deg); }
+}
+@keyframes max-float-reverse {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(20px) rotate(-5deg); }
+}
+@keyframes max-pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 58, 242, 0.5); }
+  50%      { box-shadow: 0 0 40px rgba(255, 58, 242, 0.85), 0 0 60px rgba(0, 245, 212, 0.5); }
+}
+@keyframes max-gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes max-spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes max-wiggle {
+  0%, 100% { transform: rotate(-4deg); }
+  50%      { transform: rotate(4deg); }
+}
+@keyframes max-bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+.max-float         { animation: max-float 6s ease-in-out infinite; }
+.max-float-reverse { animation: max-float-reverse 5s ease-in-out infinite; }
+.max-wiggle        { animation: max-wiggle 1s ease-in-out infinite; }
+.max-spin-slow     { animation: max-spin-slow 20s linear infinite; }
+.max-bounce        { animation: max-bounce-subtle 2s ease-in-out infinite; }
+.max-pulse-glow    { animation: max-pulse-glow 2s ease-in-out infinite; }
+
+/* ─── Base surface: void + layered global patterns (dots + stripes + mesh) ─── */
+[data-theme="maximalism"] body {
+  font-family: var(--font-body);
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(ellipse at 15% 10%, rgba(255, 58, 242, 0.14) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 90%, rgba(0, 245, 212, 0.12) 0%, transparent 45%),
+    radial-gradient(ellipse at 55% 55%, rgba(123, 47, 255, 0.1) 0%, transparent 55%),
+    radial-gradient(circle, rgba(255, 58, 242, 0.12) 1.5px, transparent 1.5px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 24px 24px;
+  background-attachment: fixed;
+}
+
+/* Diagonal-stripe overlay across the whole app, below content */
+[data-theme="maximalism"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    45deg, transparent, transparent 14px,
+    rgba(255, 230, 0, 0.05) 14px, rgba(255, 230, 0, 0.05) 28px
+  );
+}
+
+/* ─── Typography — oversized, uppercase, stacked shadows ─── */
+[data-theme="maximalism"] .page-title,
+[data-theme="maximalism"] h1,
+[data-theme="maximalism"] h2 {
+  font-family: var(--font-heading);
+  font-weight: var(--fw-black);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+[data-theme="maximalism"] .page-title {
+  text-shadow: var(--max-text-shadow-mega);
+}
+[data-theme="maximalism"] .section-title,
+[data-theme="maximalism"] h3 {
+  font-family: var(--font-heading);
+  font-weight: var(--fw-black);
+  text-transform: uppercase;
+  text-shadow: var(--max-text-shadow-2);
+}
+[data-theme="maximalism"] .stat-value {
+  font-family: var(--font-heading);
+  font-weight: var(--fw-black);
+  text-shadow: var(--max-text-shadow-1);
+}
+/* Labels / meta → bold, wide-tracked uppercase */
+[data-theme="maximalism"] .stat-label,
+[data-theme="maximalism"] .countdown-label,
+[data-theme="maximalism"] .badge,
+[data-theme="maximalism"] .tab {
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: var(--fw-bold);
+}
+
+/* ─── Cards → thick clashing borders, stacked hard shadow, playful hover ─── */
+[data-theme="maximalism"] .glass-card,
+[data-theme="maximalism"] .glass-card-static,
+[data-theme="maximalism"] .card-list-item {
+  border: 4px solid var(--accent-blue);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  backdrop-filter: blur(4px);
+  box-shadow: 6px 6px 0 #FFE600, 12px 12px 0 #FF3AF2;
+}
+/* Rotate accent border + shadow colors across siblings so grids go full rainbow */
+[data-theme="maximalism"] .glass-card:nth-child(5n+2),
+[data-theme="maximalism"] .card-list-item:nth-child(5n+2) {
+  border-color: var(--accent-emerald);
+  box-shadow: 6px 6px 0 #FF6B35, 12px 12px 0 #00F5D4;
+}
+[data-theme="maximalism"] .glass-card:nth-child(5n+3),
+[data-theme="maximalism"] .card-list-item:nth-child(5n+3) {
+  border-color: var(--accent-amber);
+  box-shadow: 6px 6px 0 #7B2FFF, 12px 12px 0 #FFE600;
+}
+[data-theme="maximalism"] .glass-card:nth-child(5n+4),
+[data-theme="maximalism"] .card-list-item:nth-child(5n+4) {
+  border-color: var(--accent-rose);
+  box-shadow: 6px 6px 0 #00F5D4, 12px 12px 0 #FF6B35;
+}
+[data-theme="maximalism"] .glass-card:nth-child(5n),
+[data-theme="maximalism"] .card-list-item:nth-child(5n) {
+  border-color: var(--accent-purple);
+  box-shadow: 6px 6px 0 #FFE600, 12px 12px 0 #7B2FFF;
+}
+[data-theme="maximalism"] .glass-card:hover,
+[data-theme="maximalism"] .card-list-item:hover {
+  transform: translate(-2px, -2px) rotate(-1deg);
+  box-shadow: 10px 10px 0 #FFE600, 20px 20px 0 #FF3AF2, 0 0 30px rgba(255, 58, 242, 0.4);
+}
+
+/* ─── Buttons → gradient fill, clashing border, stacked shadow ─── */
+[data-theme="maximalism"] .btn {
+  font-family: var(--font-heading);
+  font-weight: var(--fw-black);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border-radius: var(--radius-full);
+  border: 4px solid transparent;
+}
+[data-theme="maximalism"] .btn-primary {
+  background: linear-gradient(90deg, #FF3AF2, #7B2FFF, #00F5D4);
+  background-size: 200% 100%;
+  color: #fff;
+  border-color: #FFE600;
+  box-shadow: 0 0 20px rgba(255, 58, 242, 0.55), 5px 5px 0 #FFE600;
+}
+[data-theme="maximalism"] .btn-primary:hover {
+  filter: none;
+  transform: scale(1.06);
+  background-position: 100% 50%;
+  box-shadow: 0 0 34px rgba(255, 58, 242, 0.75), 7px 7px 0 #FFE600, 14px 14px 0 #00F5D4;
+}
+[data-theme="maximalism"] .btn-secondary {
+  background: transparent;
+  border: 4px dashed var(--accent-emerald);
+  color: var(--accent-emerald);
+}
+[data-theme="maximalism"] .btn-secondary:hover {
+  background: var(--accent-emerald);
+  color: var(--text-inverse);
+  border-style: solid;
+  transform: scale(1.05);
+  box-shadow: var(--max-glow);
+}
+[data-theme="maximalism"] .btn-ghost { border-color: transparent; }
+[data-theme="maximalism"] .btn-ghost:hover {
+  background: var(--accent-blue-glow);
+  color: var(--accent-blue);
+}
+[data-theme="maximalism"] .btn-danger {
+  background: var(--danger);
+  color: var(--text-inverse);
+  border-color: #FFE600;
+}
+[data-theme="maximalism"] .btn:active { transform: scale(0.95); }
+
+/* ─── Inputs → thick borders, pill shape, neon focus glow ─── */
+[data-theme="maximalism"] .input,
+[data-theme="maximalism"] .search-box input {
+  background: var(--bg-input);
+  border: 4px solid var(--accent-blue);
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  color: var(--text-primary);
+}
+[data-theme="maximalism"] textarea.input { border-radius: var(--radius-lg); }
+[data-theme="maximalism"] .input:focus,
+[data-theme="maximalism"] .search-box input:focus {
+  border-color: var(--accent-emerald);
+  background: var(--bg-tertiary);
+  box-shadow: 0 0 20px rgba(0, 245, 212, 0.5);
+}
+[data-theme="maximalism"] .input::placeholder,
+[data-theme="maximalism"] .search-box input::placeholder { color: var(--text-tertiary); }
+[data-theme="maximalism"] select.input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23FFE600' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* ─── Tabs → chunky pill selector ─── */
+[data-theme="maximalism"] .tabs {
+  background: var(--bg-tertiary);
+  border: 4px solid var(--accent-purple);
+  border-radius: var(--radius-full);
+}
+[data-theme="maximalism"] .tab { border-radius: var(--radius-full); }
+[data-theme="maximalism"] .tab.active {
+  background: linear-gradient(90deg, #FF3AF2, #7B2FFF);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(255, 58, 242, 0.6);
+  text-shadow: 1px 1px 0 #00F5D4;
+}
+
+/* ─── Badges / tags → thick candy chips ─── */
+[data-theme="maximalism"] .badge { border: 2px solid currentColor; border-radius: var(--radius-full); }
+[data-theme="maximalism"] .tag {
+  border: 3px solid var(--accent-blue);
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  font-weight: var(--fw-bold);
+}
+[data-theme="maximalism"] .tag:hover,
+[data-theme="maximalism"] .tag.active {
+  background: var(--accent-blue);
+  color: var(--text-inverse);
+  border-color: #FFE600;
+  box-shadow: var(--max-glow);
+}
+
+/* ─── Progress / toggle → glowing candy bars ─── */
+[data-theme="maximalism"] .progress-bar { border: 2px solid var(--accent-purple); }
+[data-theme="maximalism"] .progress-bar-fill {
+  background: linear-gradient(90deg, #FF3AF2, #00F5D4, #FFE600);
+  box-shadow: 0 0 12px rgba(255, 58, 242, 0.6);
+}
+[data-theme="maximalism"] .toggle-switch { border: 3px solid var(--accent-purple); }
+[data-theme="maximalism"] .toggle-switch.active {
+  background: var(--accent-blue);
+  border-color: #FFE600;
+  box-shadow: var(--max-glow);
+}
+
+/* ─── Modal → rainbow-framed pop-up ─── */
+[data-theme="maximalism"] .modal {
+  border: 4px solid var(--accent-blue);
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 0 40px rgba(255, 58, 242, 0.5), 10px 10px 0 #FFE600;
+}
+
+/* ─── Avatar / info-banner ─── */
+[data-theme="maximalism"] .avatar {
+  background: linear-gradient(135deg, #FF3AF2, #7B2FFF);
+  border: 3px solid #FFE600;
+  box-shadow: var(--max-glow);
+}
+[data-theme="maximalism"] .info-banner { border-width: 4px; border-radius: var(--radius-lg); }
+
+/* ─── Star rating → glowing gold ─── */
+[data-theme="maximalism"] .star-rating .star.filled {
+  color: var(--accent-amber);
+  text-shadow: 0 0 8px rgba(255, 230, 0, 0.7);
+}
+
+/* ─── Keyboard focus → double-ring (accessibility-critical) ─── */
+[data-theme="maximalism"] :focus-visible {
+  outline: 3px dashed var(--accent-amber);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(255, 58, 242, 0.45), 0 0 20px rgba(0, 245, 212, 0.5);
+}
+
+/* ─── Icon glow on hover (Lucide) ─── */
+[data-theme="maximalism"] .btn:hover > svg,
+[data-theme="maximalism"] .nav-item:hover svg,
+[data-theme="maximalism"] a:hover > svg {
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CALM-DATA GUARDRAIL — keep dense surfaces legible.
+   Tables, charts and the heatmap get neon accents but NO tilt, NO stacked
+   offset shadows, NO continuous motion, so numbers stay readable.
+   ════════════════════════════════════════════════════════════════════════════ */
+[data-theme="maximalism"] table {
+  border: 3px solid var(--accent-purple);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+[data-theme="maximalism"] th {
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-blue);
+  border-bottom: 3px solid var(--accent-blue);
+}
+[data-theme="maximalism"] td { border-bottom: 1px solid var(--border-secondary); }
+[data-theme="maximalism"] tbody tr:hover,
+[data-theme="maximalism"] tr:hover { background: var(--accent-blue-glow); }
+
+/* Cards/containers that WRAP data stay flat (no tilt, single accent frame) */
+[data-theme="maximalism"] .result-table-container .glass-card,
+[data-theme="maximalism"] .result-table-container .glass-card-static,
+[data-theme="maximalism"] .chart-container,
+[data-theme="maximalism"] .glass-card:has(canvas),
+[data-theme="maximalism"] .glass-card:has(table) {
+  box-shadow: 0 0 0 0 transparent, 4px 4px 0 var(--accent-purple);
+}
+[data-theme="maximalism"] .glass-card:has(canvas):hover,
+[data-theme="maximalism"] .glass-card:has(table):hover {
+  transform: none;
+  box-shadow: 4px 4px 0 var(--accent-purple), 0 0 20px rgba(123, 47, 255, 0.35);
+}
+/* Heatmap cells keep their compact grid — accent hover, no scale blowup */
+[data-theme="maximalism"] .heatmap-cell:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 8px rgba(255, 58, 242, 0.6);
+}
+
+/* ─── Reduced motion: kill continuous animation, keep the loud visuals ─── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="maximalism"] .max-float,
+  [data-theme="maximalism"] .max-float-reverse,
+  [data-theme="maximalism"] .max-wiggle,
+  [data-theme="maximalism"] .max-spin-slow,
+  [data-theme="maximalism"] .max-bounce,
+  [data-theme="maximalism"] .max-pulse-glow,
+  [data-theme="maximalism"] .max-gradient-text {
+    animation: none !important;
+  }
+  /* keep gradient text visible (not stuck transparent mid-animation) */
+  [data-theme="maximalism"] .max-gradient-text { background-position: 0 50%; }
 }

@@ -1,11 +1,17 @@
 import { useState } from 'react';
+import { useTheme } from '../../context/ThemeContext';
 import ExchangeKits from './ExchangeKits';
 import ToLetListings from './ToLetListings';
 import LostAndFound from './LostAndFound';
 import MentorRequests from './MentorRequests';
+import MarketplaceMasthead from './MarketplaceMasthead';
+import MarketplaceMaxHero from './MarketplaceMaxHero';
 import './MarketplacePage.css';
 
 export default function MarketplacePage() {
+  const { theme } = useTheme();
+  const isNewsprint = theme === 'newsprint';
+  const isMax = theme === 'maximalism';
   const [activeTab, setActiveTab] = useState('exchange');
 
   const renderActiveTab = () => {
@@ -24,13 +30,19 @@ export default function MarketplacePage() {
   };
 
   return (
-    <div className="marketplace-page animate-fadeIn">
-      <div className="marketplace-header">
-        <h1 className="page-title">Campus Market</h1>
-        <p className="page-description">
-          Trade student equipment/books, find bachelor sharing hosts, locate lost products, and connect study buddies.
-        </p>
-      </div>
+    <div className={`marketplace-page animate-fadeIn${isNewsprint ? ' marketplace-newsprint' : ''}${isMax ? ' marketplace-maximalism' : ''}`}>
+      {isNewsprint ? (
+        <MarketplaceMasthead />
+      ) : isMax ? (
+        <MarketplaceMaxHero />
+      ) : (
+        <div className="marketplace-header">
+          <h1 className="page-title">Campus Market</h1>
+          <p className="page-description">
+            Trade student equipment/books, find bachelor sharing hosts, locate lost products, and connect study buddies.
+          </p>
+        </div>
+      )}
 
       <div className="tabs marketplace-tabs">
         <button type="button" className={`tab ${activeTab === 'exchange' ? 'active' : ''}`} onClick={() => setActiveTab('exchange')}>Exchange Kits</button>

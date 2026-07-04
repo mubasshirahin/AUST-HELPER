@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useRoutine } from '../../context/RoutineContext';
-import { Camera, CheckCircle, Pencil, Settings, User, Bell, Info, Save, BellOff, BellRing, Clock, AlertTriangle, ShieldCheck, GraduationCap, Users, Send, CheckCircle2, Clock3 } from 'lucide-react';
+import { Camera, CheckCircle, Pencil, Settings, User, Bell, Info, Save, BellOff, BellRing, Clock, AlertTriangle, ShieldCheck, GraduationCap, Users, Send, CheckCircle2, Clock3, Moon, Sun, Newspaper, Terminal, Sparkles } from 'lucide-react';
 import AboutUs from './AboutUs';
 import { useNotifications } from '../../hooks/useNotifications';
 import { submitRoleApplication, getApplicationsByUserId, getUserApplicationStatus } from '../../utils/authStorage';
@@ -93,8 +93,16 @@ const getBatchDisplayName = (batchName, batchNo) => {
   return `BATCH ${batchNo}`;
 };
 
+const themeOptions = [
+  { id: 'dark', label: 'Dark', desc: 'Dark Mode standard', icon: Moon },
+  { id: 'light', label: 'Light', desc: 'Light Mode standard', icon: Sun },
+  { id: 'newsprint', label: 'Newsprint', desc: 'Editorial ink-on-paper', icon: Newspaper },
+  { id: 'cyberpunk', label: 'Cyberpunk', desc: 'Neon-noir / glitch terminal', icon: Terminal },
+  { id: 'maximalism', label: 'Maximalism', desc: 'Dopamine / Y2K hyperpop', icon: Sparkles },
+];
+
 export default function SettingsPage() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { user, isAuthenticated, updateUser } = useAuth();
   const { routine, weekDays } = useRoutine();
   const { supported, permission, settings: notifSettings, enable: enableNotifs, disable: disableNotifs, updateSetting } = useNotifications(routine, weekDays);
@@ -603,17 +611,47 @@ export default function SettingsPage() {
           {activeSubTab === 'theme' && (
             <div className="animate-fadeIn">
               <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', marginBottom: '16px' }}>Theme Configurations</h3>
-              
-              <div className="flex justify-between items-center p-4" style={{ background: 'var(--bg-input)', borderRadius: 'var(--radius-lg)' }}>
-                <div>
-                  <h4 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold' }}>Toggle Interface Theme</h4>
-                  <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>Current: {theme === 'dark' ? 'Dark Mode standard' : 'Light Mode standard'}</p>
+
+              <div className="p-4" style={{ background: 'var(--bg-input)', borderRadius: 'var(--radius-lg)' }}>
+                <div style={{ marginBottom: '14px' }}>
+                  <h4 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold' }}>Interface Theme</h4>
+                  <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                    Current: {themeOptions.find((t) => t.id === theme)?.desc || 'Dark Mode standard'}
+                  </p>
                 </div>
 
-                <div 
-                  className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`}
-                  onClick={toggleTheme}
-                />
+                <div
+                  role="radiogroup"
+                  aria-label="Interface theme"
+                  className="grid-3"
+                  style={{ gap: 'var(--sp-3)' }}
+                >
+                  {themeOptions.map(({ id, label, desc, icon: Icon }) => {
+                    const isActive = theme === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        role="radio"
+                        aria-checked={isActive}
+                        onClick={() => setTheme(id)}
+                        className="flex flex-col items-start gap-2 p-4"
+                        style={{
+                          textAlign: 'left',
+                          borderRadius: 'var(--radius-md)',
+                          border: `1px solid ${isActive ? 'var(--accent-blue)' : 'var(--border-primary)'}`,
+                          background: isActive ? 'var(--accent-blue-glow)' : 'var(--bg-secondary)',
+                          color: isActive ? 'var(--accent-blue)' : 'var(--text-primary)',
+                          transition: 'all var(--transition-base)',
+                        }}
+                      >
+                        <Icon size={18} />
+                        <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-semibold)' }}>{label}</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.35 }}>{desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}

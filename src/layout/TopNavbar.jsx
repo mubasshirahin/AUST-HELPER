@@ -1,8 +1,8 @@
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Search, Bell, Sun, Moon, Menu } from 'lucide-react';
+import { Search, Bell, Sun, Moon, Menu, Newspaper, Terminal, Check } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SearchModal from './SearchModal';
 import './TopNavbar.css';
 
@@ -17,11 +17,23 @@ const pageTitles = {
   '/login': 'Login / Sign up',
 };
 
+const themeOptions = [
+  { id: 'dark', label: 'Dark', icon: Moon },
+  { id: 'light', label: 'Light', icon: Sun },
+  { id: 'newsprint', label: 'Newsprint', icon: Newspaper },
+  { id: 'cyberpunk', label: 'Cyberpunk', icon: Terminal },
+];
+
 export default function TopNavbar({ onMenuClick }) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { user, isAuthenticated } = useAuth();
   const location = useLocation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
+  const themeSwitcherRef = useRef(null);
+
+  const activeTheme = themeOptions.find((t) => t.id === theme) || themeOptions[0];
+  const ThemeIcon = activeTheme.icon;
 
   const pageTitle = pageTitles[location.pathname] || 'AUST Helper';
 
@@ -31,10 +43,23 @@ export default function TopNavbar({ onMenuClick }) {
         e.preventDefault();
         setIsSearchOpen(true);
       }
+      if (e.key === 'Escape') setThemeMenuOpen(false);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Click-outside closes the menu (touch / click fallback for hover-open).
+  useEffect(() => {
+    if (!themeMenuOpen) return undefined;
+    const handleClick = (e) => {
+      if (themeSwitcherRef.current && !themeSwitcherRef.current.contains(e.target)) {
+        setThemeMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [themeMenuOpen]);
 
   return (
     <header className="topbar">
@@ -62,11 +87,48 @@ export default function TopNavbar({ onMenuClick }) {
           />
         </div>
 
-        <button className="topbar-icon-btn" onClick={toggleTheme} aria-label="Toggle theme">
-          <div className={`theme-toggle-icon ${theme}`}>
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        <div
+          className={`theme-switcher ${themeMenuOpen ? 'open' : ''}`}
+          ref={themeSwitcherRef}
+          onMouseLeave={() => setThemeMenuOpen(false)}
+        >
+          <button
+            type="button"
+            className="topbar-icon-btn"
+            aria-haspopup="menu"
+            aria-expanded={themeMenuOpen}
+            aria-label={`Theme: ${activeTheme.label}. Choose a theme`}
+            onClick={() => setThemeMenuOpen((open) => !open)}
+          >
+            <div className={`theme-toggle-icon ${theme}`}>
+              <ThemeIcon size={18} />
+            </div>
+          </button>
+
+          <div className="theme-menu" role="menu" aria-label="Select theme">
+            <span className="theme-menu-heading">Theme</span>
+            {themeOptions.map(({ id, label, icon: Icon }) => {
+              const isActive = theme === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={isActive}
+                  className={`theme-menu-item ${isActive ? 'active' : ''}`}
+                  onClick={() => {
+                    setTheme(id);
+                    setThemeMenuOpen(false);
+                  }}
+                >
+                  <Icon size={16} />
+                  <span>{label}</span>
+                  {isActive && <Check size={14} className="theme-menu-check" />}
+                </button>
+              );
+            })}
           </div>
-        </button>
+        </div>
 
         <button className="topbar-icon-btn" aria-label="Notifications">
           <Bell size={18} />

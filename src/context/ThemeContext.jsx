@@ -2,10 +2,12 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const ThemeContext = createContext();
 
+export const THEMES = ['dark', 'light', 'newsprint', 'cyberpunk', 'maximalism'];
+
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('aust-theme');
-    if (saved) return saved;
+    if (saved && THEMES.includes(saved)) return saved;
     return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   });
 
@@ -14,10 +16,17 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('aust-theme', theme);
   }, [theme]);
 
+  // Kept for backward compatibility — flips only between dark/light.
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
+  // Advances through every available theme (Dark → Light → Newsprint → …).
+  const cycleTheme = () => setTheme(prev => {
+    const idx = THEMES.indexOf(prev);
+    return THEMES[(idx + 1) % THEMES.length];
+  });
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, themes: THEMES, setTheme, toggleTheme, cycleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -313,3 +313,346 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   NEWSPRINT THEME — "The Campus Market" classifieds treatment
+   Scoped to [data-theme="newsprint"]; dark/light rendering is untouched.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Masthead / nameplate ─── */
+.mp-masthead {
+  padding-bottom: var(--sp-3);
+  border-bottom: 4px solid #111111;
+  margin-bottom: var(--sp-2);
+}
+
+.mp-masthead-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #111111;
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid #111111;
+}
+
+.mp-masthead-kicker { color: #cc0000; font-weight: 500; }
+
+.mp-masthead-nameplate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) 0 var(--sp-2);
+}
+
+.mp-masthead-title {
+  font-family: 'Playfair Display', 'Times New Roman', serif;
+  font-weight: 900;
+  color: #111111;
+  text-align: center;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  font-size: clamp(2.4rem, 6vw, 4.75rem);
+  margin: 0;
+}
+
+.mp-masthead-edition {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #525252;
+  padding-top: var(--sp-2);
+  border-top: 1px solid #111111;
+}
+
+.mp-masthead-dot { color: #cc0000; }
+
+/* ─── Breaking-news ticker (pure CSS crawl) ─── */
+.mp-ticker {
+  margin-top: var(--sp-3);
+  background: #111111;
+  color: #f9f9f7;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.mp-ticker-track {
+  display: inline-flex;
+  animation: mp-ticker-scroll 32s linear infinite;
+}
+
+.mp-ticker-group { display: inline-flex; flex-shrink: 0; }
+
+.mp-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 0;
+  margin: 0 var(--sp-6);
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  position: relative;
+}
+
+.mp-ticker-item::after {
+  content: '';
+  position: absolute;
+  right: calc(-1 * var(--sp-6));
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  background: #cc0000;
+  transform: translateY(-50%);
+}
+
+.mp-ticker-item--accent {
+  background: #cc0000;
+  color: #f9f9f7;
+  padding: 4px 10px;
+  font-weight: 500;
+}
+.mp-ticker-item--accent::after { display: none; }
+
+@keyframes mp-ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mp-ticker-track { animation: none; }
+}
+
+/* ─── Section tabs → newspaper section nav ─── */
+.marketplace-newsprint .marketplace-tabs {
+  justify-content: flex-start;
+  gap: 0;
+}
+
+/* ─── Collapsed newspaper grid (single ink lines between cells) ─── */
+[data-theme="newsprint"] .exchange-grid,
+[data-theme="newsprint"] .tolet-grid,
+[data-theme="newsprint"] .lost-grid {
+  gap: 0;
+  border-top: 1px solid #111111;
+  border-left: 1px solid #111111;
+}
+
+[data-theme="newsprint"] .exchange-grid > *,
+[data-theme="newsprint"] .tolet-grid > *,
+[data-theme="newsprint"] .lost-grid > * {
+  border-right: 1px solid #111111;
+  border-bottom: 1px solid #111111;
+}
+
+/* ─── Classified-ad card ─── */
+[data-theme="newsprint"] .mp-card {
+  background: #f9f9f7;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+[data-theme="newsprint"] .mp-card:hover {
+  border-color: transparent;
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 0 #111111;
+  z-index: 1;
+}
+
+[data-theme="newsprint"] .mp-card-image {
+  background: #e5e5e5;
+  border-bottom: 1px solid #111111;
+  /* Halftone dot pattern behind the (grayscale) photo / placeholder */
+  background-image: radial-gradient(#111111 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+
+[data-theme="newsprint"] .mp-card-image img {
+  filter: grayscale(1) contrast(1.05);
+  transition: filter var(--transition-base);
+}
+
+[data-theme="newsprint"] .mp-card:hover .mp-card-image img {
+  filter: grayscale(1) sepia(0.45) contrast(1.05);
+}
+
+[data-theme="newsprint"] .mp-card-title {
+  font-family: 'Playfair Display', 'Times New Roman', serif;
+  font-weight: 700;
+}
+
+[data-theme="newsprint"] .mp-card-subtitle,
+[data-theme="newsprint"] .mp-card-description,
+[data-theme="newsprint"] .mp-card-location {
+  font-family: 'Lora', Georgia, serif;
+}
+
+[data-theme="newsprint"] .mp-card-date,
+[data-theme="newsprint"] .mp-card-seller,
+[data-theme="newsprint"] .mp-card-rent-label,
+[data-theme="newsprint"] .mp-card-availability,
+[data-theme="newsprint"] .mp-card-response-count {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #737373;
+}
+
+[data-theme="newsprint"] .mp-card-price {
+  font-family: 'Playfair Display', 'Times New Roman', serif;
+  font-weight: 900;
+  color: #111111;
+}
+
+/* Badges / chips → square ink & red */
+[data-theme="newsprint"] .mp-card-badge,
+[data-theme="newsprint"] .mp-card-amenity,
+[data-theme="newsprint"] .mp-card-topic,
+[data-theme="newsprint"] .mp-card-availability {
+  border-radius: 0;
+}
+
+[data-theme="newsprint"] .mp-card-badge {
+  background: #111111 !important;
+  color: #f9f9f7 !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+[data-theme="newsprint"] .mp-card-amenity {
+  border: 1px solid #111111;
+  background: transparent;
+  color: #111111;
+}
+
+[data-theme="newsprint"] .mp-card-topic {
+  background: #cc0000;
+  color: #f9f9f7;
+}
+
+[data-theme="newsprint"] .mp-card-available { background: #111111; color: #f9f9f7; }
+[data-theme="newsprint"] .mp-card-occupied { background: #cc0000; color: #f9f9f7; }
+
+[data-theme="newsprint"] .mp-card-footer {
+  border-top: 1px solid #111111;
+  background: #f5f5f5;
+}
+
+[data-theme="newsprint"] .mp-card-type-lost { border-left: 4px solid #cc0000; }
+[data-theme="newsprint"] .mp-card-type-found { border-left: 4px solid #111111; }
+
+@media (max-width: 768px) {
+  /* Single column — keep only horizontal rules between ads */
+  [data-theme="newsprint"] .exchange-grid > *,
+  [data-theme="newsprint"] .tolet-grid > *,
+  [data-theme="newsprint"] .lost-grid > * {
+    border-right: none;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MAXIMALISM — Marketplace dopamine hero (MarketplaceMaxHero.jsx)
+   Only rendered when theme === 'maximalism'. All decoration is aria-hidden.
+   ════════════════════════════════════════════════════════════════════════════ */
+.mp-max-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  margin-bottom: var(--sp-6);
+  padding: clamp(32px, 6vw, 64px) var(--sp-6);
+  border: 4px solid var(--accent-blue);
+  border-radius: var(--radius-2xl);
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(255, 58, 242, 0.22), transparent 55%),
+    radial-gradient(ellipse at 80% 80%, rgba(0, 245, 212, 0.2), transparent 55%),
+    var(--bg-tertiary);
+  box-shadow: 0 0 40px rgba(255, 58, 242, 0.4), 10px 10px 0 #FFE600, 20px 20px 0 #FF3AF2;
+  text-align: center;
+}
+
+/* Massive bleeding background word */
+.mp-max-bgword {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  font-family: 'Bungee', 'Outfit', sans-serif;
+  font-size: clamp(7rem, 22vw, 18rem);
+  line-height: 0.8;
+  letter-spacing: -0.03em;
+  color: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.mp-max-decor { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.mp-max-shape { position: absolute; display: inline-flex; filter: drop-shadow(0 0 8px currentColor); }
+.mp-max-emoji { position: absolute; font-size: clamp(1.8rem, 4vw, 3rem); }
+
+.mp-max-hero-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.mp-max-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border: 3px solid var(--accent-amber);
+  border-radius: var(--radius-full);
+  background: rgba(13, 13, 26, 0.5);
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-amber);
+}
+.mp-max-kicker svg { color: var(--accent-emerald); }
+
+.mp-max-title {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: 900;
+  font-size: clamp(2.75rem, 9vw, 6rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.mp-max-sub {
+  max-width: 620px;
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  font-size: var(--fs-lg);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.mp-max-sub strong { color: var(--accent-emerald); }
+
+/* Chunky candy tab bar under the hero */
+.marketplace-maximalism .marketplace-tabs { margin-top: var(--sp-2); }
+
+@media (max-width: 768px) {
+  .mp-max-hero { padding: var(--sp-8) var(--sp-4); }
+  /* Thin the floating shapes on small screens (keep the chaos, just less of it) */
+  .mp-max-emoji { display: none; }
+}

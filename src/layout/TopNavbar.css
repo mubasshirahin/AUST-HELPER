@@ -138,8 +138,100 @@
   color: var(--accent-blue);
 }
 
+.theme-toggle-icon.newsprint {
+  color: var(--text-primary);
+}
+
+.theme-toggle-icon.cyberpunk {
+  color: var(--accent-blue);
+  filter: drop-shadow(0 0 4px var(--accent-blue));
+}
+
 .topbar-icon-btn:hover .theme-toggle-icon {
   transform: rotate(20deg);
+}
+
+/* ─── Theme switcher (hover-reveal menu) ─── */
+.theme-switcher {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.theme-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 176px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--sp-1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: var(--z-dropdown);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px) scale(0.97);
+  transform-origin: top right;
+  transition: opacity var(--transition-fast), transform var(--transition-fast), visibility var(--transition-fast);
+}
+
+/* Invisible bridge across the gap so hover doesn't drop between button & menu */
+.theme-menu::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+}
+
+.theme-switcher:hover .theme-menu,
+.theme-switcher:focus-within .theme-menu,
+.theme-switcher.open .theme-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.theme-menu-heading {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: var(--sp-2) var(--sp-3) var(--sp-1);
+}
+
+.theme-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.theme-menu-item:hover {
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.theme-menu-item.active {
+  color: var(--accent-blue);
+}
+
+.theme-menu-check {
+  margin-left: auto;
+  color: var(--accent-blue);
 }
 
 @media (max-width: 768px) {
