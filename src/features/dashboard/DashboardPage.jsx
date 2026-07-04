@@ -17,6 +17,12 @@ import { getUserStorageItem, getCurrentUserId } from '../../utils/authStorage';
 import { useAuth } from '../../context/AuthContext';
 import './DashboardPage.css';
 
+const FOCUS_SECTIONS = {
+  overview: ['all', 'stats', 'schedule', 'progress', 'notif', 'notice'],
+  schedule: ['all', 'schedule', 'notif', 'notice'],
+  progress: ['all', 'progress', 'stats', 'notif', 'notice'],
+};
+
 const storageKeyType = 'semesterResults';
 
 const focusModes = [
@@ -164,6 +170,8 @@ export default function DashboardPage() {
   const [focusMode, setFocusMode] = useState('overview');
   const firstName = user?.name?.split(' ')[0] || 'Student';
 
+  const isVisible = (key) => FOCUS_SECTIONS[focusMode].includes(key);
+
   return (
     <div className={`dashboard-page dashboard-focus-${focusMode} animate-fadeIn`}>
       <header className="dash-hero">
@@ -200,42 +208,60 @@ export default function DashboardPage() {
         variant="dashboard"
       />
 
-      <div className="dash-section" data-focus="progress all">
-        <QuickStats />
-      </div>
+      {isVisible('stats') && (
+        <div className="dash-section">
+          <QuickStats />
+        </div>
+      )}
 
-      <div className="dash-section" data-focus="all">
-        <NotificationBanner />
-      </div>
+      {isVisible('notif') && (
+        <div className="dash-section">
+          <NotificationBanner />
+        </div>
+      )}
 
-      <div className="dash-section" data-focus="schedule all">
-        <WeeklyPlanner />
-      </div>
+      {isVisible('schedule') && (
+        <div className="dash-section">
+          <WeeklyPlanner />
+        </div>
+      )}
 
-      <div className="dash-section" data-focus="schedule all">
-        <WeekSchedule />
-      </div>
+      {isVisible('schedule') && (
+        <div className="dash-section">
+          <WeekSchedule />
+        </div>
+      )}
 
       <div className="dashboard-grid">
         <div className="dashboard-main-col">
-          <div className="dash-section" data-focus="schedule all">
-            <RoutineCard />
-          </div>
-          <div className="dash-section" data-focus="progress all">
-            <ExamTracker />
-          </div>
-          <div className="dash-section" data-focus="progress all">
-            <RoutineAttendanceTracker />
-          </div>
+          {isVisible('schedule') && (
+            <div className="dash-section">
+              <RoutineCard />
+            </div>
+          )}
+          {isVisible('progress') && (
+            <div className="dash-section">
+              <ExamTracker />
+            </div>
+          )}
+          {isVisible('progress') && (
+            <div className="dash-section">
+              <RoutineAttendanceTracker />
+            </div>
+          )}
         </div>
 
         <div className="dashboard-side-col">
-          <div className="dash-section" data-focus="progress all">
-            <DeadlineTicker />
-          </div>
-          <div className="dash-section" data-focus="all">
-            <NoticeBoard />
-          </div>
+          {isVisible('progress') && (
+            <div className="dash-section">
+              <DeadlineTicker />
+            </div>
+          )}
+          {isVisible('notice') && (
+            <div className="dash-section">
+              <NoticeBoard />
+            </div>
+          )}
         </div>
       </div>
     </div>

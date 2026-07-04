@@ -34,7 +34,7 @@ export default function PrerequisiteTree() {
     <div className="glass-card-static prerequisites-container animate-fadeInUp">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
-          <div className="icon" style={{ backgroundColor: 'var(--accent-purple-glow)', color: 'var(--accent-purple)', padding: '6px', borderRadius: '8px' }}>
+          <div className="icon" style={{ backgroundColor: 'rgba(139, 92, 246, 0.12)', color: 'var(--accent-purple)', padding: '6px', borderRadius: '8px' }}>
             <Route size={18} />
           </div>
           <div>
@@ -83,13 +83,13 @@ export default function PrerequisiteTree() {
                         gap: '2px',
                         minWidth: '150px'
                       }}
-                      onClick={() => alert(`Course details: ${node.name}. Requires: ${node.prereqs.join(', ') || 'None'}`)}
+                      onClick={() => alert(`Course details: ${node.name}. Requires: ${(node.prereqs || []).join(', ') || 'None'}`)}
                     >
                       <span style={{ fontSize: '9px', fontWeight: 'bold', color: 'var(--text-tertiary)' }}>{node.id}</span>
                       <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-medium)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{node.name}</span>
                       
                       <div className="tooltip">
-                        Prerequisites: {node.prereqs.join(', ') || 'None'} ({getStatusText(node.status)})
+                        Prerequisites: {(node.prereqs || []).join(', ') || 'None'} ({getStatusText(node.status)})
                       </div>
                     </div>
                   ))}

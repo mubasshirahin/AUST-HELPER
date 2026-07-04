@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -64,7 +64,7 @@ export default function LibraryPulse() {
     <div className="glass-card-static library-pulse-container animate-fadeInUp">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
-          <div className="icon" style={{ backgroundColor: 'var(--accent-blue-glow)', color: 'var(--accent-blue)', padding: '6px', borderRadius: '8px' }}>
+          <div className="icon" style={{ backgroundColor: 'rgba(99, 145, 255, 0.12)', color: 'var(--accent-blue)', padding: '6px', borderRadius: '8px' }}>
             <Activity size={18} />
           </div>
           <div>

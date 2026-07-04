@@ -130,6 +130,50 @@
   50% { transform: translate(10px, -8px); }
 }
 
+@keyframes hotspotGlow {
+  0%, 100% { box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--accent-cyan) 18%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent-cyan) 55%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--accent-cyan) 20%, transparent); }
+  50% { box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--accent-cyan) 28%, transparent),
+    0 0 38px color-mix(in srgb, var(--accent-cyan) 70%, transparent),
+    inset 0 0 28px color-mix(in srgb, var(--accent-cyan) 30%, transparent); }
+}
+
+@keyframes hotspotGlowLift {
+  0%, 100% { box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--accent-rose) 18%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent-rose) 55%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--accent-rose) 20%, transparent); }
+  50% { box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--accent-rose) 28%, transparent),
+    0 0 38px color-mix(in srgb, var(--accent-rose) 70%, transparent),
+    inset 0 0 28px color-mix(in srgb, var(--accent-rose) 30%, transparent); }
+}
+
+@keyframes hotspotGlowWashroom {
+  0%, 100% { box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--accent-blue) 18%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent-blue) 55%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--accent-blue) 20%, transparent); }
+  50% { box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--accent-blue) 28%, transparent),
+    0 0 38px color-mix(in srgb, var(--accent-blue) 70%, transparent),
+    inset 0 0 28px color-mix(in srgb, var(--accent-blue) 30%, transparent); }
+}
+
+@keyframes hotspotGlowLab {
+  0%, 100% { box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--accent-rose) 18%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent-rose) 55%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--accent-rose) 20%, transparent); }
+  50% { box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--accent-rose) 28%, transparent),
+    0 0 38px color-mix(in srgb, var(--accent-rose) 70%, transparent),
+    inset 0 0 28px color-mix(in srgb, var(--accent-rose) 30%, transparent); }
+}
+
 .floor-plan-hero-content {
   position: relative;
   padding: var(--sp-5) var(--sp-6);
@@ -235,6 +279,37 @@
   background: var(--bg-input);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-primary);
+}
+
+.floor-plan-view-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-full);
+}
+
+.floor-plan-view-option {
+  padding: 6px 14px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.floor-plan-view-option:hover {
+  color: var(--text-primary);
+}
+
+.floor-plan-view-option.active {
+  color: var(--accent-cyan);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
 }
 
 .floor-plan-zoom-btn {
@@ -365,16 +440,286 @@
   animation: floorPlanImageIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
-@keyframes floorPlanImageIn {
+.floor-plan-no-image-fallback {
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  animation: floorPlanImageIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.floor-plan-no-image-fallback svg {
+  display: block;
+  width: 100%;
+}
+
+.ground-interactive-card {
+  width: 100%;
+  padding: 22px 22px 16px;
+  border-radius: 18px;
+  color: #241d10;
+  background: linear-gradient(180deg, #fffdf8 0%, #f7f1e3 100%);
+  border: 1px solid #e7ddc4;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 24px 52px -24px rgba(60, 45, 20, 0.35),
+    0 8px 24px -14px rgba(60, 45, 20, 0.22);
+  animation: floorPlanImageIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.ground-interactive-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+  line-height: 1.2;
+}
+
+.ground-interactive-eyebrow {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #9c8355;
+}
+
+.ground-interactive-header h3 {
+  margin: 4px 0 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(18px, 2vw, 26px);
+  color: #7c5a30;
+}
+
+.ground-interactive-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  font-size: 12px;
+  color: #4a3e28;
+}
+
+.ground-interactive-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ground-interactive-map-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #f2ead8;
+  box-shadow: inset 0 0 0 1px rgba(60, 45, 20, 0.08), inset 0 2px 10px rgba(60, 45, 20, 0.06);
+}
+
+.ground-interactive-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.ground-interactive-svg text {
+  fill: #241d10;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.ground-interactive-outline {
+  stroke-width: 3.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.ground-interactive-divider {
+  stroke: rgba(36, 29, 16, 0.55);
+  stroke-width: 1.6;
+}
+
+/* ─── Zone Click & Highlight System ─── */
+
+.ground-zone-group {
+  transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+              filter 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ground-zone-dimmed {
+  opacity: 0.35;
+  filter: saturate(0.4);
+}
+
+.ground-zone-poly {
+  stroke-width: 3.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  transition: stroke-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              filter 0.3s ease;
+}
+
+.ground-zone-group:hover .ground-zone-poly {
+  stroke-width: 5;
+}
+
+/* Selected zone pulsing outline */
+@keyframes zonePulseGlow {
+  0%, 100% {
+    stroke-opacity: 1;
+    stroke-width: 4;
+  }
+  50% {
+    stroke-opacity: 0.6;
+    stroke-width: 6;
+  }
+}
+
+@keyframes zonePulseShadow {
+  0%, 100% {
+    filter: drop-shadow(0 0 12px rgba(60, 45, 20, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 28px rgba(60, 45, 20, 0.55));
+  }
+}
+
+.ground-zone-selected {
+  stroke-width: 4;
+  stroke-opacity: 1;
+  animation: zonePulseGlow 1.8s ease-in-out infinite;
+}
+
+.ground-zone-hovered {
+  stroke-width: 5.5;
+}
+
+/* Clear button in the header */
+.ground-clear-btn {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9c4a3a;
+  background: rgba(156, 74, 58, 0.08);
+  border: 1px solid rgba(156, 74, 58, 0.2);
+  border-radius: 8px;
+  padding: 4px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ground-clear-btn:hover {
+  background: rgba(156, 74, 58, 0.15);
+  border-color: rgba(156, 74, 58, 0.35);
+}
+
+/* ─── Premium Zone Tooltip ─── */
+
+@keyframes tooltipSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ground-zone-tooltip {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 254, 248, 0.95), rgba(247, 241, 227, 0.95));
+  backdrop-filter: blur(12px);
+  border: 1px solid #e7ddc4;
+  box-shadow:
+    0 4px 20px rgba(60, 45, 20, 0.12),
+    0 1px 4px rgba(60, 45, 20, 0.06);
+  animation: tooltipSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.ground-zone-tooltip-accent {
+  width: 4px;
+  min-height: 48px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+.ground-zone-tooltip-name {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  font-weight: var(--fw-bold);
+  color: #5a3e1b;
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.ground-zone-tooltip-desc {
+  font-size: 13px;
+  color: #8b7355;
+  line-height: 1.45;
+}
+
+.ground-room-label {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.ground-cell-label {
+  font-size: 16.5px;
+  font-weight: 600;
+}
+
+.ground-small-label {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.ground-tiny-label {
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.ground-lift-label {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.ground-zone-title {
+  font-size: 54px;
+  font-weight: 700;
+  fill: #7c5a30;
+  letter-spacing: 0.5px;
+}
+
+.ground-zone-title-small {
+  font-size: 44px;
+}
+
+.ground-interactive-footer {
+  margin-top: var(--sp-3);
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  color: #a08c62;
+}
+
+ @keyframes floorPlanImageIn {
   from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }
 
-/* ─── Map hotspots ─── */
+/* ─── Hotspot inner layer (new structure) ─── */
 .floor-plan-hotspot {
   position: absolute;
   border-radius: 4px;
-  pointer-events: none;
   opacity: 0;
   transform: scale(0.96);
   transition: opacity 0.3s ease, transform 0.3s ease;
@@ -385,19 +730,71 @@
 .floor-plan-hotspot.active {
   opacity: 1;
   transform: scale(1);
-  animation: hotspotGlow 1.6s ease-in-out infinite;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
-.floor-plan-hotspot-facility.active {
+.floor-plan-hotspot.edit-active {
+  pointer-events: auto;
+  cursor: grab;
+  opacity: 1;
+  transform: scale(1);
+  animation: none;
+  border: 2px dashed rgba(150, 160, 180, 0.45);
+  background: rgba(120, 140, 180, 0.04);
+  touch-action: none;
+}
+
+.floor-plan-hotspot.edit-active:active {
+  cursor: grabbing;
+}
+
+.floor-plan-hotspot-inner {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.floor-plan-hotspot-inner.active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.floor-plan-hotspot-inner.floor-plan-hotspot-facility.active {
   border: 2px solid var(--accent-cyan);
   background: color-mix(in srgb, var(--accent-cyan) 28%, transparent);
   box-shadow:
     0 0 0 4px color-mix(in srgb, var(--accent-cyan) 18%, transparent),
     0 0 28px color-mix(in srgb, var(--accent-cyan) 55%, transparent),
     inset 0 0 24px color-mix(in srgb, var(--accent-cyan) 20%, transparent);
+  animation: hotspotGlow 1.6s ease-in-out infinite;
 }
 
-.floor-plan-hotspot-admin.active {
+.floor-plan-hotspot-inner.floor-plan-hotspot-lift.active {
+  border: 2px solid var(--accent-rose);
+  background: color-mix(in srgb, var(--accent-rose) 28%, transparent);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--accent-rose) 18%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent-rose) 55%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--accent-rose) 20%, transparent);
+  animation: hotspotGlowLift 1.6s ease-in-out infinite;
+}
+
+.floor-plan-hotspot-inner.floor-plan-hotspot-washroom.active {
+  border: 2px solid var(--accent-blue);
+  background: color-mix(in srgb, var(--accent-blue) 28%, transparent);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--accent-blue) 18%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent-blue) 55%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--accent-blue) 20%, transparent);
+  animation: hotspotGlowWashroom 1.6s ease-in-out infinite;
+}
+
+.floor-plan-hotspot-inner.floor-plan-hotspot-admin.active {
   border: 2px solid var(--accent-amber);
   background: color-mix(in srgb, var(--accent-amber) 28%, transparent);
   box-shadow:
@@ -406,7 +803,7 @@
     inset 0 0 24px color-mix(in srgb, var(--accent-amber) 20%, transparent);
 }
 
-.floor-plan-hotspot-hall.active {
+.floor-plan-hotspot-inner.floor-plan-hotspot-hall.active {
   border: 2px solid var(--accent-purple);
   background: color-mix(in srgb, var(--accent-purple) 28%, transparent);
   box-shadow:
@@ -415,7 +812,27 @@
     inset 0 0 24px color-mix(in srgb, var(--accent-purple) 20%, transparent);
 }
 
-.floor-plan-hotspot-library.active {
+.floor-plan-hotspot-inner.floor-plan-hotspot-classroom.active {
+  border: 2px solid var(--accent-blue);
+  background: color-mix(in srgb, var(--accent-blue) 28%, transparent);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--accent-blue) 18%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent-blue) 55%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--accent-blue) 20%, transparent);
+  animation: hotspotGlow 1.6s ease-in-out infinite;
+}
+
+.floor-plan-hotspot-inner.floor-plan-hotspot-lab.active {
+  border: 2px solid var(--accent-rose);
+  background: color-mix(in srgb, var(--accent-rose) 28%, transparent);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--accent-rose) 18%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent-rose) 55%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--accent-rose) 20%, transparent);
+  animation: hotspotGlowLab 1.6s ease-in-out infinite;
+}
+
+.floor-plan-hotspot-inner.floor-plan-hotspot-library.active {
   border: 2px solid var(--accent-emerald);
   background: color-mix(in srgb, var(--accent-emerald) 28%, transparent);
   box-shadow:
@@ -424,21 +841,86 @@
     inset 0 0 24px color-mix(in srgb, var(--accent-emerald) 20%, transparent);
 }
 
-@keyframes hotspotGlow {
-  0%, 100% {
-    filter: brightness(1);
-    box-shadow:
-      0 0 0 4px color-mix(in srgb, var(--accent-cyan) 18%, transparent),
-      0 0 24px color-mix(in srgb, var(--accent-cyan) 45%, transparent),
-      inset 0 0 20px color-mix(in srgb, var(--accent-cyan) 15%, transparent);
-  }
-  50% {
-    filter: brightness(1.15);
-    box-shadow:
-      0 0 0 6px color-mix(in srgb, var(--accent-cyan) 28%, transparent),
-      0 0 40px color-mix(in srgb, var(--accent-cyan) 70%, transparent),
-      inset 0 0 32px color-mix(in srgb, var(--accent-cyan) 30%, transparent);
-  }
+/* ─── Resize handles ─── */
+.floor-plan-resize-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: #fff;
+  border: 2px solid var(--accent-rose);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-rose) 25%, transparent), 0 2px 6px rgba(0,0,0,0.25);
+  z-index: 10;
+  pointer-events: auto;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.floor-plan-resize-handle.floor-plan-resize-nw {
+  top: -8px;
+  left: -8px;
+  cursor: nwse-resize;
+}
+
+.floor-plan-resize-handle.floor-plan-resize-se {
+  bottom: -8px;
+  right: -8px;
+  cursor: nwse-resize;
+}
+
+.floor-plan-resize-handle.floor-plan-resize-sw {
+  top: -8px;
+  right: -8px;
+  cursor: nesw-resize;
+}
+
+.floor-plan-resize-handle.floor-plan-resize-ne {
+  bottom: -8px;
+  left: -8px;
+  cursor: nesw-resize;
+}
+
+/* ─── Rotate handle ─── */
+.floor-plan-rotate-handle {
+  position: absolute;
+  top: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-rose);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-rose) 30%, transparent), 0 2px 8px rgba(0,0,0,0.3);
+  z-index: 10;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.floor-plan-rotate-handle::after {
+  content: '';
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 14px;
+  background: var(--accent-rose);
+  border-radius: 1px;
+}
+
+.floor-plan-rotate-handle:active {
+  cursor: grabbing;
+}
+
+.floor-plan-rotate-icon {
+  width: 10px;
+  height: 10px;
 }
 
 .floor-plan-hotspot-label {
@@ -458,10 +940,14 @@
   line-height: 1.3;
 }
 
-.floor-plan-hotspot-admin.active .floor-plan-hotspot-label { background: var(--accent-amber); }
-.floor-plan-hotspot-hall.active .floor-plan-hotspot-label { background: var(--accent-purple); }
-.floor-plan-hotspot-library.active .floor-plan-hotspot-label { background: var(--accent-emerald); }
-.floor-plan-hotspot-facility.active .floor-plan-hotspot-label { background: var(--accent-cyan); }
+.floor-plan-hotspot-inner.floor-plan-hotspot-facility.active .floor-plan-hotspot-label { background: var(--accent-cyan); }
+.floor-plan-hotspot-inner.floor-plan-hotspot-lift.active .floor-plan-hotspot-label { background: var(--accent-rose); }
+.floor-plan-hotspot-inner.floor-plan-hotspot-washroom.active .floor-plan-hotspot-label { background: var(--accent-blue); }
+.floor-plan-hotspot-inner.floor-plan-hotspot-admin.active .floor-plan-hotspot-label { background: var(--accent-amber); }
+.floor-plan-hotspot-inner.floor-plan-hotspot-hall.active .floor-plan-hotspot-label { background: var(--accent-purple); }
+.floor-plan-hotspot-inner.floor-plan-hotspot-library.active .floor-plan-hotspot-label { background: var(--accent-emerald); }
+.floor-plan-hotspot-inner.floor-plan-hotspot-classroom.active .floor-plan-hotspot-label { background: var(--accent-blue); }
+.floor-plan-hotspot-inner.floor-plan-hotspot-lab.active .floor-plan-hotspot-label { background: var(--accent-rose); }
 
 .floor-plan-hint {
   position: sticky;
@@ -495,6 +981,13 @@
   box-shadow: var(--shadow-sm);
 }
 
+.floor-plan-sidebar-card:first-child {
+  display: flex;
+  flex-direction: column;
+  max-height: min(72vh, 760px);
+  min-height: 0;
+}
+
 .floor-plan-sidebar-title {
   display: flex;
   align-items: center;
@@ -514,10 +1007,28 @@
 .floor-plan-location-list {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 4px 0 0;
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent-cyan) 45%, var(--border-primary)) transparent;
+}
+
+.floor-plan-location-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.floor-plan-location-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.floor-plan-location-list::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent-cyan) 45%, var(--border-primary));
+  border-radius: var(--radius-full);
 }
 
 .floor-plan-location-list li {
@@ -567,6 +1078,8 @@
 .floor-plan-dot-library { background: var(--accent-emerald); }
 .floor-plan-dot-classroom { background: var(--accent-blue); }
 .floor-plan-dot-lab { background: var(--accent-rose); }
+.floor-plan-dot-lift { background: var(--accent-rose); }
+.floor-plan-dot-washroom { background: var(--accent-blue); }
 
 .floor-plan-location-item div {
   display: flex;
@@ -706,6 +1219,88 @@
   border-color: var(--border-focus);
 }
 
+/* ─── Position Editor ─── */
+.floor-plan-fullscreen-btn.active {
+  color: var(--accent-rose);
+  border-color: color-mix(in srgb, var(--accent-rose) 40%, var(--border-primary));
+  background: color-mix(in srgb, var(--accent-rose) 10%, var(--bg-input));
+}
+
+.floor-plan-sidebar-card.floor-plan-editor {
+  border-color: color-mix(in srgb, var(--accent-rose) 35%, var(--border-primary));
+  background: linear-gradient(180deg, var(--bg-card) 0%, color-mix(in srgb, var(--accent-rose) 4%, var(--bg-card)) 100%);
+}
+
+.floor-plan-editor-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+.floor-plan-editor-row {
+  display: grid;
+  grid-template-columns: 48px 1fr 42px;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.floor-plan-editor-label {
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.floor-plan-editor-range {
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--bg-input);
+  border: 1px solid var(--border-secondary);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.floor-plan-editor-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-rose);
+  border: 2px solid var(--bg-card);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-rose) 35%, transparent);
+  cursor: grab;
+}
+
+.floor-plan-editor-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-rose);
+  border: 2px solid var(--bg-card);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-rose) 35%, transparent);
+  cursor: grab;
+}
+
+.floor-plan-editor-value {
+  font-size: 12px;
+  font-weight: var(--fw-bold);
+  color: var(--accent-rose);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.floor-plan-editor-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin: var(--sp-3) 0 0;
+  line-height: 1.5;
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 960px) {
   .floor-plan-workspace {
@@ -714,6 +1309,10 @@
 
   .floor-plan-sidebar {
     position: static;
+  }
+
+  .floor-plan-sidebar-card:first-child {
+    max-height: 45vh;
   }
 
   .floor-plan-viewport {
@@ -736,6 +1335,10 @@
     align-items: stretch;
   }
 
+  .floor-plan-view-switch {
+    justify-content: center;
+  }
+
   .floor-plan-fullscreen-btn {
     margin-left: 0;
     justify-content: center;
@@ -744,6 +1347,15 @@
   .floor-plan-viewport {
     min-height: 55vh;
     padding: var(--sp-3);
+  }
+
+  .ground-interactive-card {
+    padding: var(--sp-4);
+  }
+
+  .ground-interactive-legend {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .faculty-grid,

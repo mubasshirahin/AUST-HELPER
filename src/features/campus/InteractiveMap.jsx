@@ -1,10 +1,12 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
-  Map, Navigation, Sparkles, Building2, ZoomIn, Maximize2, Minimize2,
-  MapPin, Compass,
+  Map, Sparkles, Building2, ZoomIn, Maximize2, Minimize2,
+  MapPin, Compass, Move, RotateCcw,
 } from 'lucide-react';
 import { campusFloors } from '../../data/mockData';
 import GliderTabs from '../../components/GliderTabs';
+import FirstFloorInteractivePlan from './FirstFloorInteractivePlan';
+import FloorInteractivePlaceholder from './FloorInteractivePlaceholder';
 
 const floorTabs = campusFloors.map((f) => ({
   id: f.floor,
@@ -28,14 +30,61 @@ const roomTypeLabels = {
   library: 'Library',
   classroom: 'Classroom',
   lab: 'Laboratory',
+  lift: 'Lift',
+  washroom: 'Washroom',
 };
 
-function GroundFloorShowcase({ floorData, selectedFloor }) {
+const RESIZE_DIRECTIONS = {
+  nw: { dl: 1, dt: 1, dw: -1, dh: -1 },
+  se: { dl: 0, dt: 0, dw: 1, dh: 1 },
+  sw: { dl: 1, dt: 0, dw: -1, dh: 1 },
+  ne: { dl: 0, dt: 1, dw: 1, dh: -1 },
+};
+
+const getRoomHotspots = (room) => room.hotspots || (room.hotspot ? [room.hotspot] : []);
+const getHotspotKey = (room, index) => `${room.id}-${index}`;
+
+const getRoomColor = (type) => {
+  switch (type) {
+    case 'classroom': return 'var(--accent-blue)';
+    case 'lab': return 'var(--accent-purple)';
+    case 'admin': return 'var(--accent-amber)';
+    case 'facility': return 'var(--accent-cyan)';
+    case 'library': return 'var(--accent-emerald)';
+    case 'lift': return 'var(--accent-rose)';
+    case 'washroom': return 'var(--accent-blue)';
+    default: return 'var(--text-tertiary)';
+  }
+};
+
+function FloorShowcase({ floorData, selectedFloor }) {
   const [zoom, setZoom] = useState('fit');
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [highlightedRoomId, setHighlightedRoomId] = useState(null);
+  const [selectedRoomId, setSelectedRoomId] = useState(null);
+  const [selectedHotspotKey, setSelectedHotspotKey] = useState(null);
+  const [floorView, setFloorView] = useState('image');
+  const [editMode, setEditMode] = useState(false);
+  const [selectedZone, setSelectedZone] = useState(null);
+  const [positions, setPositions] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aust-campus-positions');
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
+  const [rotations, setRotations] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aust-campus-rotations');
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
   const viewportRef = useRef(null);
   const hotspotRefs = useRef({});
+  const imageWrapRef = useRef(null);
+
+  useEffect(() => {
+    localStorage.setItem('aust-campus-positions', JSON.stringify(positions));
+    localStorage.setItem('aust-campus-rotations', JSON.stringify(rotations));
+  }, [positions, rotations]);
 
   const toggleFullscreen = useCallback(async () => {
     const el = viewportRef.current;
@@ -53,28 +102,19 @@ function GroundFloorShowcase({ floorData, selectedFloor }) {
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, []);
 
-  const clearHighlight = useCallback(() => {
-    setHighlightedRoomId(null);
+  const clearSelection = useCallback(() => {
+    setSelectedRoomId(null);
+    setSelectedHotspotKey(null);
+    setSelectedZone(null);
   }, []);
 
-  useEffect(() => {
-    if (!highlightedRoomId) return undefined;
-
-    const handlePointerDown = (event) => {
-      if (event.target.closest('.floor-plan-location-item')) return;
-      clearHighlight();
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [highlightedRoomId, clearHighlight]);
-
   const handleLocationClick = useCallback((room) => {
-    setHighlightedRoomId((prev) => {
+    setSelectedRoomId((prev) => {
       const next = prev === room.id ? null : room.id;
+      setSelectedHotspotKey(next ? getHotspotKey(room, 0) : null);
       if (next) {
         requestAnimationFrame(() => {
-          const hotspotEl = hotspotRefs.current[room.id];
+          const hotspotEl = hotspotRefs.current[getHotspotKey(room, 0)];
           if (hotspotEl && viewportRef.current) {
             hotspotEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
           }
@@ -83,6 +123,170 @@ function GroundFloorShowcase({ floorData, selectedFloor }) {
       return next;
     });
   }, []);
+
+  const handleHotspotPointerDown = (e, room, hotspot, hotspotKey) => {
+    if (!editMode) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedRoomId(room.id);
+    setSelectedHotspotKey(hotspotKey);
+
+    const hotspotEl = hotspotRefs.current[hotspotKey];
+    const imageWrap = imageWrapRef.current;
+    if (!hotspotEl || !imageWrap) return;
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const currentPos = positions[hotspotKey] || hotspot;
+    const startLeft = currentPos.left;
+    const startTop = currentPos.top;
+    const wrapRect = imageWrap.getBoundingClientRect();
+
+    const handlePointerMove = (moveEvent) => {
+      const deltaXPercent = ((moveEvent.clientX - startX) / wrapRect.width) * 100;
+      const deltaYPercent = ((moveEvent.clientY - startY) / wrapRect.height) * 100;
+
+      setPositions((prev) => ({
+        ...prev,
+        [hotspotKey]: {
+          ...(prev[hotspotKey] || hotspot),
+          left: Math.round(Math.max(0, Math.min(100 - currentPos.width, startLeft + deltaXPercent)) * 10) / 10,
+          top: Math.round(Math.max(0, Math.min(100 - currentPos.height, startTop + deltaYPercent)) * 10) / 10,
+        },
+      }));
+    };
+
+    const handlePointerUp = () => {
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
+    };
+
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
+  };
+
+  const handleResizeStart = (e, room, hotspot, hotspotKey, corner) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedRoomId(room.id);
+    setSelectedHotspotKey(hotspotKey);
+
+    const imageWrap = imageWrapRef.current;
+    if (!imageWrap) return;
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const currentPos = positions[hotspotKey] || hotspot;
+    const startLeft = currentPos.left;
+    const startTop = currentPos.top;
+    const startWidth = currentPos.width;
+    const startHeight = currentPos.height;
+    const wrapRect = imageWrap.getBoundingClientRect();
+    const dir = RESIZE_DIRECTIONS[corner];
+
+    const handlePointerMove = (moveEvent) => {
+      const deltaXPercent = ((moveEvent.clientX - startX) / wrapRect.width) * 100;
+      const deltaYPercent = ((moveEvent.clientY - startY) / wrapRect.height) * 100;
+
+      const newLeft = Math.round(Math.max(0, startLeft + dir.dl * deltaXPercent) * 10) / 10;
+      const newTop = Math.round(Math.max(0, startTop + dir.dt * deltaYPercent) * 10) / 10;
+      const newWidth = Math.round(Math.max(4, startWidth + dir.dw * deltaXPercent) * 10) / 10;
+      const newHeight = Math.round(Math.max(4, startHeight + dir.dh * deltaYPercent) * 10) / 10;
+
+      setPositions((prev) => ({
+        ...prev,
+        [hotspotKey]: {
+          ...(prev[hotspotKey] || hotspot),
+          left: newLeft,
+          top: newTop,
+          width: Math.min(newWidth, 100 - newLeft),
+          height: Math.min(newHeight, 100 - newTop),
+        },
+      }));
+    };
+
+    const handlePointerUp = () => {
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
+    };
+
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
+  };
+
+  const handleRotateStart = (e, room, hotspot, hotspotKey) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedRoomId(room.id);
+    setSelectedHotspotKey(hotspotKey);
+
+    const imageWrap = imageWrapRef.current;
+    if (!imageWrap) return;
+
+    const currentPos = positions[hotspotKey] || hotspot;
+    const currentRotation = rotations[hotspotKey] || 0;
+    const wrapRect = imageWrap.getBoundingClientRect();
+
+    const getAngle = (clientX, clientY) => {
+      const centerX = wrapRect.left + ((currentPos.left + currentPos.width / 2) / 100) * wrapRect.width;
+      const centerY = wrapRect.top + ((currentPos.top + currentPos.height / 2) / 100) * wrapRect.height;
+      return Math.atan2(clientY - centerY, clientX - centerX) * 180 / Math.PI + 90;
+    };
+
+    const startMouseAngle = getAngle(e.clientX, e.clientY);
+
+    const handlePointerMove = (moveEvent) => {
+      const currentMouseAngle = getAngle(moveEvent.clientX, moveEvent.clientY);
+      const deltaAngle = currentMouseAngle - startMouseAngle;
+      const newRotation = Math.round((currentRotation + deltaAngle) * 10) / 10;
+      setRotations((prev) => ({
+        ...prev,
+        [hotspotKey]: newRotation,
+      }));
+    };
+
+    const handlePointerUp = () => {
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
+    };
+
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
+  };
+
+  const updatePosition = (hotspotKey, hotspot, field, value) => {
+    setPositions((prev) => {
+      return {
+        ...prev,
+        [hotspotKey]: { ...(prev[hotspotKey] || hotspot), [field]: parseFloat(value) || 0 },
+      };
+    });
+  };
+
+  const updateRotation = (hotspotKey, value) => {
+    setRotations((prev) => ({
+      ...prev,
+      [hotspotKey]: parseFloat(value) || 0,
+    }));
+  };
+
+  const resetPositions = () => {
+    setPositions({});
+    setRotations({});
+    localStorage.removeItem('aust-campus-positions');
+    localStorage.removeItem('aust-campus-rotations');
+  };
+
+  const editingRoom = floorData.rooms.find((r) => r.id === selectedRoomId);
+  const editingHotspotIndex = editingRoom && selectedHotspotKey
+    ? Number(selectedHotspotKey.split('-').at(-1))
+    : 0;
+  const editingHotspot = editingRoom ? getRoomHotspots(editingRoom)[editingHotspotIndex] : null;
+  const editingPos = editingHotspot && selectedHotspotKey ? (positions[selectedHotspotKey] || editingHotspot) : null;
+  const editingRotation = selectedHotspotKey ? (rotations[selectedHotspotKey] || 0) : 0;
+  const isInteractiveView = floorView === 'interactive';
+  const isInteractiveFloor = floorView === 'interactive';
+  const is1stFloor = selectedFloor === '1st';
 
   return (
     <div className="floor-plan-showcase animate-fadeInUp">
@@ -104,7 +308,7 @@ function GroundFloorShowcase({ floorData, selectedFloor }) {
             <div>
               <h2 className="floor-plan-title">{selectedFloor} Floor Plan</h2>
               <p className="floor-plan-subtitle">
-                AUST ground floor — click Key Locations to highlight areas on the map.
+                AUST {selectedFloor.toLowerCase()} floor - click Key Locations to highlight areas on the map.
               </p>
             </div>
           </div>
@@ -118,6 +322,26 @@ function GroundFloorShowcase({ floorData, selectedFloor }) {
               <ZoomIn size={14} />
               Zoom
             </span>
+             <div className="floor-plan-view-switch" role="tablist" aria-label={`${selectedFloor} floor map type`}>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={floorView === 'image'}
+                  className={`floor-plan-view-option ${floorView === 'image' ? 'active' : ''}`}
+                  onClick={() => { setFloorView('image'); setSelectedZone(null); }}
+                >
+                  Image
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={floorView === 'interactive'}
+                  className={`floor-plan-view-option ${floorView === 'interactive' ? 'active' : ''}`}
+                  onClick={() => { setFloorView('interactive'); clearSelection(); }}
+                >
+                  Interactive
+                </button>
+              </div>
             <div className="floor-plan-zoom-group">
               {zoomLevels.map((level) => (
                 <button
@@ -130,6 +354,17 @@ function GroundFloorShowcase({ floorData, selectedFloor }) {
                 </button>
               ))}
             </div>
+            <button
+              type="button"
+              className={`floor-plan-fullscreen-btn ${editMode ? 'active' : ''}`}
+              onClick={() => {
+                setEditMode((prev) => !prev);
+              }}
+              aria-label={editMode ? 'Exit edit mode' : 'Edit positions'}
+            >
+              <Move size={16} />
+              {editMode ? 'Editing' : 'Edit'}
+            </button>
             <button
               type="button"
               className="floor-plan-fullscreen-btn"
@@ -147,41 +382,116 @@ function GroundFloorShowcase({ floorData, selectedFloor }) {
           >
             <div className="floor-plan-image-frame">
               <div
+                ref={imageWrapRef}
                 className="floor-plan-image-wrap"
-                onClick={clearHighlight}
-                onKeyDown={(e) => { if (e.key === 'Escape') clearHighlight(); }}
+                onClick={clearSelection}
+                onKeyDown={(e) => { if (e.key === 'Escape') clearSelection(); }}
                 role="presentation"
               >
-                <img
-                  src={floorData.mapImage}
-                  alt={`AUST ${selectedFloor} Floor Plan`}
-                  className="floor-plan-image"
-                  draggable={false}
-                />
-                {floorData.rooms.filter((room) => room.hotspot).map((room) => (
-                  <div
-                    key={room.id}
-                    ref={(el) => { hotspotRefs.current[room.id] = el; }}
-                    className={`floor-plan-hotspot floor-plan-hotspot-${room.type} ${highlightedRoomId === room.id ? 'active' : ''}`}
-                    style={{
-                      left: `${room.hotspot.left}%`,
-                      top: `${room.hotspot.top}%`,
-                      width: `${room.hotspot.width}%`,
-                      height: `${room.hotspot.height}%`,
-                    }}
-                    aria-hidden={highlightedRoomId !== room.id}
-                  >
-                    {highlightedRoomId === room.id && (
-                      <span className="floor-plan-hotspot-label">{room.name}</span>
-                    )}
+                {isInteractiveFloor ? (
+                  is1stFloor ? (
+                    <FirstFloorInteractivePlan onZoneSelect={setSelectedZone} />
+                  ) : (
+                    <FloorInteractivePlaceholder floor={selectedFloor} />
+                  )
+                ) : floorData.mapImage ? (
+                  <img
+                    src={floorData.mapImage}
+                    alt={`AUST ${selectedFloor} Floor Plan`}
+                    className="floor-plan-image"
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="floor-plan-no-image-fallback">
+                    <svg style={{ width: '100%', height: '420px' }}>
+                      <rect x="10%" y="20%" width="80%" height="60%" fill="none" stroke="var(--border-secondary)" strokeWidth="2" strokeDasharray="4 4" rx="8" />
+                      <rect x="25%" y="40%" width="50%" height="20%" fill="none" stroke="var(--border-primary)" strokeWidth="1" />
+                      {floorData.rooms.map((room) => (
+                        <g key={room.id} style={{ cursor: 'pointer' }}>
+                          <circle cx={`${room.x}%`} cy={`${room.y}%`} r="14" fill={getRoomColor(room.type)} opacity="0.18" />
+                          <circle cx={`${room.x}%`} cy={`${room.y}%`} r="7" fill={getRoomColor(room.type)} />
+                          <text x={`${room.x}%`} y={`${room.y - 3.5}%`} textAnchor="middle" fill="var(--text-primary)" fontSize="11px" fontWeight="bold">
+                            {room.id}
+                          </text>
+                        </g>
+                      ))}
+                    </svg>
                   </div>
-                ))}
+                )}
+                {floorData.rooms
+                  .filter((room) => getRoomHotspots(room).length > 0)
+                  .flatMap((room) => getRoomHotspots(room).map((hotspot, index) => {
+                    const isSelected = selectedRoomId === room.id;
+                    const hotspotKey = getHotspotKey(room, index);
+                    const isEditing = editMode && isSelected && selectedHotspotKey === hotspotKey;
+                    const pos = positions[hotspotKey] || hotspot;
+                    const rotation = rotations[hotspotKey] || 0;
+
+                    return (
+                      <div
+                        key={hotspotKey}
+                        ref={(el) => { hotspotRefs.current[hotspotKey] = el; }}
+                        className={`floor-plan-hotspot ${isSelected ? 'active' : ''} ${isEditing ? 'edit-active' : ''}`}
+                        style={{
+                          left: `${pos.left}%`,
+                          top: `${pos.top}%`,
+                          width: `${pos.width}%`,
+                          height: `${pos.height}%`,
+                          transform: `rotate(${rotation}deg)`,
+                          transformOrigin: 'center center',
+                        }}
+                        onPointerDown={(e) => handleHotspotPointerDown(e, room, hotspot, hotspotKey)}
+                        aria-hidden={!isSelected}
+                      >
+                        <span
+                          className={`floor-plan-hotspot-inner floor-plan-hotspot-${room.type} ${isSelected ? 'active' : ''}`}
+                        />
+                        {isSelected && index === 0 && (
+                          <span className="floor-plan-hotspot-label">{room.name}</span>
+                        )}
+                        {isEditing && (
+                          <>
+                            <span
+                              className="floor-plan-resize-handle floor-plan-resize-nw"
+                              onPointerDown={(e) => handleResizeStart(e, room, hotspot, hotspotKey, 'nw')}
+                            />
+                            <span
+                              className="floor-plan-resize-handle floor-plan-resize-se"
+                              onPointerDown={(e) => handleResizeStart(e, room, hotspot, hotspotKey, 'se')}
+                            />
+                            <span
+                              className="floor-plan-resize-handle floor-plan-resize-sw"
+                              onPointerDown={(e) => handleResizeStart(e, room, hotspot, hotspotKey, 'sw')}
+                            />
+                            <span
+                              className="floor-plan-resize-handle floor-plan-resize-ne"
+                              onPointerDown={(e) => handleResizeStart(e, room, hotspot, hotspotKey, 'ne')}
+                            />
+                            <span
+                              className="floor-plan-rotate-handle"
+                              onPointerDown={(e) => handleRotateStart(e, room, hotspot, hotspotKey)}
+                            >
+                              <svg width="10" height="10" viewBox="0 0 10 10" className="floor-plan-rotate-icon">
+                                <path d="M5 1a4 4 0 1 1 0 8 4 4 0 0 1 0-8z" fill="currentColor" opacity="0.35" />
+                                <path d="M5 2.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z" fill="currentColor" opacity="0.7" />
+                                <circle cx="5" cy="5" r="1.2" fill="currentColor" />
+                              </svg>
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    );
+                  }))}
               </div>
             </div>
             <p className="floor-plan-hint">
-              {highlightedRoomId
-                ? 'Tap the same location again or click anywhere to clear'
-                : 'Click a Key Location to glow it on the map · Scroll or pinch to explore'}
+              {isInteractiveFloor && selectedZone
+                ? 'Click the zone again or press Clear to reset the map'
+                : selectedRoomId
+                  ? 'Tap the same location again or click anywhere to clear'
+                  : isInteractiveFloor
+                    ? 'Click any colored zone on the map to highlight it'
+                    : 'Click a Key Location to glow it on the map · Scroll or pinch to explore'}
             </p>
           </div>
         </div>
@@ -198,7 +508,7 @@ function GroundFloorShowcase({ floorData, selectedFloor }) {
                 <li key={room.id}>
                   <button
                     type="button"
-                    className={`floor-plan-location-item ${highlightedRoomId === room.id ? 'active' : ''}`}
+                    className={`floor-plan-location-item ${selectedRoomId === room.id ? 'active' : ''}`}
                     onClick={() => handleLocationClick(room)}
                   >
                     <span className={`floor-plan-location-dot floor-plan-dot-${room.type}`} />
@@ -221,8 +531,67 @@ function GroundFloorShowcase({ floorData, selectedFloor }) {
               <li>Click same location again or anywhere to <strong>clear</strong> glow</li>
               <li>Use <strong>125%</strong> or <strong>150%</strong> to read labels clearly</li>
               <li>Tap <strong>Fullscreen</strong> for a bigger view</li>
+              {editMode && (
+                <li style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed var(--border-secondary)' }}>
+                  <strong>Edit mode:</strong> Drag box to move. Drag corners to resize. Use top handle to rotate.
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    style={{ marginTop: '6px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11px', padding: '4px 8px', background: 'var(--bg-input)', color: 'var(--text-secondary)', border: '1px solid var(--border-secondary)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+                    onClick={resetPositions}
+                  >
+                    <RotateCcw size={12} /> Reset All Positions
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
+
+          {editMode && editingPos && editingRoom && (
+            <div className="floor-plan-sidebar-card floor-plan-editor">
+              <h3 className="floor-plan-sidebar-title">
+                <Move size={16} />
+                Adjust: {editingRoom.name} ({selectedRoomId})
+              </h3>
+              <div className="floor-plan-editor-grid">
+                {['left', 'top', 'width', 'height'].map((field) => (
+                  <label key={field} className="floor-plan-editor-row">
+                    <span className="floor-plan-editor-label">{field}</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="0.5"
+                      value={editingPos[field]}
+                      onChange={(e) => updatePosition(selectedHotspotKey, editingHotspot, field, e.target.value)}
+                      className="floor-plan-editor-range"
+                    />
+                    <span className="floor-plan-editor-value">
+                      {Math.round(editingPos[field] * 10) / 10}%
+                    </span>
+                  </label>
+                ))}
+                <label className="floor-plan-editor-row">
+                  <span className="floor-plan-editor-label">rotate</span>
+                  <input
+                    type="range"
+                    min="-180"
+                    max="180"
+                    step="1"
+                    value={editingRotation}
+                    onChange={(e) => updateRotation(selectedHotspotKey, e.target.value)}
+                    className="floor-plan-editor-range"
+                  />
+                  <span className="floor-plan-editor-value">
+                    {editingRotation}deg
+                  </span>
+                </label>
+              </div>
+              <p className="floor-plan-editor-hint">
+                Drag the box to move it. Drag corner handles to resize. Drag the top circle to rotate.
+              </p>
+            </div>
+          )}
         </aside>
       </div>
     </div>
@@ -231,24 +600,11 @@ function GroundFloorShowcase({ floorData, selectedFloor }) {
 
 export default function InteractiveMap() {
   const [selectedFloor, setSelectedFloor] = useState('Ground');
-  const [hoveredRoom, setHoveredRoom] = useState(null);
 
   const currentFloorData = campusFloors.find((f) => f.floor === selectedFloor) || campusFloors[0];
-  const hasFloorPlan = Boolean(currentFloorData.mapImage);
-
-  const getRoomColor = (type) => {
-    switch (type) {
-      case 'classroom': return 'var(--accent-blue)';
-      case 'lab': return 'var(--accent-purple)';
-      case 'admin': return 'var(--accent-amber)';
-      case 'facility': return 'var(--accent-cyan)';
-      case 'library': return 'var(--accent-emerald)';
-      default: return 'var(--text-tertiary)';
-    }
-  };
 
   return (
-    <div className={`interactive-map-root ${hasFloorPlan ? 'interactive-map-root-plan' : ''}`}>
+    <div className="interactive-map-root interactive-map-root-plan">
       <div className="interactive-map-header">
         <div className="interactive-map-heading">
           <div className="interactive-map-heading-icon">
@@ -266,102 +622,11 @@ export default function InteractiveMap() {
       <GliderTabs
         tabs={floorTabs}
         activeTab={selectedFloor}
-        onChange={(id) => {
-          setSelectedFloor(id);
-          setHoveredRoom(null);
-        }}
+        onChange={(id) => setSelectedFloor(id)}
         variant="dashboard"
       />
 
-      {hasFloorPlan ? (
-        <GroundFloorShowcase floorData={currentFloorData} selectedFloor={selectedFloor} />
-      ) : (
-        <div className="glass-card-static interactive-map-container animate-fadeInUp">
-          <div className="grid-2" style={{ gridTemplateColumns: '2.2fr 0.8fr' }}>
-            <div
-              className="map-canvas-wrapper"
-              style={{
-                background: 'var(--bg-input)',
-                border: '1px solid var(--border-primary)',
-                borderRadius: 'var(--radius-xl)',
-                position: 'relative',
-                height: '420px',
-                overflow: 'hidden',
-              }}
-            >
-              <div style={{ position: 'absolute', top: '16px', left: '16px', fontSize: '9px', color: 'var(--text-tertiary)' }}>
-                GRID COMPASS: NORTH WING
-              </div>
-
-              <svg style={{ width: '100%', height: '100%' }}>
-                <rect x="10%" y="20%" width="80%" height="60%" fill="none" stroke="var(--border-secondary)" strokeWidth="2" strokeDasharray="4 4" rx="8" />
-                <rect x="25%" y="40%" width="50%" height="20%" fill="none" stroke="var(--border-primary)" strokeWidth="1" />
-
-                {currentFloorData.rooms.map((room) => (
-                  <g
-                    key={room.id}
-                    onMouseEnter={() => setHoveredRoom(room)}
-                    onMouseLeave={() => setHoveredRoom(null)}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => alert(`Navigating to: ${room.name} (${selectedFloor} floor)`)}
-                  >
-                    <circle
-                      cx={`${room.x}%`}
-                      cy={`${room.y}%`}
-                      r="12"
-                      fill={getRoomColor(room.type)}
-                      opacity={hoveredRoom?.id === room.id ? 0.3 : 0.15}
-                      style={{ transition: 'all 0.2s' }}
-                    />
-                    <circle cx={`${room.x}%`} cy={`${room.y}%`} r="6" fill={getRoomColor(room.type)} />
-                    {hoveredRoom?.id === room.id && (
-                      <text x={`${room.x}%`} y={`${room.y - 4}%`} textAnchor="middle" fill="var(--text-primary)" fontSize="10px" fontWeight="bold">
-                        {room.id}
-                      </text>
-                    )}
-                  </g>
-                ))}
-              </svg>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="glass-card-static map-legend-card">
-                <h3 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-bold)', marginBottom: '12px' }}>Floor Map Key</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px' }}>
-                  <div className="flex items-center gap-2"><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--accent-blue)' }} /> Classrooms</div>
-                  <div className="flex items-center gap-2"><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--accent-purple)' }} /> Labs</div>
-                  <div className="flex items-center gap-2"><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--accent-amber)' }} /> Administration</div>
-                  <div className="flex items-center gap-2"><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--accent-emerald)' }} /> Library Area</div>
-                </div>
-              </div>
-
-              <div className="glass-card-static map-legend-card" style={{ flex: 1 }}>
-                <h3 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-bold)', marginBottom: '8px' }}>Room Finder Details</h3>
-                {hoveredRoom ? (
-                  <div className="animate-fadeIn">
-                    <span className="badge badge-blue" style={{ fontSize: '9px', marginBottom: '4px' }}>{hoveredRoom.id}</span>
-                    <h4 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-bold)' }}>{hoveredRoom.name}</h4>
-                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                      Category: <span style={{ textTransform: 'capitalize' }}>{hoveredRoom.type}</span>
-                    </p>
-                    <button
-                      className="btn btn-primary btn-sm mt-4"
-                      style={{ width: '100%', fontSize: '11px', display: 'flex', gap: '4px', justifyContent: 'center' }}
-                      onClick={() => alert(`Starting virtual indoor navigation pathing to ${hoveredRoom.id}`)}
-                    >
-                      <Navigation size={12} /> Go There
-                    </button>
-                  </div>
-                ) : (
-                  <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '16px 0', fontSize: '11px' }}>
-                    Hover a pin on the map to inspect room details.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <FloorShowcase floorData={currentFloorData} selectedFloor={selectedFloor} />
     </div>
   );
 }
