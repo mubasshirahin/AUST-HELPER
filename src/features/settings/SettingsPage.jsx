@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useRoutine } from '../../context/RoutineContext';
-import { Camera, CheckCircle, Pencil, Settings, User, Bell, Info, Save, BellOff, BellRing, Clock, AlertTriangle, ShieldCheck, GraduationCap, Users, Send, CheckCircle2, Clock3, Moon, Sun, Newspaper, Terminal, Sparkles } from 'lucide-react';
+import { Camera, CheckCircle, Pencil, Settings, User, Bell, Info, Save, BellOff, BellRing, Clock, AlertTriangle, ShieldCheck, GraduationCap, Users, Send, CheckCircle2, Clock3, Moon, Sun, Newspaper, Terminal, Sparkles, Gauge, MoonStar, Pen, PenTool } from 'lucide-react';
 import AboutUs from './AboutUs';
 import { useNotifications } from '../../hooks/useNotifications';
 import { submitRoleApplication, getApplicationsByUserId, getUserApplicationStatus } from '../../utils/authStorage';
@@ -99,6 +99,10 @@ const themeOptions = [
   { id: 'newsprint', label: 'Newsprint', desc: 'Editorial ink-on-paper', icon: Newspaper },
   { id: 'cyberpunk', label: 'Cyberpunk', desc: 'Neon-noir / glitch terminal', icon: Terminal },
   { id: 'maximalism', label: 'Maximalism', desc: 'Dopamine / Y2K hyperpop', icon: Sparkles },
+  { id: 'industrial', label: 'Industrial', desc: 'Neumorphic machine realism', icon: Gauge },
+  { id: 'midnight', label: 'Midnight', desc: 'Atmospheric dark + amber glow', icon: MoonStar },
+  { id: 'sketchbook', label: 'Sketchbook', desc: 'Rough sketch aesthetic', icon: PenTool },
+  { id: 'minimalist-monochrome', label: 'Monochrome', desc: 'Editorial stark minimalism', icon: Pen },
 ];
 
 export default function SettingsPage() {

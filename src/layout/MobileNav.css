@@ -48,3 +48,32 @@
   border-radius: 50%;
   background: var(--accent-blue);
 }
+
+/* ════════════════════════════════════════════════════════════════
+   SKETCHBOOK / HAND-DRAWN — MobileNav personality
+   ════════════════════════════════════════════════════════════════ */
+[data-theme="sketchbook"] .mobile-nav {
+  background: var(--bg-card);
+  border-top: 2px solid var(--border-primary);
+  box-shadow: 0 -4px 0px 0px rgba(45, 45, 45, 0.06);
+}
+[data-theme="sketchbook"] .mobile-nav-item {
+  border-radius: var(--radius-md);
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-size: 11px;
+  font-weight: 400;
+  transition: transform 100ms ease, color 100ms ease;
+}
+[data-theme="sketchbook"] .mobile-nav-item:hover {
+  color: var(--text-primary);
+  transform: translateY(-2px);
+}
+[data-theme="sketchbook"] .mobile-nav-item.active {
+  color: var(--accent-blue);
+  border: 2px solid var(--accent-blue);
+  background: var(--accent-blue-glow);
+  box-shadow: 2px 2px 0px 0px var(--accent-blue);
+}
+[data-theme="sketchbook"] .mobile-nav-item.active::after {
+  display: none;
+}

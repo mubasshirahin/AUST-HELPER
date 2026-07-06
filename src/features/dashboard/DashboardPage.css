@@ -613,3 +613,539 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CYBERPUNK THEME — Dashboard HUD personality
+   Scoped to [data-theme="cyberpunk"] so the other four themes are untouched.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* ─── Hero → HUD command center ─── */
+[data-theme="cyberpunk"] .dash-hero {
+  border-color: var(--accent-blue);
+  box-shadow: var(--box-shadow-neon-sm), inset 0 0 40px rgba(0, 255, 136, 0.04);
+  clip-path: polygon(
+    0 12px, 12px 0, calc(100% - 12px) 0, 100% 12px,
+    100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px)
+  );
+}
+
+[data-theme="cyberpunk"] .dash-hero-grid {
+  background-image:
+    linear-gradient(rgba(0, 255, 136, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(to bottom, black 30%, transparent 100%);
+}
+
+[data-theme="cyberpunk"] .dash-hero-orb {
+  filter: blur(80px);
+  opacity: 0.45;
+}
+
+[data-theme="cyberpunk"] .dash-hero-orb-1 {
+  background: radial-gradient(circle, var(--accent-blue) 0%, transparent 70%);
+}
+
+[data-theme="cyberpunk"] .dash-hero-orb-2 {
+  background: radial-gradient(circle, var(--accent-purple) 0%, transparent 70%);
+}
+
+[data-theme="cyberpunk"] .dash-hero-badge {
+  font-family: var(--font-label);
+  letter-spacing: 0.16em;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: var(--accent-blue);
+  text-shadow: 0 0 6px rgba(0, 255, 136, 0.45);
+}
+
+[data-theme="cyberpunk"] .dash-hero-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.45);
+}
+
+[data-theme="cyberpunk"] .dash-hero-name {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+
+[data-theme="cyberpunk"] .dash-hero-subtitle {
+  font-family: var(--font-code);
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+}
+
+[data-theme="cyberpunk"] .dash-hero-icon {
+  border-radius: 2px;
+  animation: dashIconPulseCyber 3s ease-in-out infinite;
+}
+
+@keyframes dashIconPulseCyber {
+  0%, 100% { box-shadow: 0 0 12px rgba(0, 255, 136, 0.35); }
+  50% { box-shadow: 0 0 24px rgba(0, 255, 136, 0.55), 0 0 48px rgba(255, 0, 255, 0.28); }
+}
+
+/* ─── Quick Stats → chamfered neon panels ─── */
+[data-theme="cyberpunk"] .dashboard-quick-stats {
+  gap: var(--sp-3);
+}
+
+[data-theme="cyberpunk"] .quick-stat-card {
+  border: 1px solid var(--border-primary);
+  border-radius: 2px;
+  clip-path: polygon(
+    0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px)
+  );
+  background: var(--bg-card);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+[data-theme="cyberpunk"] .quick-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--box-shadow-neon-sm);
+  border-color: var(--accent-blue);
+}
+
+[data-theme="cyberpunk"] .quick-stat-icon {
+  border-radius: 2px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  box-shadow: none;
+}
+
+[data-theme="cyberpunk"] .quick-stat-value {
+  font-family: var(--font-code);
+  letter-spacing: 0.04em;
+}
+
+[data-theme="cyberpunk"] .quick-stat-label {
+  font-family: var(--font-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+[data-theme="cyberpunk"] .quick-stat-bar {
+  background: var(--accent-blue);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.55);
+  opacity: 0.9;
+}
+
+[data-theme="cyberpunk"] .quick-stat-shine {
+  display: none;
+}
+
+/* ─── Focus tabs → HUD segment selector ─── */
+[data-theme="cyberpunk"] .glider-tabs-track {
+  border: 1px solid var(--border-primary);
+  border-radius: 2px;
+  background: var(--bg-secondary);
+  padding: 4px;
+  gap: 2px;
+}
+
+[data-theme="cyberpunk"] .glider-tabs-dashboard .glider-tabs-glider {
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px var(--accent-blue), var(--box-shadow-neon-sm);
+}
+
+[data-theme="cyberpunk"] .glider-tabs-dashboard .glider-tab.active .glider-tab-icon {
+  box-shadow: var(--box-shadow-neon-sm);
+}
+
+[data-theme="cyberpunk"] .glider-tab {
+  border-radius: 2px;
+  transition: color var(--transition-base), transform var(--transition-fast);
+}
+
+[data-theme="cyberpunk"] .glider-tab.active {
+  color: var(--accent-blue);
+  text-shadow: 0 0 6px rgba(0, 255, 136, 0.5);
+}
+
+[data-theme="cyberpunk"] .glider-tab-label {
+  font-family: var(--font-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+[data-theme="cyberpunk"] .glider-tab-desc {
+  font-family: var(--font-code);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+/* ─── Section titles ─── */
+[data-theme="cyberpunk"] .section-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.35);
+}
+
+/* ─── Cards / widgets → chamfered tech panels ─── */
+[data-theme="cyberpunk"] .dashboard-page .glass-card,
+[data-theme="cyberpunk"] .dashboard-page .glass-card-static {
+  border: 1px solid var(--border-primary);
+  border-radius: 2px;
+  clip-path: polygon(
+    0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px)
+  );
+  background: var(--bg-card);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+[data-theme="cyberpunk"] .dashboard-page .glass-card:hover,
+[data-theme="cyberpunk"] .dashboard-page .glass-card-static:hover {
+  border-color: var(--accent-blue);
+  box-shadow: var(--box-shadow-neon-sm);
+  transform: translateY(-1px);
+}
+
+/* Calm data guardrail: tables wrapped in cards stay flat, no chamfer scale */
+[data-theme="cyberpunk"] .dashboard-page .glass-card:has(table),
+[data-theme="cyberpunk"] .dashboard-page .glass-card-static:has(table) {
+  clip-path: none;
+  border-radius: 0;
+}
+
+[data-theme="cyberpunk"] .dashboard-page .glass-card:has(table):hover,
+[data-theme="cyberpunk"] .dashboard-page .glass-card-static:has(table):hover {
+  transform: none;
+  box-shadow: var(--box-shadow-neon-sm);
+}
+
+/* ─── Focus emphasis ring → neon HUD ring ─── */
+[data-theme="cyberpunk"] .dashboard-focus-schedule .dash-section[data-focus~="schedule"]::before,
+[data-theme="cyberpunk"] .dashboard-focus-progress .dash-section[data-focus~="progress"]::before {
+  border-radius: 0;
+  border: 1px solid var(--accent-blue);
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.35);
+  inset: -3px;
+}
+
+[data-theme="cyberpunk"] .dashboard-focus-progress .dash-section[data-focus~="progress"]::before {
+  border-color: var(--accent-emerald);
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.35);
+}
+
+/* ─── List rows → tech panel rows ─── */
+[data-theme="cyberpunk"] .routine-item,
+[data-theme="cyberpunk"] .notice-item,
+[data-theme="cyberpunk"] .exam-course-card,
+[data-theme="cyberpunk"] .exam-slot-display {
+  border-left: 2px solid var(--border-primary);
+  background: transparent;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+[data-theme="cyberpunk"] .routine-item:hover,
+[data-theme="cyberpunk"] .notice-item:hover,
+[data-theme="cyberpunk"] .exam-course-card:hover,
+[data-theme="cyberpunk"] .exam-slot-display:hover {
+  border-left-color: var(--accent-blue);
+  background: var(--accent-blue-glow);
+}
+
+/* ─── Weekly planner → HUD timetable ─── */
+[data-theme="cyberpunk"] .weekly-table-wrap {
+  border: 1px solid var(--border-primary);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+[data-theme="cyberpunk"] .weekly-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+[data-theme="cyberpunk"] .weekly-day-head,
+[data-theme="cyberpunk"] .weekly-time-head {
+  border-bottom: 1px solid var(--accent-blue);
+  border-right: 1px solid var(--border-secondary);
+  background: var(--bg-tertiary);
+  color: var(--accent-blue);
+  font-family: var(--font-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+[data-theme="cyberpunk"] .weekly-day-cell {
+  border-right: 1px solid var(--border-secondary);
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+[data-theme="cyberpunk"] .weekly-class-block {
+  border-radius: 2px;
+  border-left: 3px solid var(--accent-blue);
+  background: var(--bg-tertiary);
+  transition: filter var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+[data-theme="cyberpunk"] .weekly-class-cell:hover .weekly-class-block {
+  filter: none;
+  box-shadow: var(--box-shadow-neon-sm);
+  border-left-color: var(--accent-blue);
+}
+
+/* ─── Progress bars → glowing energy bars ─── */
+[data-theme="cyberpunk"] .progress-bar {
+  border: 1px solid var(--border-primary);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+[data-theme="cyberpunk"] .progress-bar-fill {
+  background: var(--gradient-primary);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.55);
+  border-radius: 0;
+}
+
+/* ─── Badges → square neon chips ─── */
+[data-theme="cyberpunk"] .badge {
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  font-family: var(--font-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+[data-theme="cyberpunk"] .badge-rose {
+  text-shadow: 0 0 4px rgba(255, 51, 102, 0.45);
+  box-shadow: 0 0 6px rgba(255, 51, 102, 0.18);
+}
+
+[data-theme="cyberpunk"] .badge-emerald {
+  text-shadow: 0 0 4px rgba(0, 255, 136, 0.45);
+  box-shadow: 0 0 6px rgba(0, 255, 136, 0.18);
+}
+
+/* ─── Empty state → terminal no-signal ─── */
+[data-theme="cyberpunk"] .empty-state {
+  font-family: var(--font-code);
+  color: var(--text-tertiary);
+  letter-spacing: 0.06em;
+}
+
+[data-theme="cyberpunk"] .empty-state h3 {
+  font-family: var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-blue);
+}
+
+/* ─── Notification/alert banner → HUD alert ─── */
+[data-theme="cyberpunk"] .info-banner {
+  border-left: 3px solid var(--accent-blue);
+  border-radius: 2px;
+  background: var(--accent-blue-glow);
+  font-family: var(--font-code);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ─── Modals → holographic HUD panel ─── */
+[data-theme="cyberpunk"] .routine-edit-modal,
+[data-theme="cyberpunk"] .modal {
+  border: 1px solid var(--accent-blue);
+  border-radius: 2px;
+  background: var(--bg-glass-heavy);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--box-shadow-neon-lg);
+  clip-path: polygon(
+    0 12px, 12px 0, calc(100% - 12px) 0, 100% 12px,
+    100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px)
+  );
+}
+
+[data-theme="cyberpunk"] .modal-overlay {
+  background: rgba(10, 10, 15, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+/* ─── Attendance tracker & deadline ticker → status readouts ─── */
+[data-theme="cyberpunk"] .routine-attendance-tracker,
+[data-theme="cyberpunk"] .deadline-ticker,
+[data-theme="cyberpunk"] .pomodoro-timer,
+[data-theme="cyberpunk"] .attendance-widget {
+  border-top: 2px solid var(--border-primary);
+  border-bottom: 2px solid var(--border-primary);
+  background:
+    linear-gradient(180deg, rgba(0, 255, 136, 0.03) 0%, transparent 100%);
+}
+
+[data-theme="cyberpunk"] .routine-attendance-tracker .progress-bar-fill,
+[data-theme="cyberpunk"] .attendance-widget .progress-bar-fill {
+  background: var(--gradient-primary);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.55);
+}
+
+/* ─── Keyboard focus → neon ring (dashboard surfaces) ─── */
+[data-theme="cyberpunk"] .dashboard-page :focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+  box-shadow: var(--box-shadow-neon-sm);
+}
+
+/* ─── Reduced motion: preserve static neon, remove continuous motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="cyberpunk"] .dash-hero-orb { animation: none; }
+  [data-theme="cyberpunk"] .dash-hero-icon { animation: none; }
+  [data-theme="cyberpunk"] .quick-stat-shine { display: none; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   SKETCHBOOK — Dashboard personality
+   ════════════════════════════════════════════════════════════════ */
+[data-theme="sketchbook"] .dash-hero {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  background: var(--bg-card);
+}
+[data-theme="sketchbook"] .dash-hero-bg,
+[data-theme="sketchbook"] .dash-hero-orb { display: none; }
+[data-theme="sketchbook"] .dash-hero-grid {
+  background-image:
+    linear-gradient(rgba(45, 45, 45, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 45, 45, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(to bottom, black 30%, transparent 100%);
+}
+[data-theme="sketchbook"] .dash-hero-badge {
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--accent-blue);
+  background: transparent;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-family: 'Patrick Hand', cursive;
+  color: var(--accent-blue);
+}
+[data-theme="sketchbook"] .dash-hero-icon {
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--accent-blue);
+  border: 2px solid var(--border-primary);
+  box-shadow: var(--shadow-sm);
+}
+[data-theme="sketchbook"] .dash-hero-title {
+  font-family: 'Kalam', 'Patrick Hand', cursive;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+[data-theme="sketchbook"] .dash-hero-name {
+  background: none;
+  -webkit-text-fill-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+[data-theme="sketchbook"] .dash-hero-subtitle {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+}
+[data-theme="sketchbook"] .quick-stat-card {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+[data-theme="sketchbook"] .quick-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+[data-theme="sketchbook"] .quick-stat-icon {
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border-primary);
+  background: var(--bg-card);
+  color: var(--accent-blue);
+  box-shadow: var(--shadow-sm);
+}
+[data-theme="sketchbook"] .quick-stat-value {
+  font-family: 'Kalam', 'Patrick Hand', cursive;
+  font-weight: 700;
+}
+[data-theme="sketchbook"] .quick-stat-label {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+[data-theme="sketchbook"] .quick-stat-bar {
+  background: var(--border-primary);
+  opacity: 1;
+}
+[data-theme="sketchbook"] .quick-stat-shine { display: none; }
+[data-theme="sketchbook"] .dashboard-page .glass-card,
+[data-theme="sketchbook"] .dashboard-page .glass-card-static {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  background: var(--bg-card);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+[data-theme="sketchbook"] .dashboard-page .glass-card:hover,
+[data-theme="sketchbook"] .dashboard-page .glass-card-static:hover {
+  box-shadow: var(--shadow-lg);
+  transform: rotate(-0.5deg);
+}
+[data-theme="sketchbook"] .section-title {
+  font-family: 'Kalam', 'Patrick Hand', cursive;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 6px;
+  text-decoration-color: var(--accent-blue);
+  text-decoration-thickness: 2px;
+  letter-spacing: 0.01em;
+}
+[data-theme="sketchbook"] .routine-edit-header,
+[data-theme="sketchbook"] .routine-edit-actions {
+  border-bottom-color: var(--border-primary);
+}
+[data-theme="sketchbook"] .routine-edit-modal {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  background: var(--bg-card);
+}
+[data-theme="sketchbook"] .weekly-table-wrap {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-md);
+}
+[data-theme="sketchbook"] .weekly-day-head,
+[data-theme="sketchbook"] .weekly-time-head {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  border-bottom: 2px solid var(--border-primary);
+}
+[data-theme="sketchbook"] .weekly-class-block {
+  border-radius: var(--radius-sm);
+  border-left-width: 3px !important;
+}
+[data-theme="sketchbook"] .glider-tabs-track {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+[data-theme="sketchbook"] .glider-tab {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+[data-theme="sketchbook"] .glider-tab.active {
+  color: var(--accent-blue);
+}
+[data-theme="sketchbook"] .glider-tab-label {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+}
+[data-theme="sketchbook"] .glider-tabs-glider {
+  background: var(--accent-blue-glow);
+  border-radius: var(--radius-sm);
+}

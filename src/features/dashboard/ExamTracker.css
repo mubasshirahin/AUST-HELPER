@@ -228,3 +228,37 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   SKETCHBOOK — ExamTracker personality
+   ════════════════════════════════════════════════════════════════ */
+[data-theme="sketchbook"] .exam-course-card {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+[data-theme="sketchbook"] .exam-course-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: rotate(0.5deg);
+}
+[data-theme="sketchbook"] .exam-course-code {
+  font-family: 'Kalam', 'Patrick Hand', cursive;
+  font-weight: 700;
+}
+[data-theme="sketchbook"] .exam-slot-display {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+[data-theme="sketchbook"] .exam-slot-label-text {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+[data-theme="sketchbook"] .exam-edit-form {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}

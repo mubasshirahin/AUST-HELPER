@@ -203,3 +203,77 @@
     display: none;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   SKETCHBOOK / HAND-DRAWN — Sidebar personality
+   ════════════════════════════════════════════════════════════════ */
+[data-theme="sketchbook"] .sidebar {
+  background: var(--bg-card);
+  border-right: 2px solid var(--border-primary);
+  box-shadow: 4px 4px 0px 0px rgba(45, 45, 45, 0.08);
+}
+[data-theme="sketchbook"] .sidebar-header {
+  border-bottom: 2px solid var(--border-primary);
+  padding: var(--sp-4) var(--sp-4);
+}
+[data-theme="sketchbook"] .logo-icon {
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border-primary);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+[data-theme="sketchbook"] .logo-title {
+  font-family: 'Kalam', 'Patrick Hand', cursive;
+  font-weight: 700;
+  font-size: var(--fs-lg);
+}
+[data-theme="sketchbook"] .logo-subtitle {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+}
+[data-theme="sketchbook"] .sidebar-toggle {
+  border-radius: var(--radius-sm);
+}
+[data-theme="sketchbook"] .sidebar-toggle:hover {
+  background: var(--bg-tertiary);
+}
+[data-theme="sketchbook"] .nav-item {
+  border-radius: var(--radius-md);
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-size: var(--fs-md);
+  font-weight: 400;
+  padding: 8px var(--sp-3);
+  transition: transform 100ms ease, background 100ms ease, color 100ms ease;
+}
+[data-theme="sketchbook"] .nav-item:hover {
+  background: var(--bg-tertiary);
+  transform: translateX(2px);
+}
+[data-theme="sketchbook"] .nav-item.active {
+  background: var(--accent-blue-glow);
+  color: var(--accent-blue);
+  border: 2px solid var(--accent-blue);
+  box-shadow: 3px 3px 0px 0px var(--accent-blue);
+}
+[data-theme="sketchbook"] .nav-tooltip {
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border-primary);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-md);
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-size: var(--fs-sm);
+}
+[data-theme="sketchbook"] .sidebar-footer {
+  border-top: 2px solid var(--border-primary);
+}
+[data-theme="sketchbook"] .user-card {
+  border-radius: var(--radius-md);
+}
+[data-theme="sketchbook"] .user-name {
+  font-family: 'Kalam', 'Patrick Hand', cursive;
+  font-weight: 700;
+  font-size: var(--fs-md);
+}
+[data-theme="sketchbook"] .user-dept {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+}

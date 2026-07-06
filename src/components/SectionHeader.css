@@ -1,0 +1,33 @@
+[data-theme="sketchbook"] .section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3, 12px);
+  margin-bottom: var(--sp-6, 24px);
+}
+
+[data-theme="sketchbook"] .section-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  border: 2px solid var(--border-primary, #2d2d2d);
+  background: var(--bg-card, #ffffff);
+  box-shadow: 2px 2px 0px 0px rgba(45, 45, 45, 0.1);
+  color: var(--accent-blue, #ff4d4d);
+  flex-shrink: 0;
+}
+
+[data-theme="sketchbook"] .section-header-title {
+  font-family: 'Kalam', 'Patrick Hand', cursive;
+  font-weight: 700;
+  font-size: var(--fs-2xl, 1.5rem);
+  color: var(--text-primary, #2d2d2d);
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 6px;
+  text-decoration-color: var(--accent-blue, #ff4d4d);
+  text-decoration-thickness: 2px;
+  line-height: 1.2;
+}

@@ -183,3 +183,90 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   SKETCHBOOK THEME — Hand-drawn personality
+   ═══════════════════════════════════════════════════════ */
+[data-theme="sketchbook"] .admin-panel-container {
+  font-family: 'Patrick Hand', cursive;
+}
+
+[data-theme="sketchbook"] .admin-header {
+  border-bottom-color: #2d2d2d;
+}
+
+[data-theme="sketchbook"] .admin-header h2 {
+  font-family: 'Kalam', cursive;
+}
+
+[data-theme="sketchbook"] .admin-tabs {
+  border-bottom-color: #2d2d2d;
+}
+
+[data-theme="sketchbook"] .admin-tabs button {
+  font-family: 'Patrick Hand', cursive;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  transition: box-shadow 100ms ease, transform 100ms ease;
+}
+
+[data-theme="sketchbook"] .admin-tabs button:hover {
+  box-shadow: 3px 3px 0 0 #2d2d2d;
+  transform: translate(-1px, -1px);
+}
+
+[data-theme="sketchbook"] .admin-panel-container table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+[data-theme="sketchbook"] .admin-panel-container th {
+  font-family: 'Kalam', cursive;
+  border-bottom-color: #2d2d2d;
+  letter-spacing: 0.04em;
+}
+
+[data-theme="sketchbook"] .admin-panel-container td {
+  border-bottom-color: #2d2d2d;
+  font-family: 'Patrick Hand', cursive;
+}
+
+[data-theme="sketchbook"] .modal-content {
+  border-color: #2d2d2d;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: 8px 8px 0 0 #2d2d2d;
+  background: #fdfbf7;
+}
+
+[data-theme="sketchbook"] .modal-content h2,
+[data-theme="sketchbook"] .modal-content h3 {
+  font-family: 'Kalam', cursive;
+}
+
+[data-theme="sketchbook"] .modal-content label {
+  font-family: 'Patrick Hand', cursive;
+}
+
+[data-theme="sketchbook"] .modal-content input,
+[data-theme="sketchbook"] .modal-content select,
+[data-theme="sketchbook"] .modal-content textarea {
+  border-color: #2d2d2d;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  background: #fdfbf7;
+  font-family: 'Patrick Hand', cursive;
+}
+
+[data-theme="sketchbook"] .btn-rose {
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  font-family: 'Kalam', cursive;
+  box-shadow: 4px 4px 0 0 #2d2d2d;
+  transition: box-shadow 100ms ease, transform 100ms ease;
+}
+
+[data-theme="sketchbook"] .btn-rose:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 #2d2d2d;
+}
+
+[data-theme="sketchbook"] .profile-field {
+  border-bottom-color: #2d2d2d;
+}

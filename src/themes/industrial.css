@@ -1,0 +1,400 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   INDUSTRIAL SKEUOMORPHISM  —  "machine realism" theme
+   ────────────────────────────────────────────────────────────────────────────
+   A light-only, tactile neumorphic aesthetic: matte ABS-plastic chassis under
+   diffuse top-left workshop light. Depth comes entirely from paired shadows
+   (dark bottom-right #babecc / highlight top-left #ffffff), never from borders.
+   Safety-orange (#ff4757, "Braun red") is the ONLY loud colour and is reserved
+   for interactive triggers, links, toggles and alerts.
+
+   Architecture note: this file mirrors the per-theme convention in index.css —
+   a [data-theme="industrial"] TOKEN block (every feature reads from these) plus
+   a scoped PERSONALITY layer that restyles the shared component classes. It
+   lives in its own file (imported from main.jsx after index.css) purely so it
+   can be authored without contending for index.css. Because only one theme is
+   ever active via the data-theme attribute, cascade order is irrelevant.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Token remap ─────────────────────────────────────────────────────────────
+   Redefines the same custom-property contract the other themes expose, so the
+   entire app re-skins from tokens alone. The neumorphic dual-shadows are mapped
+   onto the shared --shadow-sm/md/lg/xl scale, which means every .glass-card and
+   panel across the app lifts off the chassis automatically. */
+[data-theme="industrial"] {
+  /* Surfaces — the plastic the whole interface is moulded from */
+  --bg-primary: #e0e5ec;      /* chassis (Level 0) — everything is mounted to this */
+  --bg-secondary: #f0f2f5;    /* raised panel surface */
+  --bg-tertiary: #d1d9e6;     /* recessed / sunken areas (Level -1) */
+  --bg-card: #e0e5ec;         /* cards are the SAME material as the chassis — */
+  --bg-card-hover: #e6ebf2;   /* depth is read from shadow, not colour */
+  --bg-glass: rgba(224, 229, 236, 0.85);
+  --bg-glass-heavy: rgba(224, 229, 236, 0.96);
+  --bg-input: #d1d9e6;        /* "data slot" — a well machined into the surface */
+
+  /* Ink — dark charcoal, softer than pure black for reduced eye strain */
+  --text-primary: #2d3436;
+  --text-secondary: #4a5568;  /* WCAG-AA over the chassis */
+  --text-tertiary: #5f6b7a;
+  --text-inverse: #ffffff;
+
+  /* Borders — the two halves of the neumorphic lighting equation */
+  --border-primary: #babecc;                    /* shadow half */
+  --border-secondary: rgba(163, 177, 198, 0.45);
+  --border-focus: rgba(255, 71, 87, 0.55);
+
+  /* Accents — safety-orange is the emergency-stop button of the palette and maps
+     to the primary interactive slot. The rest are muted workshop tones so the
+     colour-coded category badges stay distinguishable without breaking the
+     monochrome discipline. */
+  --accent-blue: #ff4757;      /* Braun red / safety orange — PRIMARY */
+  --accent-blue-glow: rgba(255, 71, 87, 0.18);
+  --accent-purple: #5b6472;    /* graphite */
+  --accent-purple-glow: rgba(91, 100, 114, 0.16);
+  --accent-amber: #b26a2b;     /* powder-coat clay */
+  --accent-amber-glow: rgba(178, 106, 43, 0.16);
+  --accent-emerald: #3f8a6e;   /* status green */
+  --accent-emerald-glow: rgba(63, 138, 110, 0.16);
+  --accent-rose: #ff4757;      /* alert = the same red */
+  --accent-rose-glow: rgba(255, 71, 87, 0.16);
+  --accent-cyan: #4f6f7d;      /* brushed steel-blue */
+  --accent-cyan-glow: rgba(79, 111, 125, 0.16);
+  --accent-orange: #b8791f;    /* warning amber */
+  --accent-orange-glow: rgba(184, 121, 31, 0.16);
+
+  /* Gradients — restrained brushed-metal sheens, lit from the top-left */
+  --gradient-primary: linear-gradient(135deg, #ff5a68 0%, #ff4757 100%);
+  --gradient-secondary: linear-gradient(135deg, #f0f2f5 0%, #d1d9e6 100%);
+  --gradient-accent: linear-gradient(135deg, #ff4757 0%, #b26a2b 100%);
+  --gradient-warm: linear-gradient(135deg, #ff4757 0%, #b8791f 100%);
+  --gradient-success: linear-gradient(135deg, #3f8a6e 0%, #4f6f7d 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(186, 190, 204, 0.14) 100%);
+
+  /* Radius — soft injection-moulded curves, not machined metal edges */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 30px;
+
+  /* Neumorphic shadow scale — remapped so the whole app gains depth for free */
+  --shadow-sm: 5px 5px 10px #babecc, -5px -5px 10px #ffffff;
+  --shadow-md: 8px 8px 16px #babecc, -8px -8px 16px #ffffff;
+  --shadow-lg: 12px 12px 24px #babecc, -12px -12px 24px #ffffff;
+  --shadow-xl: 18px 18px 36px #aeb4c4, -14px -14px 32px #ffffff;
+  --shadow-glow-blue: 0 0 0 3px rgba(255, 71, 87, 0.18);
+  --shadow-glow-purple: 8px 8px 16px #babecc, -8px -8px 16px #ffffff;
+  --shadow-glow-amber: 8px 8px 16px #babecc, -8px -8px 16px #ffffff;
+
+  /* Industrial-only primitives consumed by the personality layer below */
+  --ind-light: #ffffff;
+  --ind-dark: #babecc;
+  --ind-darker: #a3b1c6;
+  --ind-recessed: inset 4px 4px 8px #babecc, inset -4px -4px 8px #ffffff;
+  --ind-recessed-deep: inset 6px 6px 12px #b2b7c6, inset -4px -4px 10px #ffffff;
+  --ind-pressed: inset 5px 5px 10px #babecc, inset -5px -5px 10px #ffffff;
+  --ind-floating: 12px 12px 24px #babecc, -12px -12px 24px #ffffff, inset 1px 1px 0 rgba(255, 255, 255, 0.5);
+  --ind-accent: #ff4757;
+  --ind-accent-dark: #a6323c;
+  --ind-accent-light: #ff7a84;
+  --ind-led-glow: 0 0 8px 1px rgba(255, 71, 87, 0.55);
+  --ind-screw: #aab0be;
+
+  --scrollbar-track: #d1d9e6;
+  --scrollbar-thumb: #babecc;
+  --scrollbar-thumb-hover: #a3b1c6;
+
+  --status-online: #3f8a6e;
+  --status-away: #b8791f;
+  --status-offline: #9aa3b2;
+  --status-busy: #ff4757;
+
+  --danger: #ff4757;
+  --warning: #b26a2b;
+  --success: #3f8a6e;
+  --info: #4f6f7d;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PERSONALITY LAYER  —  scoped to [data-theme="industrial"]
+   Restyles the shared component classes into physical, tactile objects. Pure
+   CSS: no component/DOM changes required, so it composes cleanly with the app.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Chassis: matte-plastic grain + a single top-left light hotspot ─── */
+[data-theme="industrial"] body {
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(1100px 620px at 10% 4%, rgba(255, 255, 255, 0.55), transparent 62%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-attachment: fixed, fixed;
+}
+
+/* ─── Type: embossed headings, stamped monospace metadata ─── */
+[data-theme="industrial"] .page-title,
+[data-theme="industrial"] .section-title,
+[data-theme="industrial"] h1,
+[data-theme="industrial"] h2,
+[data-theme="industrial"] h3 {
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);   /* subtle moulded-in highlight */
+}
+[data-theme="industrial"] .page-title { font-weight: var(--fw-black); }
+
+/* Numeric + label displays read as engraved terminal data */
+[data-theme="industrial"] .stat-value {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+[data-theme="industrial"] .stat-label,
+[data-theme="industrial"] .countdown-label,
+[data-theme="industrial"] .badge,
+[data-theme="industrial"] .tag {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ─── Cards: panels bolted onto the chassis, with corner screws ───────────────
+   Screws are painted into the card's own background (4 radial gradients) so no
+   pseudo-element is consumed — a dark dimple ringed by a highlight reads as a
+   recessed machine screw under the top-left light. */
+[data-theme="industrial"] .glass-card,
+[data-theme="industrial"] .glass-card-static {
+  background-color: var(--bg-card);
+  background-image:
+    radial-gradient(circle at 13px 13px, var(--ind-screw) 0 1.5px, rgba(255, 255, 255, 0.85) 2.1px, transparent 3px),
+    radial-gradient(circle at calc(100% - 13px) 13px, var(--ind-screw) 0 1.5px, rgba(255, 255, 255, 0.85) 2.1px, transparent 3px),
+    radial-gradient(circle at 13px calc(100% - 13px), var(--ind-screw) 0 1.5px, rgba(255, 255, 255, 0.85) 2.1px, transparent 3px),
+    radial-gradient(circle at calc(100% - 13px) calc(100% - 13px), var(--ind-screw) 0 1.5px, rgba(255, 255, 255, 0.85) 2.1px, transparent 3px);
+  background-repeat: no-repeat;
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+[data-theme="industrial"] .glass-card:hover {
+  background-color: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+
+/* List rows: lighter treatment — a lift, but no screws (avoids visual noise) */
+[data-theme="industrial"] .card-list-item {
+  background: var(--bg-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+[data-theme="industrial"] .card-list-item:hover {
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* ─── Buttons: physical keys ──────────────────────────────────────────────────
+   Primary depresses with translate + shadow inversion for tactile feedback. */
+[data-theme="industrial"] .btn {
+  font-family: var(--font-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: var(--fw-bold);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  transition: transform 150ms cubic-bezier(0.175, 0.885, 0.32, 1.275),
+              box-shadow 150ms ease, filter 150ms ease, color 150ms ease;
+}
+
+[data-theme="industrial"] .btn-primary {
+  background: var(--ind-accent);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 5px 5px 10px rgba(166, 50, 60, 0.35),
+              -4px -4px 10px rgba(255, 120, 130, 0.5),
+              inset 1px 1px 0 rgba(255, 255, 255, 0.3);
+}
+[data-theme="industrial"] .btn-primary:hover {
+  filter: brightness(1.06);
+  box-shadow: 6px 6px 14px rgba(166, 50, 60, 0.4),
+              -5px -5px 14px rgba(255, 120, 130, 0.55),
+              inset 1px 1px 0 rgba(255, 255, 255, 0.35);
+}
+[data-theme="industrial"] .btn-primary:active {
+  transform: translateY(2px);
+  box-shadow: inset 4px 4px 8px rgba(150, 40, 50, 0.55),
+              inset -3px -3px 8px rgba(255, 130, 140, 0.4);
+}
+
+/* Secondary: a raised chassis key that presses in */
+[data-theme="industrial"] .btn-secondary {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: none;
+  box-shadow: var(--shadow-sm);
+}
+[data-theme="industrial"] .btn-secondary:hover {
+  background: var(--bg-primary);
+  color: var(--ind-accent);
+  border-color: transparent;
+  box-shadow: var(--shadow-md);
+}
+[data-theme="industrial"] .btn-secondary:active {
+  transform: translateY(1px);
+  box-shadow: var(--ind-pressed);
+}
+
+/* Ghost: a flat label that sinks into a groove on interaction */
+[data-theme="industrial"] .btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  box-shadow: none;
+}
+[data-theme="industrial"] .btn-ghost:hover {
+  background: var(--bg-tertiary);
+  color: var(--ind-accent);
+  box-shadow: var(--ind-recessed);
+}
+[data-theme="industrial"] .btn-ghost:active {
+  transform: translateY(1px);
+  box-shadow: var(--ind-recessed);
+}
+
+[data-theme="industrial"] .btn-danger {
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 5px 5px 10px rgba(166, 50, 60, 0.35),
+              -4px -4px 10px rgba(255, 120, 130, 0.5);
+}
+[data-theme="industrial"] .btn-danger:active {
+  transform: translateY(2px);
+  box-shadow: inset 4px 4px 8px rgba(150, 40, 50, 0.55),
+              inset -3px -3px 8px rgba(255, 130, 140, 0.4);
+}
+
+[data-theme="industrial"] .btn-icon { box-shadow: var(--shadow-sm); }
+[data-theme="industrial"] .btn-icon:active { box-shadow: var(--ind-pressed); transform: translateY(1px); }
+
+/* ─── Inputs: recessed data slots, monospace entry, LED focus glow ─── */
+[data-theme="industrial"] .input,
+[data-theme="industrial"] .search-box input {
+  background: var(--bg-input);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: var(--ind-recessed);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+[data-theme="industrial"] .input:focus,
+[data-theme="industrial"] .search-box input:focus {
+  outline: none;
+  border-color: transparent;
+  box-shadow: var(--ind-recessed), 0 0 0 2px var(--ind-accent);
+}
+[data-theme="industrial"] .input::placeholder,
+[data-theme="industrial"] .search-box input::placeholder {
+  color: var(--text-tertiary);
+  opacity: 0.7;
+}
+
+/* ─── Tabs: a recessed rail; the active key sits proud of the surface ─── */
+[data-theme="industrial"] .tabs {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--ind-recessed);
+}
+[data-theme="industrial"] .tab {
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: var(--fw-bold);
+  border-radius: var(--radius-md);
+}
+[data-theme="industrial"] .tab:hover {
+  background: transparent;
+  color: var(--text-primary);
+}
+[data-theme="industrial"] .tab.active {
+  background: var(--bg-primary);
+  color: var(--ind-accent);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ─── Tags: stamped chips that click in when active ─── */
+[data-theme="industrial"] .tag {
+  background: var(--bg-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+[data-theme="industrial"] .tag:hover,
+[data-theme="industrial"] .tag.active {
+  color: var(--ind-accent);
+  box-shadow: var(--ind-pressed);
+}
+
+/* ─── Progress: a groove machined into the panel, filled with a lit bar ─── */
+[data-theme="industrial"] .progress-bar {
+  height: 8px;
+  background: var(--bg-tertiary);
+  box-shadow: var(--ind-recessed);
+}
+[data-theme="industrial"] .progress-bar-fill {
+  background: linear-gradient(180deg, var(--ind-accent-light), var(--ind-accent));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+/* ─── Toggle: a spring switch in a recessed track, LED-lit when on ─── */
+[data-theme="industrial"] .toggle-switch {
+  background: var(--bg-tertiary);
+  border: none;
+  box-shadow: var(--ind-recessed);
+}
+[data-theme="industrial"] .toggle-switch::after {
+  background: var(--bg-primary);
+  box-shadow: 2px 2px 4px #babecc, -2px -2px 4px #ffffff;
+}
+[data-theme="industrial"] .toggle-switch.active {
+  background: var(--ind-accent);
+  border-color: transparent;
+  box-shadow: var(--ind-recessed), var(--ind-led-glow);
+}
+[data-theme="industrial"] .toggle-switch.active::after {
+  background: #ffffff;
+}
+
+/* ─── Modal: a floating panel lifted well clear of the chassis ─── */
+[data-theme="industrial"] .modal {
+  background: var(--bg-primary);
+  border: none;
+  border-radius: var(--radius-xl);
+  box-shadow: 20px 20px 44px #a3b1c6, -14px -14px 34px #ffffff;
+}
+
+/* ─── Banner: recessed strip with a coloured status rule ─── */
+[data-theme="industrial"] .info-banner {
+  border-radius: var(--radius-md);
+  border-width: 0;
+  border-left: 3px solid currentColor;
+  box-shadow: var(--ind-recessed);
+}
+
+/* ─── Keyboard focus: safety-orange ring ─── */
+[data-theme="industrial"] :focus-visible {
+  outline: 2px solid var(--ind-accent);
+  outline-offset: 2px;
+}
+
+/* ─── Respect reduced-motion: keep the depth, drop the travel ─── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="industrial"] .glass-card:hover,
+  [data-theme="industrial"] .card-list-item:hover {
+    transform: none;
+  }
+  [data-theme="industrial"] .btn,
+  [data-theme="industrial"] .btn-primary:active,
+  [data-theme="industrial"] .btn-secondary:active,
+  [data-theme="industrial"] .btn-ghost:active,
+  [data-theme="industrial"] .btn-danger:active {
+    transition: none;
+    transform: none;
+  }
+}

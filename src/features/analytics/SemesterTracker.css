@@ -638,3 +638,78 @@
   .st-type-grid { gap: var(--sp-1); }
   .st-type-btn { padding: 4px 9px; font-size: 0.62rem; }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   SKETCHBOOK — SemesterTracker personality
+   ════════════════════════════════════════════════════════════════ */
+[data-theme="sketchbook"] .st-table-scroll {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-md);
+}
+[data-theme="sketchbook"] .st-th {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  border-bottom: 2px solid var(--border-primary);
+  background: var(--bg-tertiary);
+}
+[data-theme="sketchbook"] .st-th-course {
+  border-right: 2px solid var(--border-primary);
+}
+[data-theme="sketchbook"] .st-td-course {
+  border-right: 2px solid var(--border-primary);
+}
+[data-theme="sketchbook"] .st-course-code {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-weight: 700;
+}
+[data-theme="sketchbook"] .st-course-name {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+}
+[data-theme="sketchbook"] .st-cell-input {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+}
+[data-theme="sketchbook"] .st-lab-card {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+[data-theme="sketchbook"] .st-legend {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+[data-theme="sketchbook"] .st-legend-item {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+}
+[data-theme="sketchbook"] .st-section-title {
+  font-family: 'Kalam', 'Patrick Hand', cursive;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--accent-blue);
+  text-decoration-thickness: 2px;
+}
+[data-theme="sketchbook"] .st-grade-badge {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+}
+[data-theme="sketchbook"] .st-grade-letter {
+  font-family: 'Kalam', cursive;
+  font-weight: 700;
+}
+[data-theme="sketchbook"] .st-total-val {
+  font-family: 'Kalam', 'Patrick Hand', cursive;
+  font-weight: 700;
+}
+[data-theme="sketchbook"] .st-setup-panel {
+  border-top: 2px solid var(--border-primary);
+}
+[data-theme="sketchbook"] .st-empty h3 {
+  font-family: 'Kalam', cursive;
+}
+[data-theme="sketchbook"] .st-empty p {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+}

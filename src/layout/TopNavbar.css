@@ -264,3 +264,81 @@
     display: none;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   SKETCHBOOK / HAND-DRAWN — TopNavbar personality
+   ════════════════════════════════════════════════════════════════ */
+[data-theme="sketchbook"] .topbar {
+  border-bottom: 2px solid var(--border-primary);
+  background: var(--bg-card);
+}
+[data-theme="sketchbook"] .topbar-title {
+  font-family: 'Kalam', 'Patrick Hand', cursive;
+  font-weight: 700;
+  font-size: var(--fs-md);
+}
+[data-theme="sketchbook"] .topbar-greeting {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+}
+[data-theme="sketchbook"] .topbar-menu-btn {
+  border-radius: var(--radius-sm);
+}
+[data-theme="sketchbook"] .topbar-menu-btn:hover {
+  background: var(--bg-tertiary);
+}
+[data-theme="sketchbook"] .topbar-search input {
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-primary);
+  background: var(--bg-card);
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+}
+[data-theme="sketchbook"] .topbar-search input:focus {
+  border-color: var(--accent-purple);
+  background: var(--bg-card);
+  box-shadow: none;
+}
+[data-theme="sketchbook"] .topbar-icon-btn {
+  border-radius: var(--radius-sm);
+}
+[data-theme="sketchbook"] .topbar-icon-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+[data-theme="sketchbook"] .theme-toggle-icon.dark,
+[data-theme="sketchbook"] .theme-toggle-icon.light,
+[data-theme="sketchbook"] .theme-toggle-icon.newsprint,
+[data-theme="sketchbook"] .theme-toggle-icon.cyberpunk {
+  color: var(--text-primary);
+  filter: none;
+}
+[data-theme="sketchbook"] .theme-menu {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+}
+[data-theme="sketchbook"] .theme-menu-heading {
+  font-family: 'Kalam', 'Patrick Hand', cursive;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+[data-theme="sketchbook"] .theme-menu-item {
+  border-radius: var(--radius-sm);
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-weight: 400;
+}
+[data-theme="sketchbook"] .theme-menu-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+[data-theme="sketchbook"] .theme-menu-item.active {
+  background: var(--accent-blue-glow);
+  color: var(--accent-blue);
+  border: 2px solid var(--accent-blue);
+  box-shadow: 2px 2px 0px 0px var(--accent-blue);
+}
+[data-theme="sketchbook"] .theme-menu-check {
+  color: var(--accent-blue);
+}

@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const ThemeContext = createContext();
 
-export const THEMES = ['dark', 'light', 'newsprint', 'cyberpunk', 'maximalism'];
+export const THEMES = ['dark', 'light', 'newsprint', 'cyberpunk', 'maximalism', 'industrial', 'sketchbook', 'minimalist-monochrome', 'midnight'];
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {

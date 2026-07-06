@@ -546,3 +546,58 @@
     min-width: 58px;
   }
 }
+
+/* Minimalist Monochrome Settings Styles */
+[data-theme="minimalist-monochrome"] .settings-nav-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+[data-theme="minimalist-monochrome"] .settings-nav-item.active {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-left: 3px solid var(--border-primary);
+}
+
+[data-theme="minimalist-monochrome"] .profile-panel-header {
+  background: var(--bg-secondary);
+  border-bottom: 2px solid var(--border-primary);
+}
+
+[data-theme="minimalist-monochrome"] .save-status {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+}
+
+[data-theme="minimalist-monochrome"] .settings-quick-change,
+[data-theme="minimalist-monochrome"] .profile-editor,
+[data-theme="minimalist-monochrome"] .profile-read-grid > div,
+[data-theme="minimalist-monochrome"] .profile-summary-grid > div {
+  border: 1px solid var(--border-primary);
+  box-shadow: none;
+  background: var(--bg-secondary);
+}
+
+[data-theme="minimalist-monochrome"] .quick-option-grid,
+[data-theme="minimalist-monochrome"] .batch-name-field {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+[data-theme="minimalist-monochrome"] .quick-option:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+[data-theme="minimalist-monochrome"] .quick-option.selected {
+  background: #000000;
+  border-color: #000000;
+  color: #FFFFFF;
+}
+
+[data-theme="minimalist-monochrome"] .batch-name-field em {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+}

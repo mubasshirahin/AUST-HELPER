@@ -162,3 +162,99 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   SKETCHBOOK THEME — Hand-drawn personality
+   ═══════════════════════════════════════════════════════ */
+[data-theme="sketchbook"] .community-page {
+  font-family: 'Patrick Hand', cursive;
+}
+
+[data-theme="sketchbook"] .community-header h2 {
+  font-family: 'Kalam', cursive;
+}
+
+[data-theme="sketchbook"] .story-card {
+  background: #fdfbf7;
+  border-color: #2d2d2d;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: 4px 4px 0 0 #2d2d2d;
+}
+
+[data-theme="sketchbook"] .story-card:hover {
+  box-shadow: 6px 6px 0 0 #2d2d2d;
+  border-color: #2d2d2d;
+}
+
+[data-theme="sketchbook"] .story-card h3,
+[data-theme="sketchbook"] .story-card h4 {
+  font-family: 'Kalam', cursive;
+}
+
+[data-theme="sketchbook"] .story-card p,
+[data-theme="sketchbook"] .story-card span {
+  font-family: 'Patrick Hand', cursive;
+}
+
+[data-theme="sketchbook"] .secret-card {
+  background: #fdfbf7;
+  border-color: #2d2d2d;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: 4px 4px 0 0 #2d2d2d;
+}
+
+[data-theme="sketchbook"] .secret-card:hover {
+  box-shadow: 6px 6px 0 0 #2d2d2d;
+}
+
+[data-theme="sketchbook"] .secret-card h3,
+[data-theme="sketchbook"] .secret-card h4 {
+  font-family: 'Kalam', cursive;
+}
+
+[data-theme="sketchbook"] .secret-card p {
+  font-family: 'Patrick Hand', cursive;
+}
+
+[data-theme="sketchbook"] .alumni-card {
+  background: #fdfbf7;
+  border-color: #2d2d2d;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: 4px 4px 0 0 #2d2d2d;
+}
+
+[data-theme="sketchbook"] .alumni-card:hover {
+  box-shadow: 6px 6px 0 0 #2d2d2d;
+  border-color: #2d2d2d;
+}
+
+[data-theme="sketchbook"] .alumni-card h3,
+[data-theme="sketchbook"] .alumni-card h4 {
+  font-family: 'Kalam', cursive;
+}
+
+[data-theme="sketchbook"] .alumni-card p {
+  font-family: 'Patrick Hand', cursive;
+}
+
+[data-theme="sketchbook"] .club-card {
+  background: #fdfbf7;
+  border-color: #2d2d2d;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: 4px 4px 0 0 #2d2d2d;
+}
+
+[data-theme="sketchbook"] .club-card:hover {
+  box-shadow: 6px 6px 0 0 #2d2d2d;
+  border-color: #2d2d2d;
+  transform: none;
+}
+
+[data-theme="sketchbook"] .club-card h3,
+[data-theme="sketchbook"] .club-card h4 {
+  font-family: 'Kalam', cursive;
+}
+
+[data-theme="sketchbook"] .club-card p {
+  font-family: 'Patrick Hand', cursive;
+}

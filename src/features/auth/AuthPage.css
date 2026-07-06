@@ -191,3 +191,98 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   SKETCHBOOK THEME — Hand-drawn personality
+   ═══════════════════════════════════════════════════════ */
+[data-theme="sketchbook"] .auth-page {
+  background: #fdfbf7;
+}
+
+[data-theme="sketchbook"] .auth-card {
+  background: #fdfbf7;
+  border-color: #2d2d2d;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  box-shadow: 6px 6px 0 0 #2d2d2d;
+}
+
+[data-theme="sketchbook"] .auth-brand-icon {
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  background: rgba(45, 93, 161, 0.12);
+  border-color: #2d2d2d;
+  color: #2d5da1;
+}
+
+[data-theme="sketchbook"] .auth-brand h1 {
+  font-family: 'Kalam', cursive;
+  font-size: var(--fs-2xl);
+}
+
+[data-theme="sketchbook"] .auth-brand p {
+  font-family: 'Patrick Hand', cursive;
+  font-size: var(--fs-base);
+}
+
+[data-theme="sketchbook"] .auth-tabs {
+  background: #e5e0d8;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  border: 2px solid #2d2d2d;
+}
+
+[data-theme="sketchbook"] .auth-tab {
+  font-family: 'Patrick Hand', cursive;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+}
+
+[data-theme="sketchbook"] .auth-tab.active {
+  background: #fdfbf7;
+  box-shadow: 3px 3px 0 0 #2d2d2d;
+  color: #2d2d2d;
+}
+
+[data-theme="sketchbook"] .auth-role-card {
+  border-color: #2d2d2d;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  background: #fdfbf7;
+  font-family: 'Patrick Hand', cursive;
+}
+
+[data-theme="sketchbook"] .auth-role-card.active {
+  border-color: #2d5da1;
+  background: rgba(45, 93, 161, 0.1);
+  color: #2d5da1;
+}
+
+[data-theme="sketchbook"] .auth-field {
+  font-family: 'Patrick Hand', cursive;
+}
+
+[data-theme="sketchbook"] .auth-field .input {
+  border-color: #2d2d2d;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  background: #fdfbf7;
+  font-family: 'Patrick Hand', cursive;
+}
+
+[data-theme="sketchbook"] .auth-field .input:focus {
+  border-color: #2d5da1;
+  box-shadow: 3px 3px 0 0 rgba(45, 93, 161, 0.3);
+}
+
+[data-theme="sketchbook"] .auth-submit {
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  font-family: 'Kalam', cursive;
+  box-shadow: 4px 4px 0 0 #2d2d2d;
+  transition: box-shadow 100ms ease, transform 100ms ease;
+}
+
+[data-theme="sketchbook"] .auth-submit:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 #2d2d2d;
+}
+
+[data-theme="sketchbook"] .auth-message {
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  font-family: 'Patrick Hand', cursive;
+  border: 1px solid #2d2d2d;
+}

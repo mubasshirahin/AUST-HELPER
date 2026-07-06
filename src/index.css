@@ -488,6 +488,98 @@
   --info: #7B2FFF;
 }
 
+/* ─── Sketchbook / Hand-Drawn Theme (Light-only; warm paper + pencil) ────────
+   Same contract as Newsprint/Cyberpunk: remap every token so all 9 feature
+   areas flip at once, then a scoped personality block below adds the *character*:
+   handwritten fonts (Kalam heading, Patrick Hand body), wobbly borders from
+   irregular border-radius values, paper-grain dot background, hard offset shadows
+   (no blur), and playful rotation on interaction. Everything reads as if drawn
+   with a felt-tip marker on a sketchbook page.
+   ─── Only one palette (light-on-paper) — no dark variant. ─── */
+[data-theme="sketchbook"] {
+  /* Fonts */
+  --font-hand: 'Patrick Hand', 'Comic Sans MS', cursive;
+  --font-marker: 'Kalam', 'Patrick Hand', cursive;
+
+  /* Surfaces — warm off-white paper */
+  --bg-primary: #fdfbf7;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f5f2ed;
+  --bg-card: #ffffff;
+  --bg-card-hover: #faf8f4;
+  --bg-glass: rgba(255, 255, 255, 0.92);
+  --bg-glass-heavy: #ffffff;
+  --bg-input: #f5f2ed;
+
+  /* Type — soft pencil black (never pure #000) */
+  --text-primary: #2d2d2d;
+  --text-secondary: #5c5c5c;
+  --text-tertiary: #8a8a8a;
+  --text-inverse: #fdfbf7;
+
+  /* Borders — pencil lead */
+  --border-primary: #2d2d2d;
+  --border-secondary: #d4cfc7;
+  --border-focus: #2d5da1;
+
+  /* Accents — limited marker palette */
+  --accent-blue: #ff4d4d;           /* correction red = primary */
+  --accent-blue-glow: rgba(255, 77, 77, 0.10);
+  --accent-purple: #2d5da1;         /* blue ballpoint */
+  --accent-purple-glow: rgba(45, 93, 161, 0.10);
+  --accent-amber: #fff9c4;          /* post-it yellow */
+  --accent-amber-glow: rgba(255, 249, 196, 0.35);
+  --accent-emerald: #2d2d2d;        /* pencil (repeat) */
+  --accent-emerald-glow: rgba(45, 45, 45, 0.06);
+  --accent-rose: #ff4d4d;           /* correction red (repeat) */
+  --accent-rose-glow: rgba(255, 77, 77, 0.10);
+  --accent-cyan: #2d5da1;           /* blue ballpoint (repeat) */
+  --accent-cyan-glow: rgba(45, 93, 161, 0.10);
+  --accent-orange: #2d2d2d;         /* pencil (repeat) */
+  --accent-orange-glow: rgba(45, 45, 45, 0.06);
+
+  /* Gradients — all flat/solid (hand-drawn has no soft blends) */
+  --gradient-primary: linear-gradient(135deg, #ff4d4d, #ff4d4d);
+  --gradient-secondary: linear-gradient(135deg, #f5f2ed, #f5f2ed);
+  --gradient-accent: linear-gradient(135deg, #2d5da1, #2d5da1);
+  --gradient-warm: linear-gradient(135deg, #ff4d4d, #ff4d4d);
+  --gradient-success: linear-gradient(135deg, #2d2d2d, #2d2d2d);
+  --gradient-glass: none;
+
+  /* Radius — wobbly irregular values (never perfect circles / squares) */
+  --radius-sm: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  --radius-md: 60px 16px 50px 20px / 20px 50px 16px 60px;
+  --radius-lg: 100px 20px 80px 16px / 16px 80px 20px 100px;
+  --radius-xl: 120px 24px 100px 20px / 20px 100px 24px 120px;
+  --radius-2xl: 160px 30px 130px 24px / 24px 130px 30px 160px;
+
+  /* Shadows — hard offset, NO blur */
+  --shadow-sm: 2px 2px 0px 0px rgba(45, 45, 45, 0.12);
+  --shadow-md: 4px 4px 0px 0px #2d2d2d;
+  --shadow-lg: 6px 6px 0px 0px #2d2d2d;
+  --shadow-xl: 8px 8px 0px 0px #2d2d2d;
+  --shadow-glow-blue: 4px 4px 0px rgba(255, 77, 77, 0.25);
+  --shadow-glow-purple: 4px 4px 0px rgba(45, 93, 161, 0.25);
+  --shadow-glow-amber: 4px 4px 0px rgba(255, 249, 196, 0.5);
+
+  /* Dot colour for paper-grain */
+  --sketch-dot-color: #d4cfc7;
+
+  --scrollbar-track: #f5f2ed;
+  --scrollbar-thumb: #2d2d2d;
+  --scrollbar-thumb-hover: #ff4d4d;
+
+  --status-online: #2d2d2d;
+  --status-away: #5c5c5c;
+  --status-offline: #b0b0b0;
+  --status-busy: #ff4d4d;
+
+  --danger: #ff4d4d;
+  --warning: #2d2d2d;
+  --success: #2d2d2d;
+  --info: #2d5da1;
+}
+
 /* ─── Global Resets ─── */
 *, *::before, *::after {
   margin: 0;
@@ -2491,4 +2583,828 @@ select.input {
   }
   /* keep gradient text visible (not stuck transparent mid-animation) */
   [data-theme="maximalism"] .max-gradient-text { background-position: 0 50%; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SKETCHBOOK / HAND-DRAWN THEME — component personality & utilities
+   Scoped to [data-theme="sketchbook"] so the other six themes are untouched.
+   Token remap above handles colour/radius/shadow; this layer adds the *character*:
+   paper-grain background, handwritten Kalam/Patrick Hand on everything, wobbly
+   border-radius on containers, erratic rotation on interaction, hard offset
+   shadows that "press flat" when active, and playful decoration.
+   ─── ONLY LIGHT MODE — dark would defeat the warm-paper aesthetic. ───
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Reusable hand-drawn primitives (theme-agnostic) ─── */
+.font-hand   { font-family: 'Patrick Hand', 'Comic Sans MS', cursive; }
+.font-marker { font-family: 'Kalam', 'Patrick Hand', cursive; }
+
+/* Wobbly border-radius utility — apply to any box */
+.wobbly { border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; }
+.wobbly-md { border-radius: 60px 16px 50px 20px / 20px 50px 16px 60px; }
+
+/* Hard shadow utility (var(--shadow-md) equivalent for custom elements) */
+.hard-shadow { box-shadow: 4px 4px 0px 0px #2d2d2d; }
+
+/* ─── Base surface: warm paper + notebook dot-grid ─── */
+[data-theme="sketchbook"] body {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-weight: 400;
+  background-color: var(--bg-primary);
+  background-image: radial-gradient(
+    circle,
+    var(--sketch-dot-color) 0.8px,
+    transparent 0.8px
+  );
+  background-size: 20px 20px;
+  line-height: 1.7;
+  font-size: 1rem;
+}
+
+/* ─── Typography — everything looks handwritten ─── */
+[data-theme="sketchbook"] h1,
+[data-theme="sketchbook"] h2,
+[data-theme="sketchbook"] h3,
+[data-theme="sketchbook"] h4,
+[data-theme="sketchbook"] h5,
+[data-theme="sketchbook"] h6,
+[data-theme="sketchbook"] .page-title,
+[data-theme="sketchbook"] .section-title,
+[data-theme="sketchbook"] .stat-value {
+  font-family: 'Kalam', 'Patrick Hand', cursive;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+
+[data-theme="sketchbook"] .page-title {
+  font-size: var(--fs-3xl);
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 6px;
+  text-decoration-color: var(--accent-blue);
+  text-decoration-thickness: 2px;
+}
+
+[data-theme="sketchbook"] .page-description {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-size: var(--fs-lg);
+  color: var(--text-secondary);
+}
+
+/* Labels / metadata also handwritten, slightly smaller */
+[data-theme="sketchbook"] .stat-label,
+[data-theme="sketchbook"] .countdown-label,
+[data-theme="sketchbook"] .badge,
+[data-theme="sketchbook"] .tab {
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Cards / containers → wobbly, thick pencil border, hard shadow ─── */
+[data-theme="sketchbook"] .glass-card,
+[data-theme="sketchbook"] .glass-card-static,
+[data-theme="sketchbook"] .card-list-item {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-md);
+  transform: rotate(var(--sketch-rotate, 0deg));
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+[data-theme="sketchbook"] .glass-card:hover,
+[data-theme="sketchbook"] .card-list-item:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-primary);
+  box-shadow: var(--shadow-lg);
+  transform: rotate(calc(var(--sketch-rotate, 0deg) + 1deg));
+}
+
+/* Slight random rotations on cards for casual energy */
+[data-theme="sketchbook"] .glass-card:nth-child(odd),
+[data-theme="sketchbook"] .card-list-item:nth-child(odd) {
+  --sketch-rotate: -0.5deg;
+}
+[data-theme="sketchbook"] .glass-card:nth-child(even),
+[data-theme="sketchbook"] .card-list-item:nth-child(even) {
+  --sketch-rotate: 0.5deg;
+}
+
+/* ─── Buttons → wobbly oval, thick black border, press-flat active ─── */
+[data-theme="sketchbook"] .btn {
+  border: 3px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-weight: 400;
+  font-size: var(--fs-md);
+  text-transform: none;
+  letter-spacing: 0.02em;
+  padding: var(--sp-2) var(--sp-5);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-md);
+  transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease;
+}
+
+[data-theme="sketchbook"] .btn:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px #2d2d2d;
+  filter: none;
+}
+
+[data-theme="sketchbook"] .btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+[data-theme="sketchbook"] .btn-primary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+[data-theme="sketchbook"] .btn-primary:hover {
+  background: var(--accent-blue);
+  color: #fff;
+  border-color: var(--border-primary);
+  box-shadow: 2px 2px 0px 0px #2d2d2d;
+}
+
+[data-theme="sketchbook"] .btn-secondary {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="sketchbook"] .btn-secondary:hover {
+  background: var(--accent-purple);
+  color: #fff;
+  border-color: var(--border-primary);
+}
+
+[data-theme="sketchbook"] .btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+[data-theme="sketchbook"] .btn-ghost:hover {
+  background: var(--bg-tertiary);
+  box-shadow: var(--shadow-sm);
+  transform: none;
+}
+
+[data-theme="sketchbook"] .btn-danger {
+  background: var(--accent-rose);
+  color: #fff;
+}
+
+[data-theme="sketchbook"] .btn-danger:hover {
+  background: var(--accent-rose);
+  box-shadow: 2px 2px 0px 0px #2d2d2d;
+}
+
+[data-theme="sketchbook"] .btn-sm { padding: var(--sp-1) var(--sp-3); font-size: var(--fs-sm); }
+[data-theme="sketchbook"] .btn-lg { padding: var(--sp-3) var(--sp-6); font-size: var(--fs-lg); }
+
+[data-theme="sketchbook"] .btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+
+/* ─── Inputs → wobbly box, handwritten, blue ballpoint focus ─── */
+[data-theme="sketchbook"] .input,
+[data-theme="sketchbook"] .search-box input {
+  background: var(--bg-card);
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-size: var(--fs-md);
+  color: var(--text-primary);
+  padding: var(--sp-2) var(--sp-3);
+}
+
+[data-theme="sketchbook"] .input:focus,
+[data-theme="sketchbook"] .search-box input:focus {
+  border-color: var(--accent-purple);
+  box-shadow: none;
+  background: var(--bg-card);
+}
+
+[data-theme="sketchbook"] .input::placeholder,
+[data-theme="sketchbook"] .search-box input::placeholder {
+  color: var(--text-tertiary);
+  opacity: 0.6;
+}
+
+[data-theme="sketchbook"] select.input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232d2d2d' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* ─── Tabs → sketched folder tabs ─── */
+[data-theme="sketchbook"] .tabs {
+  background: transparent;
+  border-bottom: 2px solid var(--border-primary);
+  border-radius: 0;
+  padding: 0;
+  gap: 0;
+}
+
+[data-theme="sketchbook"] .tab {
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-size: var(--fs-md);
+  color: var(--text-secondary);
+  padding: var(--sp-2) var(--sp-4);
+  border: 2px solid transparent;
+  border-bottom: none;
+  margin-bottom: -2px;
+  transition: all var(--transition-fast);
+}
+
+[data-theme="sketchbook"] .tab:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+[data-theme="sketchbook"] .tab.active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-primary);
+  border-bottom-color: var(--bg-card);
+  box-shadow: none;
+  font-weight: 400;
+}
+
+/* ─── Badges / tags → sketched ink stamps ─── */
+[data-theme="sketchbook"] .badge {
+  border-radius: var(--radius-sm);
+  border: 1.5px solid currentColor;
+  padding: 1px 10px;
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="sketchbook"] .tag {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+[data-theme="sketchbook"] .tag:hover,
+[data-theme="sketchbook"] .tag.active {
+  background: var(--accent-blue);
+  color: #fff;
+  border-color: var(--border-primary);
+}
+
+/* ─── Progress bar → sketched fill line ─── */
+[data-theme="sketchbook"] .progress-bar {
+  height: 8px;
+  background: var(--bg-tertiary);
+  border: 1.5px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  overflow: visible;
+}
+
+[data-theme="sketchbook"] .progress-bar-fill {
+  background: var(--accent-purple);
+  border-radius: var(--radius-sm);
+  height: 100%;
+  position: relative;
+  box-shadow: none;
+}
+
+/* ─── Toggle switch → sketched slider ─── */
+[data-theme="sketchbook"] .toggle-switch {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+}
+
+[data-theme="sketchbook"] .toggle-switch.active {
+  background: var(--accent-purple);
+  border-color: var(--border-primary);
+}
+
+[data-theme="sketchbook"] .toggle-switch::after {
+  border-radius: var(--radius-sm);
+  background: #fff;
+  border: 1px solid var(--border-primary);
+  box-shadow: none;
+}
+
+[data-theme="sketchbook"] .toggle-switch.active::after {
+  transform: translateX(20px);
+}
+
+/* ─── Modal → wobbly pop-up with hard shadow ─── */
+[data-theme="sketchbook"] .modal {
+  border: 3px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  background: var(--bg-card);
+}
+
+/* ─── Avatar → sketched circle ─── */
+[data-theme="sketchbook"] .avatar {
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-primary);
+  background: var(--accent-blue);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="sketchbook"] .avatar img {
+  border-radius: var(--radius-md);
+}
+
+/* ─── Info banner → thick ink border ─── */
+[data-theme="sketchbook"] .info-banner {
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+
+[data-theme="sketchbook"] .info-banner.info { border-color: var(--accent-purple); background: var(--accent-purple-glow); color: var(--accent-purple); }
+[data-theme="sketchbook"] .info-banner.success { border-color: var(--text-primary); background: var(--accent-emerald-glow); color: var(--text-primary); }
+[data-theme="sketchbook"] .info-banner.warning { border-color: var(--accent-amber); background: var(--accent-amber-glow); color: var(--text-primary); }
+[data-theme="sketchbook"] .info-banner.danger { border-color: var(--accent-blue); background: var(--accent-blue-glow); color: var(--accent-blue); }
+
+/* ─── Keyboard focus → wobbly sketchy ring ─── */
+[data-theme="sketchbook"] :focus-visible {
+  outline: 2.5px dashed var(--accent-purple);
+  outline-offset: 3px;
+}
+
+/* ─── Star rating → high-contrast marker stars ─── */
+[data-theme="sketchbook"] .star-rating .star.filled {
+  color: var(--accent-amber);
+  text-shadow: none;
+}
+
+/* ─── Icon glow on hover ─── */
+[data-theme="sketchbook"] .btn:hover > svg,
+[data-theme="sketchbook"] .nav-item:hover svg,
+[data-theme="sketchbook"] a:hover > svg {
+  filter: none;
+}
+
+/* ─── Divider → dashed pencil line ─── */
+[data-theme="sketchbook"] .divider {
+  height: 0;
+  border-top: 2px dashed var(--border-secondary);
+  background: none;
+}
+
+/* ─── Section header icons ─── */
+[data-theme="sketchbook"] .section-title .icon {
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border-primary);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ─── Stat card ─── */
+[data-theme="sketchbook"] .stat-value {
+  font-family: 'Kalam', 'Patrick Hand', cursive;
+  font-weight: 700;
+}
+
+/* ─── Heatmap cells → pencil-dot grid ─── */
+[data-theme="sketchbook"] .heatmap-cell {
+  border-radius: 2px;
+  border: 1px solid var(--border-secondary);
+}
+
+[data-theme="sketchbook"] .heatmap-cell:hover {
+  transform: scale(1.2);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ─── Countdown → sketched digits ─── */
+[data-theme="sketchbook"] .countdown-value {
+  font-family: 'Kalam', 'Patrick Hand', cursive;
+  font-weight: 700;
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+}
+
+/* ─── Hard-shadow hover utility (inspired by newsprint .hard-shadow-hover) ─── */
+[data-theme="sketchbook"] .hard-shadow-hover {
+  transition: box-shadow 120ms ease, transform 120ms ease;
+}
+[data-theme="sketchbook"] .hard-shadow-hover:hover {
+  box-shadow: 4px 4px 0 0 #2d2d2d;
+  transform: translate(-2px, -2px);
+}
+
+/* ─── Sketchbook utilities ─── */
+
+/* Sticky-note yellow background */
+.sketch-postit {
+  background: #fff9c4 !important;
+  border-color: #2d2d2d !important;
+}
+
+/* Tape strip decoration (translucent bar at top of card) */
+.sketch-tape {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-3deg);
+  width: 48px;
+  height: 16px;
+  background: rgba(200, 200, 200, 0.35);
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Thumbtack decoration (red circle at top of card) */
+.sketch-tack {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  background: #ff4d4d;
+  border-radius: 50%;
+  box-shadow: 1px 1px 0 0 rgba(45, 45, 45, 0.3);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sketch-tack::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 6px;
+  background: #2d2d2d;
+  border-radius: 1px;
+}
+
+/* Wavy underline decoration */
+.sketch-wavy {
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--accent-blue);
+  text-decoration-thickness: 2px;
+}
+
+/* ─── Responsive adjustments ─── */
+@media (max-width: 768px) {
+  [data-theme="sketchbook"] .page-title {
+    font-size: var(--fs-2xl);
+  }
+
+  [data-theme="sketchbook"] .glass-card:nth-child(odd),
+  [data-theme="sketchbook"] .card-list-item:nth-child(odd) {
+    --sketch-rotate: 0deg;
+  }
+  [data-theme="sketchbook"] .glass-card:nth-child(even),
+  [data-theme="sketchbook"] .card-list-item:nth-child(even) {
+    --sketch-rotate: 0deg;
+  }
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="sketchbook"] .glass-card,
+  [data-theme="sketchbook"] .glass-card-static,
+  [data-theme="sketchbook"] .card-list-item {
+    --sketch-rotate: 0deg !important;
+    transition: none !important;
+  }
+  [data-theme="sketchbook"] .glass-card:hover,
+  [data-theme="sketchbook"] .card-list-item:hover {
+    transform: none !important;
+  }
+  [data-theme="sketchbook"] .btn {
+    transition: none !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MINIMALIST MONOCHROME THEME — Editorial luxury, stark typography
+   Pure black & white palette, serif display type, zero radius, line-based
+   textures, instant interactions. All accents collapse to monochrome.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="minimalist-monochrome"] {
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-body: 'Source Serif 4', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F5F5F5;
+  --bg-tertiary: #E5E5E5;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F5F5F5;
+  --bg-glass: #FFFFFF;
+  --bg-glass-heavy: #FFFFFF;
+  --bg-input: #E5E5E5;
+  --text-primary: #000000;
+  --text-secondary: #525252;
+  --text-tertiary: #737373;
+  --text-inverse: #FFFFFF;
+  --border-primary: #000000;
+  --border-secondary: #E5E5E5;
+  --border-focus: #000000;
+  --accent-blue: #000000;
+  --accent-blue-glow: rgba(0, 0, 0, 0.04);
+  --accent-purple: #000000;
+  --accent-purple-glow: #E5E5E5;
+  --accent-amber: #000000;
+  --accent-amber-glow: #E5E5E5;
+  --accent-emerald: #000000;
+  --accent-emerald-glow: #E5E5E5;
+  --accent-rose: #000000;
+  --accent-rose-glow: #E5E5E5;
+  --accent-cyan: #000000;
+  --accent-cyan-glow: #E5E5E5;
+  --accent-orange: #000000;
+  --accent-orange-glow: #E5E5E5;
+  --gradient-primary: linear-gradient(0deg, #000000, #000000);
+  --gradient-secondary: linear-gradient(0deg, #E5E5E5, #E5E5E5);
+  --gradient-accent: linear-gradient(0deg, #000000, #000000);
+  --gradient-warm: linear-gradient(0deg, #000000, #000000);
+  --gradient-success: linear-gradient(0deg, #000000, #000000);
+  --gradient-glass: linear-gradient(0deg, transparent, transparent);
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-glow-blue: none;
+  --shadow-glow-purple: none;
+  --shadow-glow-amber: none;
+  --scrollbar-track: #E5E5E5;
+  --scrollbar-thumb: #000000;
+  --scrollbar-thumb-hover: #525252;
+  --status-online: #000000;
+  --status-away: #525252;
+  --status-offline: #737373;
+  --status-busy: #000000;
+  --danger: #000000;
+  --warning: #000000;
+  --success: #000000;
+  --info: #000000;
+}
+
+[data-theme="minimalist-monochrome"] body {
+  font-family: var(--font-body);
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0, 0, 0, 0.015) 1px, rgba(0, 0, 0, 0.015) 2px), repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(0, 0, 0, 0.008) 1px, rgba(0, 0, 0, 0.008) 2px);
+}
+
+[data-theme="minimalist-monochrome"] .page-title,
+[data-theme="minimalist-monochrome"] .section-title,
+[data-theme="minimalist-monochrome"] h1,
+[data-theme="minimalist-monochrome"] h2,
+[data-theme="minimalist-monochrome"] h3 {
+  font-family: var(--font-serif);
+  letter-spacing: -0.02em;
+}
+
+[data-theme="minimalist-monochrome"] .page-title {
+  font-weight: 900;
+  font-size: var(--fs-4xl);
+}
+
+@media (min-width: 768px) {
+  [data-theme="minimalist-monochrome"] .page-title { font-size: var(--fs-7xl); }
+}
+
+[data-theme="minimalist-monochrome"] .stat-label,
+[data-theme="minimalist-monochrome"] .countdown-label,
+[data-theme="minimalist-monochrome"] .badge,
+[data-theme="minimalist-monochrome"] .table-label {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+[data-theme="minimalist-monochrome"] .glass-card,
+[data-theme="minimalist-monochrome"] .glass-card-static,
+[data-theme="minimalist-monochrome"] .card-list-item {
+  border: 1px solid var(--border-primary);
+  box-shadow: none;
+}
+
+[data-theme="minimalist-monochrome"] .glass-card:hover,
+[data-theme="minimalist-monochrome"] .card-list-item:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--border-primary);
+  box-shadow: none;
+}
+
+[data-theme="minimalist-monochrome"] .btn {
+  border-radius: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  transition: none;
+}
+
+[data-theme="minimalist-monochrome"] .btn-primary {
+  background: #000000;
+  color: #FFFFFF;
+  border: 1px solid #000000;
+}
+
+[data-theme="minimalist-monochrome"] .btn-primary:hover {
+  background: #FFFFFF;
+  color: #000000;
+}
+
+[data-theme="minimalist-monochrome"] .btn-secondary {
+  background: transparent;
+  border: 1px solid #000000;
+  color: #000000;
+}
+
+[data-theme="minimalist-monochrome"] .btn-secondary:hover {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+[data-theme="minimalist-monochrome"] .input,
+[data-theme="minimalist-monochrome"] .search-box input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #000000;
+  border-radius: 0;
+}
+
+[data-theme="minimalist-monochrome"] .input:focus,
+[data-theme="minimalist-monochrome"] .search-box input:focus {
+  background: #E5E5E5;
+  border-color: #000000;
+}
+
+[data-theme="minimalist-monochrome"] .tabs {
+  background: transparent;
+  border-bottom: 2px solid #000000;
+  border-radius: 0;
+  padding: 0;
+  gap: 0;
+}
+
+[data-theme="minimalist-monochrome"] .tab {
+  border-radius: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+[data-theme="minimalist-monochrome"] .tab:hover {
+  color: #000000;
+  background: transparent;
+}
+
+[data-theme="minimalist-monochrome"] .tab.active {
+  background: transparent;
+  color: #000000;
+  border-bottom-color: #000000;
+  box-shadow: none;
+}
+
+[data-theme="minimalist-monochrome"] .badge,
+[data-theme="minimalist-monochrome"] .tag {
+  border-radius: 0;
+  border: 1px solid #000000;
+  color: #000000;
+}
+
+[data-theme="minimalist-monochrome"] .tag:hover,
+[data-theme="minimalist-monochrome"] .tag.active {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+[data-theme="minimalist-monochrome"] .tag { background: transparent; }
+
+[data-theme="minimalist-monochrome"] .progress-bar,
+[data-theme="minimalist-monochrome"] .progress-bar-fill { border-radius: 0; }
+[data-theme="minimalist-monochrome"] .progress-bar-fill { background: #000000; }
+
+[data-theme="minimalist-monochrome"] .modal {
+  border: 2px solid #000000;
+  border-radius: 0;
+}
+
+[data-theme="minimalist-monochrome"] :focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
+[data-theme="minimalist-monochrome"] .status-dot {
+  border-radius: 0;
+  width: 8px;
+  height: 8px;
+  background: #000000;
+}
+
+[data-theme="minimalist-monochrome"] .toggle-switch,
+[data-theme="minimalist-monochrome"] .toggle-switch::after { border-radius: 0; }
+[data-theme="minimalist-monochrome"] .toggle-switch.active {
+  background: #000000;
+  border-color: #000000;
+}
+
+[data-theme="minimalist-monochrome"] .edition-rule { border-bottom: 4px solid #000000; }
+
+[data-theme="minimalist-monochrome"] .hard-shadow-hover:hover {
+  box-shadow: 4px 4px 0 0 #000000;
+  transform: translate(-2px, -2px);
+}
+
+[data-theme="minimalist-monochrome"] .stat-card-inverted {
+  background: #000000;
+  color: #FFFFFF;
+  padding: var(--sp-4) var(--sp-5);
+}
+
+[data-theme="minimalist-monochrome"] .stat-card-inverted .stat-value,
+[data-theme="minimalist-monochrome"] .stat-card-inverted .stat-label {
+  color: #FFFFFF;
+}
+
+[data-theme="minimalist-monochrome"] .drop-cap::first-letter {
+  float: left;
+  font-family: var(--font-serif);
+  font-size: 3.2em;
+  line-height: 0.8;
+  font-weight: 900;
+  padding: 4px 8px 0 0;
+  color: #000000;
+}
+
+@media (max-width: 768px) {
+  [data-theme="minimalist-monochrome"] .page-title { font-size: var(--fs-xl); }
+  [data-theme="minimalist-monochrome"] .drop-cap::first-letter { font-size: 2.4em; }
+}
+
+/* ─── Placeholder themes (incomplete) ─── */
+[data-theme="midnight"] {
+  --bg-primary: #0a0a12;
+  --bg-secondary: #12121a;
+  --bg-tertiary: #1a1a24;
+  --bg-card: #12121a;
+  --bg-card-hover: #1a1a24;
+  --bg-glass: rgba(18, 18, 26, 0.8);
+  --bg-input: #1a1a24;
+  --text-primary: #e0e0e0;
+  --text-secondary: #8b8ba7;
+  --text-tertiary: #666;
+  --text-inverse: #0a0a12;
+  --border-primary: #2a2a3a;
+  --border-secondary: rgba(42, 42, 58, 0.5);
+  --border-focus: #ff9f43;
+  --accent-blue: #ff9f43;
+  --accent-blue-glow: rgba(255, 159, 67, 0.1);
+  --accent-purple: #ff9f43;
+  --accent-purple-glow: rgba(255, 159, 67, 0.08);
+  --radius-sm: 0px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-2xl: 12px;
+}
+
+[data-theme="sketchbook"] {
+  --bg-primary: #faf8f0;
+  --bg-secondary: #fff;
+  --bg-tertiary: #f5f0e6;
+  --bg-card: #fff;
+  --bg-card-hover: #f5f0e6;
+  --bg-glass: rgba(255, 255, 255, 0.9);
+  --bg-input: #f5f0e6;
+  --text-primary: #2a1a0a;
+  --text-secondary: #6b5a46;
+  --text-tertiary: #8c7a66;
+  --text-inverse: #faf8f0;
+  --border-primary: #d4c0a1;
+  --border-secondary: #e8dcc9;
+  --border-focus: #a67c4a;
+  --accent-blue: #a67c4a;
+  --accent-blue-glow: rgba(166, 124, 74, 0.15);
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-2xl: 12px;
 }

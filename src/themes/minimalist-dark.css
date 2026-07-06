@@ -1,0 +1,349 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   MINIMALIST DARK  —  "midnight" theme
+   ────────────────────────────────────────────────────────────────────────────
+   Atmospheric depth through layered darkness rather than colour. Rich slate
+   tones stack (#0A0A0F → #12121A → #1A1A24) under a single warm amber accent
+   (#F59E0B) that glows like an ember. Glass-effect cards float over the slate;
+   ambient amber orbs bleed soft light through the dark. Think Linear / Raycast
+   at 2am — calm, premium, nocturnal.
+
+   Distinct from the built-in `dark` theme (which is a warm-taupe standard dark
+   mode): this one is cooler, glassier, amber-accented and far more spacious in
+   feel. Architecture mirrors the per-theme convention in index.css — a token
+   remap the whole app reads from, plus a scoped personality layer. Lives in its
+   own file (imported from main.jsx after index.css) so it can be authored
+   without contending for index.css; only one theme is ever active via the
+   data-theme attribute, so cascade order is irrelevant.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+/* ─── Token remap ─────────────────────────────────────────────────────────────
+   Redefines the shared custom-property contract so every feature re-skins from
+   tokens alone. Amber lands in the primary (--accent-blue) slot; the remaining
+   semantic accents are kept refined and slightly desaturated so amber stays the
+   single focal warmth. */
+[data-theme="midnight"] {
+  --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Layered slate — at least three distinct dark tones are always visible */
+  --bg-primary: #0A0A0F;      /* deepest — the room */
+  --bg-secondary: #12121A;    /* slightly elevated surfaces */
+  --bg-tertiary: #1A1A24;     /* elevated / muted surfaces, input wells */
+  --bg-card: rgba(26, 26, 36, 0.6);    /* glass — floats over the slate */
+  --bg-card-hover: rgba(26, 26, 36, 0.82);
+  --bg-glass: rgba(18, 18, 26, 0.6);
+  --bg-glass-heavy: rgba(12, 12, 18, 0.85);
+  --bg-input: rgba(26, 26, 36, 0.6);
+
+  /* Type — near-white primary (18:1), zinc greys below */
+  --text-primary: #FAFAFA;
+  --text-secondary: #A1A1AA;   /* zinc-400 */
+  --text-tertiary: #71717A;    /* zinc-500 — AA on the slate */
+  --text-inverse: #0A0A0F;     /* dark ink on amber */
+
+  /* Borders — whisper-subtle, never harsh */
+  --border-primary: rgba(255, 255, 255, 0.08);
+  --border-secondary: rgba(255, 255, 255, 0.05);
+  --border-focus: rgba(245, 158, 11, 0.5);
+
+  /* Accents — amber is the ember; the rest stay muted so it never competes */
+  --accent-blue: #F59E0B;      /* amber-500 — PRIMARY / interactive */
+  --accent-blue-glow: rgba(245, 158, 11, 0.15);
+  --accent-purple: #A78BFA;    /* soft violet */
+  --accent-purple-glow: rgba(167, 139, 250, 0.14);
+  --accent-amber: #F59E0B;     /* amber (same as primary) */
+  --accent-amber-glow: rgba(245, 158, 11, 0.15);
+  --accent-emerald: #34D399;   /* refined success green */
+  --accent-emerald-glow: rgba(52, 211, 153, 0.13);
+  --accent-rose: #FB7185;      /* soft alert rose */
+  --accent-rose-glow: rgba(251, 113, 133, 0.13);
+  --accent-cyan: #22D3EE;      /* dimmed teal for the odd category chip */
+  --accent-cyan-glow: rgba(34, 211, 238, 0.12);
+  --accent-orange: #FB923C;    /* warm orange */
+  --accent-orange-glow: rgba(251, 146, 60, 0.13);
+
+  /* Gradients — restrained, amber-led */
+  --gradient-primary: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+  --gradient-secondary: linear-gradient(135deg, #1A1A24 0%, #12121A 100%);
+  --gradient-accent: linear-gradient(135deg, #F59E0B 0%, #FB923C 100%);
+  --gradient-warm: linear-gradient(135deg, #F59E0B 0%, #FB7185 100%);
+  --gradient-success: linear-gradient(135deg, #34D399 0%, #22D3EE 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(245, 158, 11, 0.06) 0%, rgba(255, 255, 255, 0.015) 100%);
+
+  /* Radius — soft rounded, not dramatic */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+
+  /* Elevation — deep, quiet drop shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4);
+  /* The shared *-glow-* slots carry the signature amber ambient glow */
+  --shadow-glow-blue: 0 0 40px rgba(245, 158, 11, 0.2);
+  --shadow-glow-purple: 0 0 40px rgba(167, 139, 250, 0.18);
+  --shadow-glow-amber: 0 0 40px rgba(245, 158, 11, 0.2);
+
+  /* Midnight-only primitives consumed by the personality layer below */
+  --md-accent: #F59E0B;
+  --md-glow-sm: 0 0 20px rgba(245, 158, 11, 0.15);
+  --md-glow-md: 0 0 40px rgba(245, 158, 11, 0.2);
+  --md-glow-btn: 0 0 20px rgba(245, 158, 11, 0.4);
+  --md-border-glow: 0 0 0 1px rgba(245, 158, 11, 0.25), 0 0 24px rgba(245, 158, 11, 0.15);
+  --md-blur: blur(8px);
+
+  --scrollbar-track: #0A0A0F;
+  --scrollbar-thumb: #26262E;
+  --scrollbar-thumb-hover: #3A3A44;
+
+  --status-online: #34D399;
+  --status-away: #F59E0B;
+  --status-offline: #52525B;
+  --status-busy: #FB7185;
+
+  --danger: #FB7185;
+  --warning: #F59E0B;
+  --success: #34D399;
+  --info: #F59E0B;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PERSONALITY LAYER  —  scoped to [data-theme="midnight"]
+   Pure CSS on the shared component classes: no component/DOM changes required.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── The room: deep slate + top amber ambience + fine noise ─── */
+[data-theme="midnight"] body {
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -8%, rgba(245, 158, 11, 0.06), transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+  background-attachment: fixed, fixed;
+}
+
+/* Ambient orbs — massive blurred amber light bleeding through the dark.
+   Fixed + pointer-events:none so they sit behind everything and never interfere.
+   Sized down on small screens for GPU cost, but always present. */
+[data-theme="midnight"] body::before,
+[data-theme="midnight"] body::after {
+  content: '';
+  position: fixed;
+  border-radius: 9999px;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(120px);
+}
+[data-theme="midnight"] body::before {
+  top: -180px;
+  left: 50%;
+  width: 460px;
+  height: 460px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.14), transparent 70%);
+}
+[data-theme="midnight"] body::after {
+  bottom: -220px;
+  right: -120px;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.08), transparent 70%);
+}
+/* Keep app chrome above the ambience */
+[data-theme="midnight"] #root { position: relative; z-index: 1; }
+
+/* ─── Typography: geometric display + mono labels ─── */
+[data-theme="midnight"] .page-title,
+[data-theme="midnight"] .section-title,
+[data-theme="midnight"] .stat-value,
+[data-theme="midnight"] h1,
+[data-theme="midnight"] h2,
+[data-theme="midnight"] h3 {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: -0.025em;
+}
+[data-theme="midnight"] .stat-value { font-variant-numeric: tabular-nums; }
+
+[data-theme="midnight"] .stat-label,
+[data-theme="midnight"] .countdown-label,
+[data-theme="midnight"] .badge {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ─── Cards: floating glass ─── */
+[data-theme="midnight"] .glass-card,
+[data-theme="midnight"] .glass-card-static {
+  background: var(--bg-card);
+  -webkit-backdrop-filter: var(--md-blur);
+  backdrop-filter: var(--md-blur);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+[data-theme="midnight"] .glass-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-focus);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
+[data-theme="midnight"] .card-list-item {
+  background: var(--bg-card);
+  -webkit-backdrop-filter: var(--md-blur);
+  backdrop-filter: var(--md-blur);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+}
+[data-theme="midnight"] .card-list-item:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: scale(1.01);
+}
+
+/* ─── Buttons: amber ember, glow on hover, gentle press ─── */
+[data-theme="midnight"] .btn {
+  font-family: var(--font-primary);
+  font-weight: var(--fw-medium);
+  border-radius: var(--radius-lg);
+  transition: background var(--transition-base), border-color var(--transition-base),
+              box-shadow var(--transition-base), transform 150ms ease-out, filter var(--transition-base);
+}
+[data-theme="midnight"] .btn:active { transform: scale(0.98); }
+
+[data-theme="midnight"] .btn-primary {
+  background: var(--md-accent);
+  color: var(--text-inverse);
+  border: none;
+  box-shadow: none;
+}
+[data-theme="midnight"] .btn-primary:hover {
+  filter: brightness(1.1);
+  box-shadow: var(--md-glow-btn);
+}
+
+[data-theme="midnight"] .btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+[data-theme="midnight"] .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+[data-theme="midnight"] .btn-ghost {
+  background: transparent;
+  color: var(--text-primary);
+}
+[data-theme="midnight"] .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--md-accent);
+}
+
+[data-theme="midnight"] .btn-danger {
+  background: var(--danger);
+  color: #0A0A0F;
+}
+[data-theme="midnight"] .btn-danger:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 20px rgba(251, 113, 133, 0.35);
+}
+
+/* ─── Inputs: glass wells with an amber focus bloom ─── */
+[data-theme="midnight"] .input,
+[data-theme="midnight"] .search-box input {
+  background: var(--bg-input);
+  -webkit-backdrop-filter: var(--md-blur);
+  backdrop-filter: var(--md-blur);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+}
+[data-theme="midnight"] .input:focus,
+[data-theme="midnight"] .search-box input:focus {
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2), 0 0 20px rgba(245, 158, 11, 0.1);
+}
+[data-theme="midnight"] .input::placeholder,
+[data-theme="midnight"] .search-box input::placeholder { color: var(--text-tertiary); }
+
+/* ─── Tabs: quiet rail, amber-lit active key ─── */
+[data-theme="midnight"] .tabs {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+}
+[data-theme="midnight"] .tab { color: var(--text-secondary); border-radius: var(--radius-md); }
+[data-theme="midnight"] .tab:hover { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); }
+[data-theme="midnight"] .tab.active {
+  background: var(--accent-blue-glow);
+  color: var(--md-accent);
+  box-shadow: none;
+}
+
+/* ─── Tags / badges: subtle glass chips ─── */
+[data-theme="midnight"] .tag {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+}
+[data-theme="midnight"] .tag:hover,
+[data-theme="midnight"] .tag.active {
+  background: var(--accent-blue-glow);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: var(--md-accent);
+}
+
+/* ─── Progress: amber bar with a soft glow ─── */
+[data-theme="midnight"] .progress-bar { background: rgba(255, 255, 255, 0.06); }
+[data-theme="midnight"] .progress-bar-fill {
+  background: linear-gradient(90deg, #FBBF24, #F59E0B);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.45);
+}
+
+/* ─── Toggle: track glows amber when on ─── */
+[data-theme="midnight"] .toggle-switch { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-primary); }
+[data-theme="midnight"] .toggle-switch.active {
+  background: var(--md-accent);
+  border-color: transparent;
+  box-shadow: var(--md-glow-sm);
+}
+[data-theme="midnight"] .toggle-switch::after { background: #FAFAFA; }
+
+/* ─── Modal: heavy glass, lifted clear ─── */
+[data-theme="midnight"] .modal {
+  background: var(--bg-glass-heavy);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+}
+
+/* ─── Banner: glass strip with a coloured rule ─── */
+[data-theme="midnight"] .info-banner {
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid currentColor;
+}
+
+/* ─── Focus: amber ring, everywhere ─── */
+[data-theme="midnight"] :focus-visible {
+  outline: 2px solid var(--md-accent);
+  outline-offset: 2px;
+}
+
+/* ─── Reduced motion: keep the glow, drop the scale ─── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="midnight"] .glass-card:hover,
+  [data-theme="midnight"] .glass-card-static:hover,
+  [data-theme="midnight"] .card-list-item:hover { transform: none; }
+  [data-theme="midnight"] .btn { transition: none; }
+  [data-theme="midnight"] .btn:active { transform: none; }
+}
