@@ -1,7 +1,8 @@
+import { getUserStorageItem } from './authStorage';
+
 const submissionsKey = 'aust-helper-dept-heatmap-submissions-v1';
 const contributorKey = 'aust-helper-dept-heatmap-contributor-id';
 const userStorageKey = 'aust-user-profile';
-const semesterResultsKey = 'aust-helper-semester-results-v2';
 
 export const MIN_BATCH_CONTRIBUTORS = 10;
 export const MIN_CELL_CONTRIBUTORS = 10;
@@ -50,10 +51,8 @@ function saveSubmissions(submissions) {
 /** Completed semester CGPA values from CGPA Tracker storage. */
 export function getSemesterCgpasFromTracker() {
   try {
-    const raw = localStorage.getItem(semesterResultsKey);
-    if (!raw) return {};
-
-    const results = JSON.parse(raw);
+    const results = getUserStorageItem('semesterResults');
+    if (!results) return {};
     const semesterCgpas = {};
 
     for (const sem of results) {

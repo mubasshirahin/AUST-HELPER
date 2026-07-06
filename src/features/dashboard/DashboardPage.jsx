@@ -104,10 +104,14 @@ function QuickStats() {
   const animatedCredits = useAnimatedValue(stats.creditsCompleted);
   const animatedDeadlines = useAnimatedValue(stats.upcomingDeadlines);
 
+  const hasCgpa = stats.currentCgpa !== null && stats.currentCgpa !== undefined;
+  const hasAttendance = stats.avgAttendance !== '—';
+
   const items = [
     {
       label: 'Current CGPA',
-      value: stats.currentCgpa ? animatedCgpa : '—',
+      value: hasCgpa ? animatedCgpa : '0.00',
+      placeholder: !hasCgpa,
       icon: TrendingUp,
       color: 'var(--accent-blue)',
       bg: 'var(--accent-blue-glow)',
@@ -115,7 +119,8 @@ function QuickStats() {
     },
     {
       label: 'Avg. Attendance',
-      value: `${stats.avgAttendance}%`,
+      value: hasAttendance ? `${stats.avgAttendance}%` : '0%',
+      placeholder: !hasAttendance,
       icon: Percent,
       color: 'var(--accent-emerald)',
       bg: 'var(--accent-emerald-glow)',
@@ -154,7 +159,7 @@ function QuickStats() {
               <Icon size={18} />
             </div>
             <div className="quick-stat-body">
-              <span className="quick-stat-value" style={{ color: item.color }}>{item.value}</span>
+              <span className={`quick-stat-value${item.placeholder ? ' placeholder' : ''}`} style={{ color: item.color }}>{item.value}</span>
               <span className="quick-stat-label">{item.label}</span>
             </div>
             <div className="quick-stat-bar" style={{ background: item.color }} />
@@ -233,15 +238,15 @@ export default function DashboardPage() {
       )}
 
       <div className="dashboard-grid">
+        {isVisible('progress') && (
+          <div className="dash-section" style={{ gridColumn: '1 / -1' }}>
+            <ExamTracker />
+          </div>
+        )}
         <div className="dashboard-main-col">
           {isVisible('schedule') && (
             <div className="dash-section">
               <RoutineCard />
-            </div>
-          )}
-          {isVisible('progress') && (
-            <div className="dash-section">
-              <ExamTracker />
             </div>
           )}
           {isVisible('progress') && (

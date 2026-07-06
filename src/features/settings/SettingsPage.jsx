@@ -343,6 +343,12 @@ export default function SettingsPage() {
     const nextName = profileDetails.name.trim();
     const finalBatchName = quickProfile.batchCustomName.trim() || quickProfile.batchName;
 
+    const semesterNum = (() => {
+      const m = (quickProfile.yearSemester || '').match(/Year (\d+) - Semester (\d+)/);
+      if (m) { const y = parseInt(m[1]), s = parseInt(m[2]); if (y >= 1 && y <= 4 && s >= 1 && s <= 2) return (y - 1) * 2 + s; }
+      return 1;
+    })();
+
     updateUser({
       id: profileDetails.id.trim(),
       name: nextName,
@@ -354,6 +360,7 @@ export default function SettingsPage() {
       batchName: finalBatchName,
       batchNo: quickProfile.batchNo,
       yearSemester: quickProfile.yearSemester,
+      semester: semesterNum,
       section: quickProfile.section,
       labSection: quickProfile.labSection,
     });

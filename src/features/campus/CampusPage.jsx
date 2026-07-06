@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
+import { Map, Sparkles, MapPin, Users, Library, UtensilsCrossed, GitBranch } from 'lucide-react';
 import InteractiveMap from './InteractiveMap';
 import FacultyStatus from './FacultyStatus';
 import LibraryPulse from './LibraryPulse';
 import CanteenMenu from './CanteenMenu';
 import PrerequisiteTree from './PrerequisiteTree';
+import GliderTabs from '../../components/GliderTabs';
 import './CampusPage.css';
+
+const campusTabs = [
+  { id: 'map',     label: 'Floor Finder',     icon: MapPin,          color: 'cyan',    desc: '' },
+  { id: 'faculty', label: 'Faculty Status',   icon: Users,           color: 'amber',   desc: 'Office hours' },
+  { id: 'library', label: 'Library Pulse',    icon: Library,         color: 'emerald', desc: 'Occupancy' },
+  { id: 'canteen', label: 'Canteen Menu',     icon: UtensilsCrossed, color: 'rose',    desc: "Today's menu" },
+  { id: 'prereqs', label: 'Prerequisites',    icon: GitBranch,       color: 'purple',  desc: 'Course tree' },
+];
 
 export default function CampusPage() {
   const [activeTab, setActiveTab] = useState('map');
@@ -22,20 +32,40 @@ export default function CampusPage() {
 
   return (
     <div className="campus-page animate-fadeIn">
-      <div className="campus-header">
-        <h1 className="page-title">Campus Hub</h1>
-        <p className="page-description">Navigate buildings, review faculty office hours, and check live canteen/library occupancy.</p>
-      </div>
+      <header className="campus-hero">
+        <div className="campus-hero-bg" aria-hidden="true">
+          <div className="campus-hero-orb campus-hero-orb-1" />
+          <div className="campus-hero-orb campus-hero-orb-2" />
+          <div className="campus-hero-grid" />
+        </div>
+        <div className="campus-hero-content">
+          <div className="campus-hero-badge">
+            <Sparkles size={12} />
+            <span>AUST Campus</span>
+          </div>
+          <div className="campus-hero-title-row">
+            <div className="campus-hero-icon">
+              <Map size={26} />
+            </div>
+            <div>
+              <h1 className="campus-hero-title">Campus Hub</h1>
+              <p className="campus-hero-subtitle">
+                Navigate buildings, review faculty office hours, and check live canteen/library occupancy.
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
 
-      <div className="tabs campus-tabs">
-        <button className={`tab ${activeTab === 'map' ? 'active' : ''}`} onClick={() => setActiveTab('map')}>Floor Finder</button>
-        <button className={`tab ${activeTab === 'faculty' ? 'active' : ''}`} onClick={() => setActiveTab('faculty')}>Faculty Status</button>
-        <button className={`tab ${activeTab === 'library' ? 'active' : ''}`} onClick={() => setActiveTab('library')}>Library Pulse</button>
-        <button className={`tab ${activeTab === 'canteen' ? 'active' : ''}`} onClick={() => setActiveTab('canteen')}>Canteen Menu</button>
-        <button className={`tab ${activeTab === 'prereqs' ? 'active' : ''}`} onClick={() => setActiveTab('prereqs')}>Prerequisites Tree</button>
-      </div>
+      <GliderTabs
+        tabs={campusTabs}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        variant="gradelab"
+        compact
+      />
 
-      <div className="campus-content-area">
+      <div className="campus-content-area" key={activeTab}>
         {renderActiveTab()}
       </div>
     </div>

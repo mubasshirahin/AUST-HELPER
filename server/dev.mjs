@@ -15,11 +15,11 @@ import {
   setTelegramWebhook,
   getWebhookInfo
 } from './telegramNotifier.mjs';
-import { 
-  registerUser, 
-  unregisterUser, 
-  getUser, 
-  getAllUsers, 
+import {
+  registerUser,
+  unregisterUser,
+  getUser,
+  getAllUsers,
   updateUserRoutine,
   toggleUserStatus,
   getStats,
@@ -29,6 +29,11 @@ import {
   getUserAttendanceRecords,
   getAttendanceSummary
 } from './telegramDB.mjs';
+import {
+  recordCheckIn,
+  recordCheckOut,
+  getOccupancy
+} from './libraryDB.mjs';
 
 // Helper function to answer callback query
 async function answerCallbackQueryFn(botToken, callbackQueryId, text) {
@@ -752,6 +757,57 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // ========== Library Occupancy Endpoints ==========
+
+  // Check in (or heartbeat refresh) with the device's GPS position.
+  // The server verifies the position is inside the library geofence.
+  if (req.url === '/api/library/checkin' && req.method === 'POST') {
+    try {
+      const { deviceId, lat, lng } = await readJsonBody(req);
+      const result = recordCheckIn(deviceId, Number(lat), Number(lng));
+      sendJson(res, 200, { success: true, ...result });
+    } catch (error) {
+      sendJson(res, 400, {
+        success: false,
+        error: error.message || 'Check-in failed.',
+      });
+    }
+    return;
+  }
+
+  // Explicit check out (user left the library or tapped "check out").
+  if (req.url === '/api/library/checkout' && req.method === 'POST') {
+    try {
+      const { deviceId } = await readJsonBody(req);
+      if (!deviceId) {
+        sendJson(res, 400, { success: false, error: 'deviceId is required.' });
+        return;
+      }
+      const result = recordCheckOut(deviceId);
+      sendJson(res, 200, { success: true, ...result });
+    } catch (error) {
+      sendJson(res, 500, {
+        success: false,
+        error: error.message || 'Check-out failed.',
+      });
+    }
+    return;
+  }
+
+  // Current live occupancy (anyone can read this).
+  if (req.url === '/api/library/occupancy' && req.method === 'GET') {
+    try {
+      const result = getOccupancy();
+      sendJson(res, 200, { success: true, ...result });
+    } catch (error) {
+      sendJson(res, 500, {
+        success: false,
+        error: error.message || 'Failed to get occupancy.',
+      });
+    }
+    return;
+  }
+
   if (vite) {
     vite.middlewares(req, res);
     return;
@@ -761,7 +817,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(port, '0.0.0.0', () => {
-  console.log(`AUST Helper running at http://localhost:${port}`);
+  console.log(`AUSTWise running at http://localhost:${port}`);
   console.log(`Mode: ${useViteMiddleware ? 'Vite middleware' : 'static dist (no HMR)'}`);
   console.log('');
   console.log('Telegram API Endpoints:');
@@ -781,6 +837,11 @@ server.listen(port, '0.0.0.0', () => {
   console.log('  GET  /api/telegram/attendance          - Get attendance records');
   console.log('  POST /api/telegram/attendance          - Record attendance manually');
   console.log('  GET  /api/telegram/today-classes       - Get today\'s classes');
+  console.log('');
+  console.log('Library Occupancy Endpoints:');
+  console.log('  POST /api/library/checkin              - GPS check-in / heartbeat');
+  console.log('  POST /api/library/checkout             - Leave the library');
+  console.log('  GET  /api/library/occupancy            - Live occupancy count');
   console.log('');
   console.log('📞 Telegram Webhook Setup:');
   console.log('  To enable button clicks in Telegram, set your webhook URL using:');

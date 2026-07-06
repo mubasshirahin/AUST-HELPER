@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "npm run build && node server/dev.mjs",
-    "dev:vite-full": "node server/dev.mjs --vite",
+    "dev": "node server/dev.mjs --vite",
+    "dev:static": "npm run build && node server/dev.mjs",
     "dev:vite": "vite",
     "build": "vite build",
     "lint": "eslint .",
@@ -14,6 +14,8 @@
   "dependencies": {
     "chart.js": "^4.5.1",
     "dotenv": "^17.4.2",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.17.0",
     "react": "^19.2.7",
     "react-chartjs-2": "^5.3.1",

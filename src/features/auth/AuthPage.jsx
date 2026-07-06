@@ -98,7 +98,7 @@ export default function AuthPage() {
           <div className="auth-brand-icon">
             <GraduationCap size={26} />
           </div>
-          <h1>AUST Helper</h1>
+          <h1>AUSTWise</h1>
           <p>Sign in or create your campus account</p>
         </div>
 
@@ -284,7 +284,7 @@ export default function AuthPage() {
 
         <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', textAlign: 'center', marginTop: '16px' }}>
           {mode === 'login' ? (
-            <>New to AUST Helper? <button type="button" className="btn-ghost" style={{ padding: 0, color: 'var(--accent-blue)' }} onClick={() => setMode('signup')}>Create an account</button></>
+            <>New to AUSTWise? <button type="button" className="btn-ghost" style={{ padding: 0, color: 'var(--accent-blue)' }} onClick={() => setMode('signup')}>Create an account</button></>
           ) : (
             <>Already registered? <button type="button" className="btn-ghost" style={{ padding: 0, color: 'var(--accent-blue)' }} onClick={() => setMode('login')}>Login here</button></>
           )}

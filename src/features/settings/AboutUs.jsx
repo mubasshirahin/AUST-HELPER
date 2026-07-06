@@ -4,7 +4,7 @@ import { Sparkles, Terminal, Cpu } from 'lucide-react';
 export default function AboutUs() {
   return (
     <div className="about-us-container animate-fadeIn">
-      <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', marginBottom: '8px' }}>About AUST Student Helper</h3>
+      <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', marginBottom: '8px' }}>About AUSTWise</h3>
       <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginBottom: '20px' }}>
         An all-in-one academic command center custom-tailored for Ahsanullah University of Science & Technology (AUST).
       </p>

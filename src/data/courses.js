@@ -173,3 +173,24 @@ export function findCourseByName(name) {
     course.name.toLowerCase() === name.toLowerCase().trim()
   );
 }
+
+const SEMESTER_RANGES = [
+  { start: 0, end: 8, semester: 1 },
+  { start: 9, end: 17, semester: 2 },
+  { start: 18, end: 26, semester: 3 },
+  { start: 27, end: 35, semester: 4 },
+  { start: 36, end: 44, semester: 5 },
+  { start: 45, end: 54, semester: 6 },
+  { start: 55, end: 62, semester: 7 },
+  { start: 63, end: 131, semester: 8 },
+];
+
+export function getCourseSemester(code) {
+  if (!code) return null;
+  const idx = AUST_COURSES.findIndex(c => c.code.toLowerCase() === code.toLowerCase().trim());
+  if (idx === -1) return null;
+  for (const range of SEMESTER_RANGES) {
+    if (idx >= range.start && idx <= range.end) return range.semester;
+  }
+  return null;
+}

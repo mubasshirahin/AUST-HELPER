@@ -138,7 +138,7 @@ function formatNotification(classes, customDate) {
     message += `   ⏰ ${time} | 📍 Room ${room}\n\n`;
   });
   
-  message += `\n📖 AUST Helper থেকে`;
+  message += `\n📖 AUSTWise থেকে`;
   
   return message;
 }
@@ -347,7 +347,7 @@ export async function registerUserForNotifications(chatId, routine) {
   const testResult = await sendTelegramMessage(
     TELEGRAM_BOT_TOKEN,
     chatId,
-    '✅ Welcome to AUST Helper Telegram Notifications!\n\nYour Chat ID has been registered successfully. You will receive daily class schedule notifications at 8 AM.'
+    '✅ Welcome to AUSTWise Telegram Notifications!\n\nYour Chat ID has been registered successfully. You will receive daily class schedule notifications at 8 AM.'
   );
   
   if (!testResult.success) {
@@ -419,7 +419,7 @@ function formatSingleClassMessage(cls, index, total, today, date) {
   message += `আজকের ক্লাসের উপস্থিতি নিশ্চিত করুন (${today}, ${date})\n\n`;
   message += `${type} ${cls.course} – ${cls.name}\n`;
   message += `   ⏰ ${time} | 📍 Room ${room}\n\n`;
-  message += `📖 AUST Helper থেকে`;
+  message += `📖 AUSTWise থেকে`;
   
   // Create Yes/No buttons for this class
   const callbackDataYes = `attend_yes_${index}_${cls.course.replace(/\s/g, '_')}`;
@@ -459,7 +459,7 @@ function formatAttendanceMessage(classes) {
   
   if (classes.length === 0) {
     message += `🎉 আজ কোনো ক্লাস ছিল না!\n\n`;
-    message += `📖 AUST Helper থেকে`;
+    message += `📖 AUSTWise থেকে`;
     return { message, keyboard: null };
   }
   
@@ -485,7 +485,7 @@ function formatAttendanceMessage(classes) {
     ]);
   });
   
-  message += `\n📖 AUST Helper থেকে`;
+  message += `\n📖 AUSTWise থেকে`;
   
   return { message, keyboard };
 }
@@ -583,7 +583,7 @@ export async function sendAttendanceMessageToUser(chatId, routine, isTest = fals
   
   if (classes.length === 0) {
     // No classes today
-    const message = `🌙 রাত ৯টায়:\n\n🎉 আজ কোনো ক্লাস ছিল না!\n\n📖 AUST Helper থেকে`;
+    const message = `🌙 রাত ৯টায়:\n\n🎉 আজ কোনো ক্লাস ছিল না!\n\n📖 AUSTWise থেকে`;
     return await sendTelegramMessage(botToken, chatId, message);
   }
   

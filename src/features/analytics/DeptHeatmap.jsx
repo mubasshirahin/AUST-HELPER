@@ -27,17 +27,17 @@ export default function DeptHeatmap() {
 
   const getCellColor = (val) => {
     if (val === null) return 'rgba(255,255,255,0.03)';
-    if (val >= 3.4) return 'var(--accent-emerald)';
+    if (val >= 3.5) return 'var(--accent-emerald)';
     if (val >= 3.2) return 'var(--accent-blue)';
-    if (val >= 3.0) return 'var(--accent-amber)';
+    if (val >= 2.8) return 'var(--accent-amber)';
     return 'var(--accent-rose)';
   };
 
   const getCellOpacity = (val) => {
     if (val === null) return 0.2;
-    if (val >= 3.4) return 0.9;
+    if (val >= 3.5) return 0.9;
     if (val >= 3.2) return 0.75;
-    if (val >= 3.0) return 0.6;
+    if (val >= 2.8) return 0.6;
     return 0.8;
   };
 
@@ -51,7 +51,7 @@ export default function DeptHeatmap() {
           <div>
             <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Dept. CGPA Heatmap</h2>
             <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
-              Averages CGPA from CGPA Tracker per batch. A batch unlocks after {MIN_BATCH_CONTRIBUTORS}+ students save grades.
+              Averages CGPA from {heatmapView.totalSubmissions} students across {heatmapView.visibleBatches.length + heatmapView.pendingBatches.length} batches
             </p>
           </div>
         </div>
@@ -72,10 +72,9 @@ export default function DeptHeatmap() {
       </div>
 
       {userBatchNo && userPendingBatch && (
-        <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-          Your batch ({userBatchNo}): {userPendingBatch.contributorCount}/{MIN_BATCH_CONTRIBUTORS} contributors from CGPA Tracker.
-          Save your grades in <strong>CGPA Tracker</strong> to count toward this pool.
-        </p>
+        <div className="flex gap-3 flex-wrap" style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+          <span>Your batch ({userBatchNo}): <strong style={{color: userPendingBatch.contributorCount >= MIN_BATCH_CONTRIBUTORS ? 'var(--accent-emerald)' : 'var(--accent-amber)'}}>{userPendingBatch.contributorCount}/{MIN_BATCH_CONTRIBUTORS}</strong> contributors</span>
+        </div>
       )}
 
       {heatmapView.visibleBatches.length === 0 ? (
@@ -89,8 +88,7 @@ export default function DeptHeatmap() {
           </p>
         </div>
       ) : (
-        <div style={{ overflowX: 'auto', width: '100%', paddingBottom: '12px' }}>
-          <div style={{ minWidth: '600px' }}>
+        <div style={{ width: '100%' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '120px repeat(8, 1fr)', gap: '6px', marginBottom: '8px', textAlign: 'center', fontWeight: 'bold', fontSize: '11px', color: 'var(--text-secondary)' }}>
               <div>Batch</div>
               {semesterNumbers.map((semester) => (
@@ -117,8 +115,8 @@ export default function DeptHeatmap() {
                   >
                     <div style={{ paddingLeft: '8px', fontSize: '12px', fontWeight: isUserBatch ? 'bold' : 'normal', color: isUserBatch ? 'var(--accent-blue)' : 'var(--text-primary)' }}>
                       {batch.label}{isUserBatch ? ' (You)' : ''}
-                      <span style={{ display: 'block', fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 'normal' }}>
-                        n={batch.contributorCount}
+                      <span style={{ display: 'inline-flex', alignItems:'center', gap:'3px', marginLeft:'6px', fontSize:'9px', fontWeight:'bold', padding:'1px 6px', borderRadius:'8px', background:batch.contributorCount >= MIN_BATCH_CONTRIBUTORS ? 'var(--accent-emerald-glow)' : 'var(--accent-amber-glow)', color:batch.contributorCount >= MIN_BATCH_CONTRIBUTORS ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>
+                        {batch.contributorCount}
                       </span>
                     </div>
 
@@ -152,26 +150,32 @@ export default function DeptHeatmap() {
               })}
             </div>
           </div>
-        </div>
       )}
 
-      {heatmapView.pendingBatches.length > 0 && (
-        <div style={{ marginTop: '16px', fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
-          <strong style={{ color: 'var(--text-primary)' }}>Collecting from CGPA Tracker:</strong>{' '}
-          {heatmapView.pendingBatches.map((batch) => (
-            <span key={batch.batchNo} style={{ marginRight: '10px' }}>
-              {batch.label} ({batch.contributorCount}/{MIN_BATCH_CONTRIBUTORS})
-            </span>
-          ))}
+      {/* ── Batch-wise contributor counter ── */}
+      {(heatmapView.visibleBatches.length > 0 || heatmapView.pendingBatches.length > 0) && (
+        <div style={{ marginTop: '16px', padding:'12px', background:'var(--bg-input)', borderRadius:'var(--radius-md)', fontSize: 'var(--fs-xs)' }}>
+          <strong style={{ color: 'var(--text-primary)', fontSize:'11px' }}>Collected Data:</strong>
+          <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', marginTop:'6px' }}>
+            {[...heatmapView.visibleBatches, ...heatmapView.pendingBatches].sort((a,b)=>Number(b.batchNo)-Number(a.batchNo)).map((batch) => (
+              <span key={batch.batchNo} style={{ display:'inline-flex', alignItems:'center', gap:'4px', background:'var(--bg-card)', padding:'3px 10px', borderRadius:'12px', fontSize:'11px' }}>
+                <span style={{fontWeight:'600'}}>{batch.label}</span>
+                <span style={{ fontWeight:'bold', color:batch.contributorCount >= MIN_BATCH_CONTRIBUTORS ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>
+                  {batch.contributorCount}
+                </span>
+                <span style={{color:'var(--text-tertiary)'}}>students</span>
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
       <div className="flex flex-wrap gap-4 items-center justify-center p-3" style={{ background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', fontSize: '11px', marginTop: '20px' }}>
         <span style={{ color: 'var(--text-tertiary)', fontWeight: 'bold' }}>Heatmap Legend:</span>
-        <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '2px', background: 'var(--accent-emerald)' }}></span> High CGPA (3.4+)</div>
-        <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '2px', background: 'var(--accent-blue)' }}></span> Moderate (3.2-3.4)</div>
-        <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '2px', background: 'var(--accent-amber)' }}></span> Average (3.0-3.2)</div>
-        <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '2px', background: 'var(--accent-rose)' }}></span> Critical (&lt;3.0)</div>
+        <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '2px', background: 'var(--accent-emerald)' }}></span> High CGPA (3.5+)</div>
+        <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '2px', background: 'var(--accent-blue)' }}></span> Moderate (3.2-3.5)</div>
+        <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '2px', background: 'var(--accent-amber)' }}></span> Average (2.8-3.2)</div>
+        <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '2px', background: 'var(--accent-rose)' }}></span> Critical (&lt;2.8)</div>
       </div>
     </div>
   );

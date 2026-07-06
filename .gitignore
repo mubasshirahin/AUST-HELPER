@@ -30,3 +30,6 @@ dist-ssr
 
 # Telegram user database (contains sensitive bot tokens)
 .telegram_users.json
+
+# Library occupancy presence data (runtime state)
+.library_presence.json

@@ -1,21 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useRoutine } from '../../context/RoutineContext';
 import CourseAutocomplete from '../../components/CourseAutocomplete';
 import { findCourseByCode } from '../../data/courses';
 
 export default function WeekSchedule() {
   const { user } = useAuth();
-  const { routine, weekDays } = useRoutine();
-  const [currentWeek, setCurrentWeek] = useState(1);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [showSettings, setShowSettings] = useState(false);
+  const [viewMode, setViewMode] = useState('weekly');
   const [semesterStart, setSemesterStart] = useState(() => {
     const stored = localStorage.getItem('aust-semester-start');
     return stored || new Date().toISOString().split('T')[0];
   });
+  const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
   const [newTask, setNewTask] = useState({
     courseCode: '',
     courseName: '',
@@ -92,16 +91,9 @@ export default function WeekSchedule() {
     }
   };
 
-  // Generate 14 weeks of dates starting from semester start date
-  // Always start from Sunday of the week containing the semester start date
-  const getWeekDates = (weekNum) => {
-    const startDate = new Date(semesterStart);
-    // Find the Sunday of the week containing the start date
-    const startOfWeek = new Date(startDate);
-    startOfWeek.setDate(startDate.getDate() - startDate.getDay());
-    // Add weeks offset
-    startOfWeek.setDate(startOfWeek.getDate() + (weekNum - 1) * 7);
-
+  const getWeekDates = (refDate) => {
+    const startOfWeek = new Date(refDate);
+    startOfWeek.setDate(refDate.getDate() - refDate.getDay());
     const dates = [];
     for (let i = 0; i < 7; i++) {
       const date = new Date(startOfWeek);
@@ -111,7 +103,26 @@ export default function WeekSchedule() {
     return dates;
   };
 
-  const weekDates = getWeekDates(currentWeek);
+  const weekDates = getWeekDates(currentDate);
+
+  const getMonthDates = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startPad = firstDay.getDay();
+    const days = [];
+    for (let i = 0; i < startPad; i++) days.push(null);
+    for (let d = 1; d <= lastDay.getDate(); d++) days.push(new Date(year, month, d));
+    return days;
+  };
+
+  const getCurrentWeekNum = () => {
+    const startDate = new Date(semesterStart);
+    const diff = currentDate.getTime() - startDate.getTime();
+    const weekNum = Math.floor(diff / (7 * 24 * 60 * 60 * 1000)) + 1;
+    return Math.max(1, Math.min(14, weekNum));
+  };
 
   // Load tasks from localStorage
   const [tasks, setTasks] = useState([]);
@@ -129,14 +140,16 @@ export default function WeekSchedule() {
   };
 
   const formatDateKey = (date) => {
-    return date.toISOString().split('T')[0];
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   };
 
   const getTasksForDate = (date) => {
     const key = formatDateKey(date);
     let filteredTasks = tasks.filter(task => task.date === key);
     
-    // Filter by batch if a specific batch is selected
     if (batchFilter !== 'all') {
       filteredTasks = filteredTasks.filter(task => task.batchGroup === batchFilter);
     }
@@ -216,211 +229,245 @@ export default function WeekSchedule() {
 
   return (
     <div className="glass-card-static animate-fadeInUp">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="icon" style={{ backgroundColor: 'var(--accent-cyan-glow)', color: 'var(--accent-cyan)', padding: '6px', borderRadius: '8px' }}>
-            <Calendar size={18} />
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="icon" style={{ backgroundColor: 'var(--accent-cyan-glow)', color: 'var(--accent-cyan)', padding: '12px', borderRadius: '12px' }}>
+            <Calendar size={28} />
           </div>
           <div>
-            <h3 className="section-title" style={{ fontSize: 'var(--fs-md)', margin: 0 }}>14-Week Schedule</h3>
-            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>Academic calendar with tasks & events</p>
+            <h3 className="section-title" style={{ fontSize: 'var(--fs-xl)', margin: 0 }}>14-Week Schedule</h3>
+            <p style={{ fontSize: 'var(--fs-md)', color: 'var(--text-secondary)' }}>Academic calendar with tasks & events</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             className="btn btn-icon"
             onClick={() => setShowSettings(true)}
-            style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', padding: '4px' }}
+            style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', padding: '6px' }}
             title="Set semester start date"
           >
-            <Calendar size={16} />
+            <Calendar size={18} />
           </button>
+          <div className="flex items-center" style={{ gap: '4px', background: 'var(--bg-input)', borderRadius: '8px', padding: '3px' }}>
+            {['daily', 'weekly', 'monthly'].map(mode => (
+              <button
+                key={mode}
+                onClick={() => {
+                  if (mode === 'daily' && viewMode !== 'daily') {
+                    setCurrentDate(new Date());
+                  } else if (mode === 'monthly' && viewMode !== 'monthly') {
+                    const d = new Date(currentDate);
+                    d.setDate(15);
+                    setCurrentDate(d);
+                  }
+                  setViewMode(mode);
+                }}
+                style={{
+                  border: 'none', cursor: 'pointer', borderRadius: '6px',
+                  padding: '4px 10px', fontSize: '11px', fontWeight: 'bold',
+                  background: viewMode === mode ? 'var(--accent-cyan)' : 'transparent',
+                  color: viewMode === mode ? '#fff' : 'var(--text-secondary)',
+                  textTransform: 'capitalize',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {mode === 'daily' ? 'Day' : mode === 'weekly' ? 'Week' : 'Month'}
+              </button>
+            ))}
+          </div>
           <button
             className="btn btn-icon"
-            onClick={() => setCurrentWeek(Math.max(1, currentWeek - 1))}
-            disabled={currentWeek <= 1}
-            style={{ border: 'none', background: 'transparent', cursor: currentWeek <= 1 ? 'not-allowed' : 'pointer', color: 'var(--text-secondary)', opacity: currentWeek <= 1 ? 0.4 : 1 }}
+            onClick={() => {
+              const d = new Date(currentDate);
+              if (viewMode === 'daily') d.setDate(d.getDate() - 1);
+              else if (viewMode === 'monthly') d.setMonth(d.getMonth() - 1);
+              else d.setDate(d.getDate() - 7);
+              setCurrentDate(d);
+            }}
+            style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', padding: '6px' }}
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={20} />
           </button>
-          <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', minWidth: '80px', textAlign: 'center' }}>
-            Week {currentWeek}
+          <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', minWidth: '120px', textAlign: 'center' }}>
+            {viewMode === 'daily'
+              ? currentDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })
+              : viewMode === 'monthly'
+                ? currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                : `Week ${getCurrentWeekNum()}`}
           </span>
           <button
             className="btn btn-icon"
-            onClick={() => setCurrentWeek(Math.min(14, currentWeek + 1))}
-            disabled={currentWeek >= 14}
-            style={{ border: 'none', background: 'transparent', cursor: currentWeek >= 14 ? 'not-allowed' : 'pointer', color: 'var(--text-secondary)', opacity: currentWeek >= 14 ? 0.4 : 1 }}
+            onClick={() => {
+              const d = new Date(currentDate);
+              if (viewMode === 'daily') d.setDate(d.getDate() + 1);
+              else if (viewMode === 'monthly') d.setMonth(d.getMonth() + 1);
+              else d.setDate(d.getDate() + 7);
+              setCurrentDate(d);
+            }}
+            style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', padding: '6px' }}
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={20} />
           </button>
         </div>
       </div>
 
-      {/* Calendar Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} style={{ textAlign: 'center', padding: '8px', fontSize: 'var(--fs-xs)', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
-            {day}
-          </div>
-        ))}
-      </div>
-
-      {/* Calendar Days */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
-        {weekDates.map((date, idx) => {
-          const dayTasks = getTasksForDate(date);
-          const dayClasses = routine[weekDays[idx]] || [];
-          // Calculate dynamic height based on ALL content
-          const contentCount = dayTasks.length + (dayClasses.length > 0 ? 1 : 0);
-          const dynamicMinHeight = 70 + (contentCount * 30);
-
-          return (
-            <div
-              key={idx}
-              style={{
-                padding: '6px',
-                borderRadius: 'var(--radius-md)',
-                background: isToday(date) ? 'var(--accent-blue-glow)' : 'var(--bg-input)',
-                border: isToday(date) ? '1px solid var(--accent-blue)' : '1px solid var(--border-primary)',
-                minHeight: `${Math.max(80, dynamicMinHeight)}px`,
-                cursor: 'default',
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-            >
-              {isBeforeSemesterStart(date) ? (
-                <div style={{ textAlign: 'center', padding: '6px 0', color: 'var(--text-tertiary)', opacity: 0.3, flex: 1 }}>
-                  <span style={{ fontSize: '10px' }}>{getDayNumber(date)}</span>
-                </div>
-              ) : (
-                <>
-                  {/* Date Header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border-secondary)' }}>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 'bold', color: isToday(date) ? 'var(--accent-blue)' : 'var(--text-primary)' }}>
-                        {getDayNumber(date)}
-                      </span>
-                      <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>
-                        {getMonthName(date)}
-                      </span>
-                    </div>
-                    {isToday(date) && (
-                      <span style={{ fontSize: '7px', fontWeight: 'bold', color: 'var(--accent-blue)', background: 'var(--accent-blue-glow)', padding: '1px 5px', borderRadius: '4px' }}>
-                        TODAY
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Content Area - Classes and ALL Tasks */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                    {/* Classes */}
-                    {dayClasses.slice(0, 1).map((cls, i) => (
-                      <div key={i} style={{ fontSize: '9px', padding: '3px 5px', background: `${cls.color}20`, borderLeft: `2px solid ${cls.color}`, borderRadius: '3px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>
-                        {cls.course}
-                      </div>
-                    ))}
-
-                    {/* ALL Tasks - Show every task, no limit */}
-                    {dayTasks.map(task => (
-                      <div 
-                        key={task.id} 
-                        style={{ 
-                          fontSize: '10px', 
-                          padding: '3px 5px', 
-                          background: `${getTypeColor(task.type)}15`, 
-                          borderLeft: `3px solid ${getTypeColor(task.type)}`, 
-                          borderRadius: '3px', 
-                          color: 'var(--text-primary)', 
-                          cursor: 'pointer',
-                          transition: 'background 0.15s ease',
-                          fontWeight: '500'
-                        }}
-                        onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = `${getTypeColor(task.type)}30`; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = `${getTypeColor(task.type)}15`; }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{task.title}</span>
-                          {canAddTask && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }}
-                              style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--accent-rose)', padding: '0 3px', fontSize: '11px', marginLeft: '3px' }}
-                            >
-                              ×
-                            </button>
-                          )}
-                        </div>
-                        <div style={{ display: 'flex', gap: '3px', marginTop: '1px', flexWrap: 'wrap' }}>
-                          {task.courseCode && (
-                            <span style={{ fontSize: '8px', color: 'var(--accent-cyan)', background: 'var(--accent-cyan-glow)', padding: '0 3px', borderRadius: '2px', fontWeight: 'bold' }}>
-                              {task.courseCode}
-                            </span>
-                          )}
-                          {task.batchGroup && (
-                            <span style={{ fontSize: '8px', color: 'var(--accent-amber)', background: 'var(--accent-amber-glow)', padding: '0 3px', borderRadius: '2px', fontWeight: 'bold' }}>
-                              {task.batchGroup}
-                            </span>
-                          )}
-                          {task.time && (
-                            <span style={{ fontSize: '8px', color: 'var(--text-tertiary)' }}>
-                              {task.time}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Empty state */}
-                    {dayTasks.length === 0 && dayClasses.length === 0 && (
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: '9px', fontStyle: 'italic' }}>
-                        No tasks
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Add Task Button */}
-                  {canAddTask && (
-                    <button
-                      style={{ 
-                        marginTop: '4px', 
-                        width: '100%',
-                        padding: '4px',
-                        background: 'var(--bg-secondary)',
-                        border: '1px dashed var(--border-secondary)',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '10px',
-                        color: 'var(--accent-cyan)',
-                        fontWeight: 'bold',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedDay(date);
-                        setNewTask({ ...newTask, date: formatDateKey(date) });
-                        setShowAddModal(true);
-                      }}
-                    >
-                      + Add
-                    </button>
-                  )}
-                </>
+      {viewMode === 'daily' ? (() => {
+        const date = currentDate;
+        const dayTasks = getTasksForDate(date);
+        return (
+          <div style={{ padding: '32px', borderRadius: 'var(--radius-xl)', background: isToday(date) ? 'var(--accent-blue-glow)' : 'var(--bg-input)', border: isToday(date) ? '2px solid var(--accent-blue)' : '1px solid var(--border-primary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '14px', borderBottom: '2px solid var(--border-secondary)' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px' }}>
+                <span style={{ fontSize: '32px', fontWeight: 'bold', color: isToday(date) ? 'var(--accent-blue)' : 'var(--text-primary)' }}>
+                  {date.toLocaleDateString('en-US', { weekday: 'long' })}
+                </span>
+                <span style={{ fontSize: '20px', color: 'var(--text-tertiary)' }}>
+                  {date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </span>
+              </div>
+              {isToday(date) && (
+                <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--accent-blue)', background: 'var(--accent-blue-glow)', padding: '4px 12px', borderRadius: '6px' }}>TODAY</span>
               )}
             </div>
-          );
-        })}
-      </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {dayTasks.map(task => (
+                <div key={task.id} onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
+                  style={{ fontSize: '15px', padding: '14px 16px', background: `${getTypeColor(task.type)}15`, borderLeft: `5px solid ${getTypeColor(task.type)}`, borderRadius: '10px', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: '500' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = `${getTypeColor(task.type)}30`; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = `${getTypeColor(task.type)}15`; }}
+                >
+                  <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>{task.title}</div>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {task.courseCode && <span style={{ fontSize: '12px', color: 'var(--accent-cyan)', background: 'var(--accent-cyan-glow)', padding: '2px 10px', borderRadius: '5px', fontWeight: 'bold' }}>{task.courseCode}</span>}
+                    {task.batchGroup && <span style={{ fontSize: '12px', color: 'var(--accent-amber)', background: 'var(--accent-amber-glow)', padding: '2px 10px', borderRadius: '5px', fontWeight: 'bold' }}>{task.batchGroup}</span>}
+                    {task.time && <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{task.time}</span>}
+                  </div>
+                </div>
+              ))}
+              {dayTasks.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontSize: '15px', fontStyle: 'italic' }}>No tasks for this day</div>
+              )}
+            </div>
+            {canAddTask && (
+              <button onClick={(e) => { e.stopPropagation(); setSelectedDay(date); setNewTask({ ...newTask, date: formatDateKey(date) }); setShowAddModal(true); }}
+                style={{ marginTop: '16px', width: '100%', padding: '14px', background: 'var(--bg-secondary)', border: '1px dashed var(--border-secondary)', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', color: 'var(--accent-cyan)', fontWeight: 'bold' }}>
+                + Add Task
+              </button>
+            )}
+          </div>
+        );
+      })() : viewMode === 'monthly' ? (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', marginBottom: '12px' }}>
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div key={day} style={{ textAlign: 'center', padding: '10px', fontSize: 'var(--fs-sm)', fontWeight: 'bold', color: 'var(--text-secondary)' }}>{day}</div>
+            ))}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', alignItems: 'start' }}>
+            {getMonthDates().map((date, idx) => {
+              if (!date) return <div key={`pad-${idx}`} />;
+              const dayTasks = getTasksForDate(date);
+              return (
+                <div key={idx} style={{ padding: '10px', borderRadius: 'var(--radius-lg)', background: isToday(date) ? 'var(--accent-blue-glow)' : 'var(--bg-input)', border: isToday(date) ? '2px solid var(--accent-blue)' : '1px solid var(--border-primary)', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', paddingBottom: '6px', borderBottom: '1px solid var(--border-secondary)' }}>
+                    <span style={{ fontSize: '15px', fontWeight: 'bold', color: isToday(date) ? 'var(--accent-blue)' : 'var(--text-primary)' }}>{getDayNumber(date)}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                    {dayTasks.slice(0, 5).map(task => (
+                      <div key={task.id} onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
+                        style={{ fontSize: '10px', padding: '3px 6px', background: `${getTypeColor(task.type)}15`, borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {task.batchGroup && <span style={{ fontSize: '9px', fontWeight: 'bold', color: 'var(--accent-amber)', background: 'var(--accent-amber-glow)', padding: '1px 4px', borderRadius: '2px', flexShrink: 0 }}>{task.batchGroup}</span>}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', overflow: 'hidden' }}>
+                            {task.courseCode && <span style={{ fontSize: '8px', color: 'var(--accent-cyan)', fontWeight: 'bold' }}>{task.courseCode}</span>}
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '9px' }}>{task.title}</span>
+                          </div>
+                      </div>
+                    ))}
+                    {dayTasks.length > 5 && (
+                      <div style={{ fontSize: '9px', color: 'var(--text-tertiary)', textAlign: 'center' }}>+{dayTasks.length - 5} more</div>
+                    )}
+                    {dayTasks.length === 0 && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: '10px', fontStyle: 'italic', padding: '14px 0' }}>No tasks</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Weekly Calendar Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '12px', marginBottom: '16px' }}>
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div key={day} style={{ textAlign: 'center', padding: '14px', fontSize: 'var(--fs-md)', fontWeight: 'bold', color: 'var(--text-secondary)' }}>{day}</div>
+            ))}
+          </div>
+
+          {/* Weekly Calendar Days */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '12px', alignItems: 'start' }}>
+            {weekDates.map((date, idx) => {
+              const dayTasks = getTasksForDate(date);
+              return (
+                <div key={idx} style={{ padding: '18px', borderRadius: 'var(--radius-xl)', background: isToday(date) ? 'var(--accent-blue-glow)' : 'var(--bg-input)', border: isToday(date) ? '2px solid var(--accent-blue)' : '1px solid var(--border-primary)', minHeight: '100px', cursor: 'default', display: 'flex', flexDirection: 'column' }}>
+                  {isBeforeSemesterStart(date) ? (
+                    <div style={{ textAlign: 'center', padding: '14px 0', color: 'var(--text-tertiary)', opacity: 0.3, flex: 1 }}>
+                      <span style={{ fontSize: '18px' }}>{getDayNumber(date)}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', paddingBottom: '0' }}>
+                        <span style={{ fontSize: '16px', fontWeight: 'bold', color: isToday(date) ? 'var(--accent-blue)' : 'var(--text-primary)', lineHeight: 1 }}>{getDayNumber(date)}</span>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {dayTasks.map(task => (
+                          <div key={task.id} onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
+                            style={{ fontSize: '11px', padding: '4px 8px', background: `${getTypeColor(task.type)}15`, borderRadius: '5px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {task.batchGroup && <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--accent-amber)', background: 'var(--accent-amber-glow)', padding: '2px 5px', borderRadius: '3px', flexShrink: 0 }}>{task.batchGroup}</span>}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', overflow: 'hidden' }}>
+                              {task.courseCode && <span style={{ fontSize: '9px', color: 'var(--accent-cyan)', fontWeight: 'bold' }}>{task.courseCode}</span>}
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '10px' }}>{task.title}</span>
+                            </div>
+                          </div>
+                        ))}
+                        {dayTasks.length === 0 && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: '12px', fontStyle: 'italic', padding: '20px 0' }}>No tasks</div>}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {canAddTask && viewMode !== 'daily' && (
+        <button
+          onClick={() => {
+            const d = currentDate;
+            setSelectedDay(d);
+            setNewTask({ ...newTask, date: formatDateKey(d) });
+            setShowAddModal(true);
+          }}
+          style={{
+            marginTop: '12px', width: '100%', padding: '12px',
+            background: 'var(--bg-secondary)', border: '1px dashed var(--border-secondary)',
+            borderRadius: '8px', cursor: 'pointer', fontSize: '13px',
+            color: 'var(--accent-cyan)', fontWeight: 'bold',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          + Add Task
+        </button>
+      )}
 
       {/* Batch Filter */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-secondary)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px', paddingTop: '12px', borderTop: '2px solid var(--border-secondary)' }}>
         <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Filter:</span>
         <button
           onClick={() => setBatchFilter('all')}
           style={{
-            fontSize: '9px',
-            padding: '2px 8px',
-            borderRadius: '4px',
+            fontSize: '10px',
+            padding: '4px 12px',
+            borderRadius: '6px',
             border: 'none',
             cursor: 'pointer',
             background: batchFilter === 'all' ? 'var(--accent-blue)' : 'var(--bg-secondary)',
@@ -435,9 +482,9 @@ export default function WeekSchedule() {
             key={bg}
             onClick={() => setBatchFilter(bg)}
             style={{
-              fontSize: '9px',
-              padding: '2px 8px',
-              borderRadius: '4px',
+              fontSize: '10px',
+              padding: '4px 12px',
+              borderRadius: '6px',
               border: 'none',
               cursor: 'pointer',
               background: batchFilter === bg ? 'var(--accent-amber)' : 'var(--bg-secondary)',
@@ -450,7 +497,7 @@ export default function WeekSchedule() {
           </button>
         ))}
         {batchFilter !== 'all' && (
-          <span style={{ fontSize: '8px', color: 'var(--text-tertiary)', marginLeft: '4px' }}>
+          <span style={{ fontSize: '9px', color: 'var(--text-tertiary)', marginLeft: '6px' }}>
             (Showing {batchFilter} only)
           </span>
         )}
@@ -458,8 +505,8 @@ export default function WeekSchedule() {
 
       {/* Settings Modal - Set Semester Start Date */}
       {showSettings && (
-        <div className="modal-overlay" onClick={() => setShowSettings(false)}>
-          <div className="modal glass-card-static" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '350px' }}>
+        <div className="modal-overlay" onClick={() => setShowSettings(false)} style={{ overflow: 'hidden' }}>
+          <div className="modal glass-card-static" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px', width: '90%', maxHeight: '92vh', overflowY: 'auto' }}>
             <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', margin: '0 0 16px' }}>Semester Settings</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
@@ -475,7 +522,7 @@ export default function WeekSchedule() {
                 </p>
               </div>
               <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
-                <p style={{ margin: '0 0 4px' }}>Current Week {currentWeek} starts on:</p>
+                <p style={{ margin: '0 0 4px' }}>Current Week {getCurrentWeekNum()} starts on:</p>
                 <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--text-primary)' }}>
                   {new Date(semesterStart).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
@@ -506,18 +553,21 @@ export default function WeekSchedule() {
             justifyContent: 'center',
             zIndex: 1000,
             padding: '16px',
-            animation: 'fadeIn 0.15s ease'
+            animation: 'fadeIn 0.15s ease',
+            overflow: 'hidden'
           }}
         >
           <div 
             onClick={(e) => e.stopPropagation()} 
             style={{ 
-              maxWidth: '380px', 
-              width: '100%',
+              maxWidth: '520px', 
+              width: '90%',
+              maxHeight: '92vh',
+              overflowY: 'auto',
               background: 'var(--bg-secondary)',
               border: '1px solid var(--border-primary)',
               borderRadius: 'var(--radius-lg)',
-              padding: '20px',
+              padding: '24px',
               boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
               animation: 'scaleIn 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
@@ -649,16 +699,17 @@ export default function WeekSchedule() {
             justifyContent: 'center',
             zIndex: 1000,
             padding: '8px',
-            animation: 'fadeIn 0.15s ease'
+            animation: 'fadeIn 0.15s ease',
+            overflow: 'hidden'
           }}
         >
           <div 
             className="modal glass-card-static" 
             onClick={(e) => e.stopPropagation()} 
             style={{ 
-              maxWidth: '320px', 
-              width: '100%',
-              maxHeight: '80vh',
+              maxWidth: '520px', 
+              width: '90%',
+              maxHeight: '92vh',
               overflowY: 'auto',
               animation: 'scaleIn 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
               boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',

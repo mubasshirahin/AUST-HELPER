@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Check, ChevronDown, ChevronUp, FileSpreadsheet, Pencil, Plus, RotateCcw, Trash2, X, Download } from 'lucide-react';
 import CourseAutocomplete from '../../components/CourseAutocomplete';
 import { formatSemesterLabel } from '../../utils/semester';
@@ -6,6 +6,7 @@ import { syncHeatmapFromTracker } from '../../utils/deptHeatmapStorage';
 import { semesterResults as mockSemesterResults } from '../../data/mockData';
 import { getUserStorageItem, setUserStorageItem, getUserStorageKey, removeUserStorageItem } from '../../utils/authStorage';
 import { loadTemplates } from '../../utils/transcriptTemplates';
+import { useAuth } from '../../context/AuthContext';
 
 const gradePoints = {
   'A+': 4.00,
@@ -48,6 +49,8 @@ const sortCourses = (courses) => [...courses].sort((firstCourse, secondCourse) =
 });
 
 const getCreditValue = (credit) => Number(credit) || 0;
+
+const formatCredit = (credit) => parseFloat(Number(credit).toFixed(2)).toString();
 
 const cloneResults = (results) => results.map((sem) => ({
   ...sem,
@@ -120,7 +123,14 @@ const hasStoredResults = () => {
 };
 
 export default function ResultTable({ onResultsChange }) {
-  const [expandedSemester, setExpandedSemester] = useState(1);
+  const { user } = useAuth();
+  const getInitialSem = () => {
+    const ysMatch = (user?.yearSemester || '').match(/Year (\d+) - Semester (\d+)/);
+    if (ysMatch) { const y = parseInt(ysMatch[1]), s = parseInt(ysMatch[2]); if (y >= 1 && y <= 4 && s >= 1 && s <= 2) return (y - 1) * 2 + s; }
+    if (user?.semester && user.semester >= 1 && user.semester <= 8) return user.semester;
+    return 1;
+  };
+  const [expandedSemester, setExpandedSemester] = useState(getInitialSem);
   const [results, setResults] = useState(loadStoredResults);
   const [draftResults, setDraftResults] = useState(() => cloneResults(results));
   const [editingSemester, setEditingSemester] = useState(null);
@@ -130,6 +140,40 @@ export default function ResultTable({ onResultsChange }) {
   const [selectedSemesterForTemplate, setSelectedSemesterForTemplate] = useState(null);
   const [templatesForSelection, setTemplatesForSelection] = useState([]);
   const hasCustomResults = hasStoredResults();
+  const inputRefs = useRef({});
+
+  const handleKeyDown = (e, semNum, rowIdx, fieldIdx) => {
+    const fieldsPerRow = 3; // name, credit, grade (skip course code)
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      if (fieldIdx + 1 < fieldsPerRow) {
+        inputRefs.current[`r_${semNum}_${rowIdx}_${fieldIdx + 1}`]?.focus();
+      } else if (rowIdx + 1 < (draftResults.find(s => s.semester === semNum)?.courses.length || 0)) {
+        inputRefs.current[`r_${semNum}_${rowIdx + 1}_0`]?.focus();
+      }
+    }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (fieldIdx - 1 >= 0) {
+        inputRefs.current[`r_${semNum}_${rowIdx}_${fieldIdx - 1}`]?.focus();
+      } else if (rowIdx - 1 >= 0) {
+        inputRefs.current[`r_${semNum}_${rowIdx - 1}_2`]?.focus();
+      }
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const courses = draftResults.find(s => s.semester === semNum)?.courses || [];
+      if (rowIdx + 1 < courses.length) {
+        inputRefs.current[`r_${semNum}_${rowIdx + 1}_${fieldIdx}`]?.focus();
+      }
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (rowIdx - 1 >= 0) {
+        inputRefs.current[`r_${semNum}_${rowIdx - 1}_${fieldIdx}`]?.focus();
+      }
+    }
+  };
 
   useEffect(() => {
     // Load available templates
@@ -254,32 +298,81 @@ export default function ResultTable({ onResultsChange }) {
     }));
   };
 
-  const exportTranscript = () => {
-    const rows = [
-      ['Semester', 'Year', 'Course Code', 'Course Title', 'Credits', 'Grade', 'GPA', 'SGPA', 'CGPA'],
-      ...results.flatMap((sem) => sem.courses.map((course) => [
-        formatSemesterLabel(sem.semester),
-        sem.year,
-        course.code,
-        course.name,
-        course.credit.toFixed(1),
-        course.grade,
-        course.point !== null ? course.point.toFixed(2) : '-',
-        sem.sgpa ?? 'Pending',
-        sem.cgpa ?? 'Pending',
-      ])),
-    ];
+  const exportTranscript = async () => {
+    const { default: jsPDF } = await import('jspdf');
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageW = 190;
+    let y = 20;
 
-    const csv = rows
-      .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(','))
-      .join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'aust-transcript.csv';
-    link.click();
-    URL.revokeObjectURL(url);
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.text('Academic Transcript', pageW / 2, y, { align: 'center' });
+    y += 10;
+
+    results.forEach((sem) => {
+      const hasCourses = sem.courses.some(c => c.code && c.code.trim() !== '');
+      if (!hasCourses) return;
+
+      const boxH = 12 + sem.courses.length * 7 + 12;
+      if (y + boxH > 280) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setDrawColor(200);
+      doc.setFillColor(248, 248, 252);
+      doc.roundedRect(10, y, pageW, boxH, 3, 3, 'FD');
+
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      doc.text(`${formatSemesterLabel(sem.semester)}${sem.year ? ` (${sem.year})` : ''}`, 16, y + 8);
+
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'bold');
+      doc.text('Code', 16, y + 16);
+      doc.text('Course', 42, y + 16);
+      doc.text('Cr', 120, y + 16, { align: 'center' });
+      doc.text('Grade', 138, y + 16, { align: 'center' });
+      doc.text('GPA', 156, y + 16, { align: 'center' });
+
+      let rowY = y + 16;
+      sem.courses.forEach((course) => {
+        if (!course.code && !course.name) return;
+        rowY += 7;
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(8);
+        doc.text(course.code || '-', 16, rowY);
+        doc.text(course.name || '-', 42, rowY);
+        doc.text(formatCredit(course.credit), 120, rowY, { align: 'center' });
+        doc.text(course.grade || '-', 138, rowY, { align: 'center' });
+        doc.text(course.point !== null ? course.point.toFixed(2) : '-', 156, rowY, { align: 'center' });
+      });
+
+      const sumY = y + boxH - 5;
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(9);
+      doc.text(`SGPA: ${sem.sgpa ?? '—'}    CGPA: ${sem.cgpa ?? '—'}`, pageW - 10, sumY, { align: 'right' });
+
+      y += boxH + 6;
+    });
+
+    doc.save('aust-transcript.pdf');
+  };
+
+  const getCurrentSemester = () => {
+    const ysMatch = (user?.yearSemester || '').match(/Year (\d+) - Semester (\d+)/);
+    if (ysMatch) {
+      const y = parseInt(ysMatch[1]), s = parseInt(ysMatch[2]);
+      if (y >= 1 && y <= 4 && s >= 1 && s <= 2) return (y - 1) * 2 + s;
+    }
+    if (user?.semester && user.semester >= 1 && user.semester <= 8) return user.semester;
+    for (let i = results.length - 1; i >= 0; i--) {
+      const sem = results[i];
+      const hasRealCourses = sem.courses.some(c => c.code && c.code.trim() !== '');
+      const hasPendingGrade = sem.courses.some(c => c.grade === '-' || c.point === null);
+      if (hasRealCourses && hasPendingGrade) return sem.semester;
+    }
+    return null;
   };
 
   const getGradeColor = (grade) => {
@@ -309,14 +402,33 @@ export default function ResultTable({ onResultsChange }) {
         </div>
       </div>
 
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 'var(--fw-semibold)', marginRight: '4px' }}>View:</span>
+        {results.map((sem) => {
+          const hasReal = sem.courses.some(c => c.code && c.code.trim() !== '');
+          return (
+            <button key={sem.semester} onClick={() => setExpandedSemester(expandedSemester === sem.semester ? null : sem.semester)}
+              style={{
+                border: 'none', cursor: 'pointer', borderRadius: '6px', padding: '4px 12px',
+                fontSize: '11px', fontWeight: 'bold', whiteSpace: 'nowrap',
+                background: expandedSemester === sem.semester ? 'var(--accent-blue)' : 'var(--bg-input)',
+                color: expandedSemester === sem.semester ? '#fff' : hasReal ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                opacity: hasReal ? 1 : 0.45,
+                transition: 'all 0.15s'
+              }}>
+              {formatSemesterLabel(sem.semester)}
+            </button>
+          );
+        })}
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {results.map((sem) => {
           const displaySemester = editingSemester === sem.semester
             ? draftResults.find((draftSem) => draftSem.semester === sem.semester) ?? sem
             : sem;
           const isExpanded = expandedSemester === sem.semester;
-          const hasPendingGrades = displaySemester.sgpa === null;
-          const isCurrentSemester = displaySemester.semester === maxSemester && hasPendingGrades;
+          const isCurrentSemester = displaySemester.semester === getCurrentSemester();
           const isEditing = editingSemester === sem.semester;
 
           return (
@@ -360,20 +472,14 @@ export default function ResultTable({ onResultsChange }) {
                 </div>
 
                 <div className="flex items-center gap-6" style={{ marginRight: '16px' }}>
-                  {!hasPendingGrades ? (
-                    <>
-                      <div>
-                        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', display: 'block', textAlign: 'right' }}>SGPA</span>
-                        <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-purple)' }}>{displaySemester.sgpa}</span>
-                      </div>
-                      <div>
-                        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', display: 'block', textAlign: 'right' }}>CGPA</span>
-                        <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-blue)' }}>{displaySemester.cgpa}</span>
-                      </div>
-                    </>
-                  ) : (
-                    <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)' }}>Grades Pending</span>
-                  )}
+                  <div>
+                    <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', display: 'block', textAlign: 'right' }}>SGPA</span>
+                    <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-purple)' }}>{displaySemester.sgpa ?? '—'}</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', display: 'block', textAlign: 'right' }}>CGPA</span>
+                    <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-blue)' }}>{displaySemester.cgpa ?? '—'}</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2" style={{ marginRight: '12px' }} onClick={(event) => event.stopPropagation()}>
                   {/* Load Template button for this semester */}
@@ -498,11 +604,13 @@ export default function ResultTable({ onResultsChange }) {
                           <td style={{ padding: '12px 8px', color: 'var(--text-secondary)' }}>
                             {isEditing ? (
                               <input
+                                ref={el => inputRefs.current[`r_${displaySemester.semester}_${courseIndex}_0`] = el}
                                 className="input"
                                 value={course.name}
                                 onChange={(event) => updateCourseField(displaySemester.semester, courseIndex, 'name', event.target.value)}
                                 placeholder="Course title"
                                 style={{ minWidth: '220px' }}
+                                onKeyDown={e => handleKeyDown(e, displaySemester.semester, courseIndex, 0)}
                               />
                             ) : (
                               course.name
@@ -511,6 +619,7 @@ export default function ResultTable({ onResultsChange }) {
                           <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                             {isEditing ? (
                               <input
+                                ref={el => inputRefs.current[`r_${displaySemester.semester}_${courseIndex}_1`] = el}
                                 className="input"
                                 type="number"
                                 min="0"
@@ -518,18 +627,21 @@ export default function ResultTable({ onResultsChange }) {
                                 value={course.credit}
                                 onChange={(event) => updateCourseField(displaySemester.semester, courseIndex, 'credit', event.target.value)}
                                 style={{ width: '82px', margin: '0 auto', textAlign: 'center' }}
+                                onKeyDown={e => handleKeyDown(e, displaySemester.semester, courseIndex, 1)}
                               />
                             ) : (
-                              course.credit.toFixed(1)
+                              formatCredit(course.credit)
                             )}
                           </td>
                           <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                             {isEditing ? (
                               <select
+                                ref={el => inputRefs.current[`r_${displaySemester.semester}_${courseIndex}_2`] = el}
                                 className="input"
                                 value={course.grade}
                                 onChange={(event) => updateCourseField(displaySemester.semester, courseIndex, 'grade', event.target.value)}
                                 style={{ width: '76px', padding: '5px 8px', textAlign: 'center', margin: '0 auto' }}
+                                onKeyDown={e => handleKeyDown(e, displaySemester.semester, courseIndex, 2)}
                               >
                                 {gradeOptions.map((grade) => (
                                   <option key={grade} value={grade}>{grade}</option>
@@ -561,6 +673,16 @@ export default function ResultTable({ onResultsChange }) {
                       ))}
                     </tbody>
                   </table>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '24px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border-primary)' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', display: 'block', fontWeight: 'var(--fw-semibold)' }}>SGPA</span>
+                      <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-purple)' }}>{displaySemester.sgpa ?? '—'}</span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', display: 'block', fontWeight: 'var(--fw-semibold)' }}>CGPA</span>
+                      <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-blue)' }}>{displaySemester.cgpa ?? '—'}</span>
+                    </div>
+                  </div>
                   {isEditing && (
                     <div className="flex justify-between items-center" style={{ marginTop: '12px' }}>
                       <button className="btn btn-secondary btn-sm" onClick={() => addCourse(displaySemester.semester)}>

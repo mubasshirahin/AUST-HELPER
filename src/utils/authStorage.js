@@ -143,6 +143,28 @@ function loadAccounts() {
       });
       localStorage.setItem(accountsKey, JSON.stringify(list));
     }
+
+    // Demo alumni with "Open for Talk" enabled so messaging can be tried
+    // immediately from any logged-in account.
+    const demoAlumniExists = list.some(acc => acc.id === 'ALU-DEMO-001');
+    if (!demoAlumniExists) {
+      list.push({
+        id: 'ALU-DEMO-001',
+        name: 'Rafi Ahmed (Demo Alumni)',
+        email: 'demo.alumni@aust.edu',
+        password: btoa('demo1234'),
+        role: 'alumni',
+        department: 'CSE',
+        batch: 'Batch 30',
+        batchNo: '30',
+        designation: 'Software Engineer',
+        company: 'Demo Tech Ltd.',
+        graduationYear: '2020',
+        openForTalk: true,
+        createdAt: new Date().toISOString(),
+      });
+      localStorage.setItem(accountsKey, JSON.stringify(list));
+    }
     return list;
   } catch {
     return [];
@@ -174,6 +196,35 @@ export function clearSession() {
 
 export function getAccountById(userId) {
   return loadAccounts().find((account) => account.id === userId) ?? null;
+}
+
+// All registered accounts (used by admin views and directories).
+export function getAllAccounts() {
+  return loadAccounts();
+}
+
+// All registered alumni, as lightweight profile objects for the directory.
+export function getAlumniAccounts() {
+  return loadAccounts()
+    .filter((account) => account.role === 'alumni')
+    .map((account) => ({
+      id: account.id,
+      name: account.name,
+      email: account.email,
+      department: account.department || 'Undeclared',
+      batchNo: String(account.batchNo || '').trim(),
+      batch: account.batch || (account.batchNo ? `Batch ${account.batchNo}` : 'N/A'),
+      company: account.company || '',
+      designation: account.designation || '',
+      graduationYear: account.graduationYear || '',
+      initials: getInitials(account.name),
+      openForTalk: Boolean(account.openForTalk),
+    }));
+}
+
+// Toggle the "Open for Talk" availability flag on an alumni account.
+export function setOpenForTalk(userId, value) {
+  return updateAccountProfile(userId, { openForTalk: Boolean(value) });
 }
 
 export function getAccountByEmail(email) {
@@ -218,6 +269,7 @@ export function accountToUser(account) {
     yearSemester: account.yearSemester || '',
     section: account.section || '',
     labSection: account.labSection || '',
+    openForTalk: Boolean(account.openForTalk),
     semester: account.semester ?? 1,
     avatar: account.avatar || null,
     initials: getInitials(account.name),

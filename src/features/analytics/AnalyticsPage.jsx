@@ -1,33 +1,42 @@
 import React, { useState } from 'react';
 import {
-  TrendingUp, Layers, Grid3x3, BookCheck, Star, Sparkles, FlaskConical,
+  TrendingUp, Layers, Grid3x3, Star, Sparkles, FlaskConical, Trophy,
 } from 'lucide-react';
 import CGPAGraph from './CGPAGraph';
 import SemesterTracker from './SemesterTracker';
 import DeptHeatmap from './DeptHeatmap';
-import SyllabusProgress from './SyllabusProgress';
 import CourseReview from './CourseReview';
+import CoursePoll from './CoursePoll';
 import GliderTabs from '../../components/GliderTabs';
 import './AnalyticsPage.css';
+
+const TAB_KEY = 'analyticsActiveTab';
 
 const gradeLabTabs = [
   { id: 'cgpagraph', label: 'CGPA Tracker', icon: TrendingUp, color: 'blue', desc: 'Grade trends' },
   { id: 'semestertracker', label: 'Semester', icon: Layers, color: 'purple', desc: 'Per-semester' },
   { id: 'heatmap', label: 'Dept Heatmap', icon: Grid3x3, color: 'rose', desc: 'Topic density' },
-  { id: 'syllabus', label: 'Syllabus', icon: BookCheck, color: 'emerald', desc: 'Completion' },
   { id: 'reviews', label: 'Reviews', icon: Star, color: 'amber', desc: 'Course ratings' },
+  { id: 'bestworst', label: 'Best & Worst', icon: Trophy, color: 'emerald', desc: 'Course poll' },
 ];
 
 export default function AnalyticsPage() {
-  const [activeTab, setActiveTab] = useState('cgpagraph');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem(TAB_KEY) || 'cgpagraph';
+  });
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem(TAB_KEY, tab);
+  };
 
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'cgpagraph': return <CGPAGraph />;
       case 'semestertracker': return <SemesterTracker />;
       case 'heatmap': return <DeptHeatmap />;
-      case 'syllabus': return <SyllabusProgress />;
       case 'reviews': return <CourseReview />;
+      case 'bestworst': return <CoursePoll />;
       default: return <CGPAGraph />;
     }
   };
@@ -62,7 +71,7 @@ export default function AnalyticsPage() {
       <GliderTabs
         tabs={gradeLabTabs}
         activeTab={activeTab}
-        onChange={setActiveTab}
+        onChange={handleTabChange}
         variant="gradelab"
       />
 

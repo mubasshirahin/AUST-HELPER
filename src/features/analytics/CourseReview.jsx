@@ -13,7 +13,6 @@ import {
 const defaultReviewForm = {
   course: '',
   name: '',
-  faculty: '',
   rating: 4,
   difficulty: 3,
   workload: 3,
@@ -67,8 +66,7 @@ export default function CourseReview() {
     const term = searchTerm.toLowerCase();
     const filtered = reviews.filter((review) =>
       review.course.toLowerCase().includes(term)
-      || review.name.toLowerCase().includes(term)
-      || review.faculty.toLowerCase().includes(term),
+      || review.name.toLowerCase().includes(term),
     );
 
     return [...filtered].sort((left, right) => {
@@ -149,7 +147,7 @@ export default function CourseReview() {
     <div className="glass-card-static course-reviews-container animate-fadeInUp">
       <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
         <div>
-          <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Course & Faculty Reviews</h2>
+          <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Course Reviews</h2>
           <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
             Live student ratings — averages update when you and others submit reviews.
           </p>
@@ -246,17 +244,6 @@ export default function CourseReview() {
             </label>
           </div>
 
-          <label style={{ fontSize: 'var(--fs-xs)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            Faculty / instructor
-            <input
-              className="input"
-              value={reviewForm.faculty}
-              onChange={(event) => setReviewForm((current) => ({ ...current, faculty: event.target.value }))}
-              placeholder="Dr. Farzana Sadia"
-              required
-            />
-          </label>
-
           <div className="grid-3" style={{ gap: '12px' }}>
             <StarPicker
               label="Overall rating"
@@ -326,7 +313,6 @@ export default function CourseReview() {
                     <div>
                       <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 'bold' }}>{review.course}</span>
                       <h3 style={{ fontSize: '15px', fontWeight: 'var(--fw-bold)' }}>{review.name}</h3>
-                      <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Faculty: {review.faculty}</p>
                     </div>
                     <div className="flex items-center gap-1" style={{ color: 'var(--accent-amber)' }}>
                       <Star size={16} fill="currentColor" />
@@ -366,7 +352,7 @@ export default function CourseReview() {
                 <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 'bold' }}>{selectedCourse.course}</span>
                 <h3 style={{ fontSize: 'var(--fs-lg)', fontWeight: 'var(--fw-bold)' }}>{selectedCourse.name}</h3>
                 <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                  Instructor: <b>{selectedCourse.faculty}</b> · {selectedCourse.reviews} student rating{selectedCourse.reviews === 1 ? '' : 's'}
+                  {selectedCourse.reviews} student rating{selectedCourse.reviews === 1 ? '' : 's'}
                 </p>
               </div>
 

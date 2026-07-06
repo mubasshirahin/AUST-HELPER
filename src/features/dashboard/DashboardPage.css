@@ -136,7 +136,8 @@
 
 .dash-hero-subtitle {
   font-size: var(--fs-sm);
-  color: var(--text-secondary);
+  font-weight: var(--fw-regular);
+  color: var(--text-tertiary);
   margin: 0;
   max-width: 480px;
   line-height: 1.5;
@@ -273,6 +274,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+.quick-stat-value.placeholder {
+  opacity: 0.35;
+  font-weight: var(--fw-regular);
+}
+
 .quick-stat-label {
   font-size: var(--fs-xs);
   color: var(--text-tertiary);
@@ -351,78 +357,203 @@
 .weekly-table-wrap {
   width: 100%;
   max-width: 100%;
-  overflow: hidden;
+  overflow-x: auto;
+  border-radius: 12px;
+  background: var(--bg-secondary);
 }
 
 .weekly-table {
   width: 100%;
   font-size: clamp(7px, 0.74vw, 11px);
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  text-align: center;
+  overflow: hidden;
 }
 
-.weekly-day-head,
-.weekly-day-cell {
-  width: clamp(44px, 6.2vw, 90px);
+.weekly-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
-.weekly-day-head,
+.weekly-table thead tr {
+  background: var(--bg-tertiary);
+}
+
+.weekly-day-head {
+  width: clamp(46px, 6.4vw, 92px);
+  padding: clamp(8px, 0.8vw, 12px) 4px;
+  font-size: clamp(7px, 0.7vw, 10px);
+  font-weight: var(--fw-bold);
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border-secondary);
+  border-right: 1px solid var(--border-secondary);
+}
+
 .weekly-time-head {
-  padding: clamp(4px, 0.7vw, 8px) 3px;
+  padding: clamp(8px, 0.8vw, 12px) 4px;
+  font-size: clamp(7px, 0.7vw, 10px);
+  font-weight: var(--fw-semibold);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-secondary);
+  border-right: 1px solid var(--border-secondary);
+  background: var(--bg-tertiary);
+}
+
+.weekly-time-head:last-child {
+  border-right: none;
+}
+
+/* ─── Body rows ─── */
+.weekly-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.weekly-table tbody tr:nth-child(even) {
+  background: rgba(128, 128, 128, 0.03);
+}
+
+.weekly-table tbody tr:hover {
+  background: var(--bg-hover);
 }
 
 .weekly-day-cell {
-  padding: clamp(6px, 0.9vw, 14px) 3px;
+  padding: clamp(8px, 0.9vw, 14px) 4px;
+  font-weight: var(--fw-bold);
+  font-size: clamp(8px, 0.75vw, 11px);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-secondary);
+  border-right: 1px solid var(--border-secondary);
+  position: sticky;
+  left: 0;
+  z-index: 1;
 }
 
+.weekly-table tbody tr:last-child .weekly-day-cell,
+.weekly-table tbody tr:last-child .weekly-class-cell,
+.weekly-table tbody tr:last-child .weekly-empty-cell {
+  border-bottom: none;
+}
+
+/* ─── Content cells ─── */
 .weekly-class-cell {
-  padding: 2px;
+  padding: 3px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-secondary);
+  border-right: 1px solid var(--border-secondary);
+  cursor: pointer;
+  background: var(--bg-secondary);
 }
 
-.weekly-empty-cell > div,
-.weekly-class-block {
-  min-height: clamp(34px, 4.8vw, 52px);
+.weekly-class-cell:last-child {
+  border-right: none;
 }
 
+.weekly-empty-cell {
+  border-bottom: 1px solid var(--border-secondary);
+  border-right: 1px solid var(--border-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  background: var(--bg-secondary);
+}
+
+.weekly-empty-cell:last-child {
+  border-right: none;
+}
+
+.weekly-empty-cell:hover {
+  background: var(--bg-hover);
+}
+
+.weekly-empty-cell > div {
+  min-height: clamp(40px, 5vw, 56px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease;
+}
+
+.weekly-empty-cell > div::after {
+  content: '+';
+  font-size: 16px;
+  font-weight: 300;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: var(--text-tertiary);
+}
+
+.weekly-empty-cell:hover > div::after {
+  opacity: 0.6;
+}
+
+/* ─── Class blocks ─── */
 .weekly-class-block {
-  border-radius: 4px;
-  padding: clamp(4px, 0.65vw, 8px) 3px;
+  min-height: clamp(40px, 5vw, 56px);
+  border-radius: 6px;
+  padding: clamp(4px, 0.6vw, 8px) 6px;
   min-width: 0;
-}
-
-.weekly-course-code {
-  font-size: clamp(7px, 0.72vw, 10px);
-  line-height: 1.15;
-}
-
-.weekly-course-name {
-  font-size: clamp(6px, 0.65vw, 9px);
-  line-height: 1.15;
-  margin: 2px 0;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-.weekly-room {
-  font-size: clamp(5px, 0.58vw, 8px);
-  line-height: 1.15;
-  overflow-wrap: anywhere;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .weekly-class-cell:hover .weekly-class-block {
-  filter: brightness(1.12);
+  transform: scale(1.03);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.weekly-course-code {
+  font-size: clamp(8px, 0.75vw, 11px);
+  line-height: 1.2;
+  font-weight: var(--fw-bold);
+}
+
+.weekly-course-name {
+  font-size: clamp(6px, 0.62vw, 9px);
+  line-height: 1.2;
+  margin: 2px 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  color: var(--text-secondary);
+}
+
+.weekly-room {
+  font-size: clamp(5px, 0.55vw, 8px);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  color: var(--text-tertiary);
 }
 
 /* ─── Routine Edit Modal ─── */
 .routine-edit-modal {
-  max-width: 540px;
-  width: min(540px, calc(100vw - 64px));
-  max-height: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  z-index: calc(var(--z-modal) + 1);
+  max-width: 640px;
+  width: min(640px, calc(100vw - 64px));
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
-  overflow: visible;
-  position: relative;
-  z-index: calc(var(--z-modal) + 1);
+  overflow: hidden;
   box-shadow: var(--shadow-xl);
-  margin: auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-5);
+  animation: scaleIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.routine-edit-body {
+  overflow-y: auto;
+  padding: var(--sp-3) 1px;
 }
 
 .routine-edit-header {
@@ -440,9 +571,91 @@
   font-weight: var(--fw-bold);
 }
 
-.routine-edit-body {
-  overflow: visible;
-  padding: var(--sp-3) 1px;
+.type-toggle {
+  display: flex;
+  gap: 0;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-primary);
+}
+
+.type-toggle-btn {
+  flex: 1;
+  padding: 6px 16px;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.type-toggle-btn.active {
+  background: var(--accent-blue);
+  color: #fff;
+  font-weight: var(--fw-semibold);
+}
+
+.routine-edit-type-row {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+}
+
+.routine-edit-type-row .type-toggle {
+  width: 220px;
+}
+
+.week-split-box {
+  width: 220px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.week-split-option {
+  padding: 8px 16px;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.week-split-option.active {
+  background: var(--accent-blue);
+  color: #fff;
+  font-weight: var(--fw-semibold);
+}
+
+.week-split-divider {
+  height: 1px;
+  background: var(--border-primary);
+  margin: 0 12px;
+}
+
+.biweekly-label {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: var(--sp-2);
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.biweekly-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-blue);
+  cursor: pointer;
 }
 
 .routine-edit-grid {

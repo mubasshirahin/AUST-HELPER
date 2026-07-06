@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { CalendarDays, Trash2, X, Download, Eye, Check, RotateCcw } from 'lucide-react';
+import { CalendarDays, Trash2, X, Download, Eye, Check, RotateCcw, FileDown } from 'lucide-react';
 import { useRoutine } from '../../context/RoutineContext';
 import { ocrImportedRoutine, ocrImportedWeekDays } from '../../context/RoutineContext';
-import { normalizeAccentColor } from '../../utils/colorPalette';
+import { normalizeAccentColor, getCourseColor } from '../../utils/colorPalette';
 import CourseAutocomplete from '../../components/CourseAutocomplete';
 import { findCourseByCode, findCourseByName } from '../../data/courses';
 import { getAutoColorForCourse } from '../../utils/autoColorPalette';
 import { loadTemplates } from '../../utils/routineTemplates';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function WeeklyPlanner() {
   const { routine, weekDays, updateRoutineClass, addRoutineClass, deleteRoutineClass, replaceRoutine } = useRoutine();
@@ -78,7 +80,9 @@ export default function WeeklyPlanner() {
     time: '08:00 - 08:50',
     room: '',
     teacher: 'TBA',
-    color: getAutoColorForCourse('', 'Theory'), // Auto-assign default CSE theory color
+    color: getAutoColorForCourse('', 'Theory'),
+    biWeekly: false,
+    weekGroup: 'first',
   };
 
   const getSlotDetails = (timeStr) => {
@@ -179,6 +183,143 @@ export default function WeeklyPlanner() {
     }
   };
 
+  const downloadSchedulePDF = async () => {
+    const tableWrap = document.querySelector('.weekly-table-wrap');
+    if (!tableWrap) return;
+
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position: fixed; left: -9999px; top: 0;
+      padding: 32px 28px; background: #ffffff;
+      width: fit-content; max-width: 1200px;
+    `;
+
+    const titleRow = document.createElement('div');
+    titleRow.style.cssText = `
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; padding-bottom: 12px;
+      border-bottom: 2px solid #e5e7eb;
+    `;
+    titleRow.innerHTML = `
+      <div>
+        <h1 style="font-size: 20px; font-weight: 700; color: #1a1a2e; margin: 0; letter-spacing: 0.02em;">
+          📚 Class Schedule
+        </h1>
+        <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">
+          AUST · Sunday – Thursday
+        </p>
+      </div>
+      <div style="text-align: right;">
+        <p style="font-size: 10px; color: #9ca3af; margin: 0;">Generated</p>
+        <p style="font-size: 11px; color: #6b7280; margin: 2px 0 0 0; font-weight: 500;">
+          ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+        </p>
+      </div>
+    `;
+    container.appendChild(titleRow);
+
+    const clone = tableWrap.cloneNode(true);
+    clone.style.cssText = `
+      overflow: visible; border-radius: 0; padding: 0;
+      border: 1px solid #d1d5db;
+    `;
+    container.appendChild(clone);
+
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `
+      .weekly-table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+      }
+      .weekly-table th,
+      .weekly-table td {
+        border: 1px solid #d1d5db !important;
+        padding: 8px 10px !important;
+        font-size: 11px !important;
+        background: #ffffff !important;
+      }
+      .weekly-table thead th {
+        background: #f3f4f6 !important;
+        font-weight: 600 !important;
+        color: #374151 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.04em !important;
+      }
+      .weekly-day-head, .weekly-day-cell {
+        background: #f9fafb !important;
+        font-weight: 700 !important;
+        color: #111827 !important;
+        text-align: center !important;
+        white-space: nowrap !important;
+        position: static !important;
+      }
+      .weekly-class-block {
+        border-radius: 6px !important;
+        padding: 6px 8px !important;
+        min-height: auto !important;
+        background: #f9fafb !important;
+        border-left: 3px solid currentColor !important;
+      }
+      .weekly-course-code {
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        line-height: 1.3 !important;
+      }
+      .weekly-course-name {
+        font-size: 10px !important;
+        color: #374151 !important;
+        line-height: 1.3 !important;
+      }
+      .weekly-room {
+        font-size: 10px !important;
+        color: #6b7280 !important;
+      }
+      .weekly-empty-cell div:after {
+        content: none !important;
+      }
+      .weekly-empty-cell {
+        background: #fafafa !important;
+      }
+      * {
+        box-shadow: none !important;
+        transform: none !important;
+        transition: none !important;
+      }
+    `;
+    container.appendChild(styleEl);
+
+    document.body.appendChild(container);
+
+    try {
+      const canvas = await html2canvas(container, {
+        scale: 2.5,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: container.scrollWidth,
+        height: container.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('l', 'mm', 'a4');
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      const imgW = pdfW - 16;
+      const imgH = (canvas.height * imgW) / canvas.width;
+
+      if (imgH <= pdfH - 16) {
+        pdf.addImage(imgData, 'PNG', 8, (pdfH - imgH) / 2, imgW, imgH);
+      } else {
+        pdf.addImage(imgData, 'PNG', 8, 8, imgW, imgH);
+      }
+
+      pdf.save('class-schedule.pdf');
+    } finally {
+      document.body.removeChild(container);
+    }
+  };
+
   return (
     <div className="glass-card-static weekly-planner animate-fadeInUp">
       <div className="flex items-center justify-between mb-4">
@@ -192,6 +333,9 @@ export default function WeeklyPlanner() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
+          <button className="btn btn-primary btn-sm" onClick={downloadSchedulePDF} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FileDown size={14} /> PDF
+          </button>
           <button className="btn btn-danger btn-sm" onClick={() => {
             const emptyRoutine = {
               Sunday: [],
@@ -212,31 +356,12 @@ export default function WeeklyPlanner() {
       </div>
 
       <div className="weekly-table-wrap">
-        <table 
-          className="weekly-table"
-          style={{ 
-            width: '100%', 
-            borderCollapse: 'collapse', 
-            textAlign: 'center',
-            tableLayout: 'fixed',
-            border: '1px solid var(--border-primary)'
-          }}
-        >
+        <table className="weekly-table">
           <thead>
-            <tr style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-primary)' }}>
-              <th className="weekly-day-head" style={{ borderRight: '1px solid var(--border-primary)', color: 'var(--text-secondary)', fontWeight: 'bold' }}>
-                Time/Day
-              </th>
+            <tr>
+              <th className="weekly-day-head">Time/Day</th>
               {timeSlots.map((slot) => (
-                <th 
-                  key={slot.label} 
-                  className="weekly-time-head"
-                  style={{ 
-                    color: 'var(--text-secondary)', 
-                    fontWeight: 'var(--fw-semibold)',
-                    borderRight: '1px solid var(--border-primary)'
-                  }}
-                >
+                <th key={slot.label} className="weekly-time-head">
                   {slot.display}
                 </th>
               ))}
@@ -246,7 +371,6 @@ export default function WeeklyPlanner() {
             {weekDays.map((day) => {
               const dayClasses = routine[day] || [];
               
-              // We create a row representing the 12 columns
               const scheduledCells = dayClasses
                 .map((cls) => ({ ...cls, ...getSlotDetails(cls.time) }))
                 .filter((cls) => cls.startIdx < timeSlots.length)
@@ -255,79 +379,193 @@ export default function WeeklyPlanner() {
               let nextClassIdx = 0;
 
               return (
-                <tr key={day} style={{ borderBottom: '1px solid var(--border-primary)' }}>
-                  {/* Day cell */}
-                  <td 
-                    className="weekly-day-cell"
-                    style={{ 
-                      fontWeight: 'bold', 
-                      background: 'var(--bg-input)', 
-                      borderRight: '1px solid var(--border-primary)',
-                      color: 'var(--text-primary)',
-                      textTransform: 'uppercase'
-                    }}
-                  >
+                <tr key={day}>
+                  <td className="weekly-day-cell">
                     {day.substring(0, 3)}
                   </td>
 
                   {/* Render columns, skipping spanned ones */}
                   {timeSlots.map((_, idx) => {
-                    const cls = scheduledCells[nextClassIdx];
-                    if (cls && cls.startIdx === idx) {
-                      nextClassIdx += 1;
-                      const accentColor = normalizeAccentColor(cls.color);
+                    const isCoveredByPrevious = scheduledCells.some((item) => idx > item.startIdx && idx < item.startIdx + item.colSpan);
+                    if (isCoveredByPrevious) return null;
+
+                    const classesAtIdx = scheduledCells.filter((c) => c.startIdx === idx);
+                    if (classesAtIdx.length > 0) {
+                      const colSpan = classesAtIdx[0].colSpan;
+                      const isBiWeekly = classesAtIdx.some((c) => c.biWeekly);
+
+                      if (isBiWeekly) {
+                        nextClassIdx += classesAtIdx.length;
+                        const firstCls = classesAtIdx.find((c) => c.weekGroup === 'first') || classesAtIdx[0];
+                        const secondCls = classesAtIdx.find((c) => c.weekGroup === 'second');
+                        const baseColor = getCourseColor(firstCls.course);
+
+                        return (
+                          <td
+                            key={`${day}-bw-${idx}`}
+                            colSpan={colSpan}
+                            className="weekly-class-cell"
+                          >
+                            <div
+                              className="weekly-class-block"
+                              style={{
+                                background: 'var(--bg-input)',
+                                borderLeft: `3px solid ${baseColor}`,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                padding: 0,
+                                minHeight: 0,
+                                gap: 0,
+                              }}
+                            >
+                              <div
+                                onClick={() => openEditModal(day, firstCls)}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  padding: '4px 6px',
+                                  cursor: 'pointer',
+                                  borderBottom: '1px solid var(--border-secondary)',
+                                }}
+                              >
+                                <span style={{ fontSize: '7px', fontWeight: 'var(--fw-bold)', color: 'var(--accent-amber)', whiteSpace: 'nowrap', flexShrink: 0, width: '32px' }}>Week 1</span>
+                                <div style={{ flex: 1, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
+                                  <span style={{ fontWeight: 'bold', color: baseColor, fontSize: '10px' }}>{firstCls.course}</span>
+                                  <span style={{ fontSize: '8px', color: 'var(--text-tertiary)' }}>{firstCls.room}</span>
+                                </div>
+                                <span style={{ width: '32px', flexShrink: 0 }} />
+                              </div>
+
+                              {secondCls ? (
+                                <div
+                                  onClick={() => openEditModal(day, secondCls)}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    padding: '4px 6px',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  <span style={{ fontSize: '7px', fontWeight: 'var(--fw-bold)', color: 'var(--accent-amber)', whiteSpace: 'nowrap', flexShrink: 0, width: '32px' }}>Week 2</span>
+                                  <div style={{ flex: 1, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
+                                    <span style={{ fontWeight: 'bold', color: getCourseColor(secondCls.course), fontSize: '10px' }}>{secondCls.course}</span>
+                                    <span style={{ fontSize: '8px', color: 'var(--text-tertiary)' }}>{secondCls.room}</span>
+                                  </div>
+                                  <span style={{ width: '32px', flexShrink: 0 }} />
+                                </div>
+                              ) : (
+                                <div
+                                  onClick={() => {
+                                    const start = slotBoundaries[idx] || '08:00';
+                                    const end = slotBoundaries[idx + colSpan] || calculateEndTime(start, colSpan);
+                                    setEditing({
+                                      mode: 'add',
+                                      day,
+                                      form: {
+                                        ...emptyForm,
+                                        type: 'Lab',
+                                        time: `${start} - ${end}`,
+                                        biWeekly: true,
+                                        weekGroup: 'second',
+                                        color: firstCls.color,
+                                      },
+                                    });
+                                  }}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    padding: '4px 6px',
+                                    cursor: 'pointer',
+                                    color: 'var(--text-tertiary)',
+                                    fontSize: '10px',
+                                  }}
+                                >
+                                  <span style={{ fontSize: '7px', fontWeight: 'var(--fw-bold)', color: 'var(--accent-amber)', whiteSpace: 'nowrap', flexShrink: 0, width: '32px' }}>Week 2</span>
+                                  <div style={{ flex: 1, textAlign: 'center' }}>+</div>
+                                  <span style={{ width: '32px', flexShrink: 0 }} />
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        );
+                      }
+
+                      // Normal (non-bi-weekly): single or multiple stacked
+                      nextClassIdx += classesAtIdx.length;
+                      if (classesAtIdx.length === 1) {
+                        const cls = classesAtIdx[0];
+                        const accentColor = getCourseColor(cls.course);
+                        return (
+                          <td 
+                            key={`${day}-${cls.id}`}
+                            colSpan={colSpan}
+                            className="weekly-class-cell"
+                            onClick={() => openEditModal(day, cls)}
+                          >
+                            <div 
+                              className="weekly-class-block"
+                              style={{
+                                background: 'var(--bg-input)',
+                                borderLeft: `3px solid ${accentColor}`,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                textAlign: 'center'
+                              }}
+                            >
+                              <div className="weekly-course-code" style={{ color: accentColor }}>
+                                {cls.course}
+                              </div>
+                              <div className="weekly-course-name" style={{ fontWeight: 'var(--fw-medium)', color: 'var(--text-primary)' }}>
+                                {cls.name.split('(')[0].trim()}
+                              </div>
+                              <div className="weekly-room" style={{ color: 'var(--text-tertiary)' }}>
+                                {cls.room}
+                              </div>
+                            </div>
+                          </td>
+                        );
+                      }
 
                       return (
-                        <td 
-                          key={`${day}-${cls.id}`}
-                          colSpan={cls.colSpan}
-                          className="weekly-class-cell"
-                          onClick={() => openEditModal(day, cls)}
-                          style={{
-                            borderRight: '1px solid var(--border-primary)',
-                            verticalAlign: 'middle',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <div 
-                            className="weekly-class-block"
-                            style={{
-                              background: `${accentColor}18`,
-                              border: `1px solid ${accentColor}40`,
-                              borderLeft: `4px solid ${accentColor}`,
-                              display: 'flex',
-                              flexDirection: 'column',
-                              justifyContent: 'center',
-                              textAlign: 'center'
-                            }}
+                          <td 
+                            key={`${day}-${idx}`}
+                            colSpan={colSpan}
+                            className="weekly-class-cell"
+                            style={{ padding: '2px' }}
                           >
-                            <div className="weekly-course-code" style={{ fontWeight: 'bold', color: accentColor }}>
-                              {cls.course}
-                            </div>
-                            <div className="weekly-course-name" style={{ fontWeight: 'var(--fw-medium)', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {cls.name.split('(')[0].trim()}
-                            </div>
-                            <div className="weekly-room" style={{ color: 'var(--text-secondary)' }}>
-                              {cls.room} {cls.teacher.split(',')[0].trim() !== 'TBA' && `(${cls.teacher.split(' ').pop()})`}
-                            </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                            {classesAtIdx.map((cls) => {
+                              const clr = getCourseColor(cls.course);
+                              return (
+                                <div
+                                  key={cls.id}
+                                  onClick={() => openEditModal(day, cls)}
+                                  style={{
+                                    background: 'var(--bg-input)',
+                                    borderLeft: `3px solid ${clr}`,
+                                    borderRadius: '4px',
+                                    padding: '3px 6px',
+                                    cursor: 'pointer',
+                                    textAlign: 'center',
+                                  }}
+                                >
+                                  <span style={{ fontWeight: 'bold', color: clr, fontSize: '10px' }}>
+                                    {cls.course}
+                                  </span>
+                                </div>
+                              );
+                            })}
                           </div>
                         </td>
                       );
                     }
-
-                    const isCoveredByPrevious = scheduledCells.some((item) => idx > item.startIdx && idx < item.startIdx + item.colSpan);
-                    if (isCoveredByPrevious) return null;
 
                     return (
                       <td 
                         key={`${day}-empty-${idx}`} 
                         className="weekly-empty-cell"
                         onClick={() => openAddModal(day, idx)}
-                        style={{ 
-                          borderRight: '1px solid var(--border-secondary)',
-                          background: 'rgba(255,255,255,0.01)',
-                          cursor: 'pointer'
-                        }}
                       >
                         <div />
                       </td>
@@ -415,7 +653,6 @@ export default function WeeklyPlanner() {
             <div className="routine-edit-header">
               <div>
                 <h3>{editing.mode === 'add' ? 'Add Class' : 'Edit Class'}</h3>
-                <p>Update OCR mistakes directly from the routine table.</p>
               </div>
               <button type="button" className="btn btn-icon btn-ghost" onClick={() => setEditing(null)} aria-label="Close">
                 <X size={18} />
@@ -424,24 +661,28 @@ export default function WeeklyPlanner() {
 
             <div className="routine-edit-body">
               <div className="routine-edit-grid">
-              <label>
-                Type
-                <select className="input" value={editing.form.type} onChange={(event) => {
-                  const newType = event.target.value;
-                  // Auto-set periods based on type: Lab = 3 periods, Theory = 1 period
-                  const periods = newType === 'Lab' ? 3 : 1;
-                  const timeParts = editing.form.time.split(' - ');
-                  const start = timeParts[0] || '08:00';
-                  const newEnd = calculateEndTime(start, periods);
-                  updateForm('time', `${start} - ${newEnd}`);
-                  updateForm('type', newType);
-                  // Auto-update color based on department and new type
-                  updateForm('color', getAutoColorForCourse(editing.form.course, newType));
-                }}>
-                  <option value="Theory">Theory</option>
-                  <option value="Lab">Lab</option>
-                </select>
-              </label>
+              <div className="routine-edit-type-row">
+                <div className="type-toggle" role="radiogroup">
+                  {['Theory', 'Lab'].map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      className={`type-toggle-btn${editing.form.type === t ? ' active' : ''}`}
+                      onClick={() => {
+                        const periods = t === 'Lab' ? 3 : 1;
+                        const timeParts = editing.form.time.split(' - ');
+                        const start = timeParts[0] || '08:00';
+                        const newEnd = calculateEndTime(start, periods);
+                        updateForm('time', `${start} - ${newEnd}`);
+                        updateForm('type', t);
+                        updateForm('color', getAutoColorForCourse(editing.form.course, t));
+                      }}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <label>
                 Course Code
                 <CourseAutocomplete
@@ -451,20 +692,17 @@ export default function WeeklyPlanner() {
                   onCourseSelect={(course) => {
                     if (course) {
                       if (course.partialUpdate) {
-                        // Manual typing - only update the code field
                         updateForm('course', course.code);
                       } else {
-                        // Selected from suggestions - update both fields
                         updateForm('course', course.code);
                         updateForm('name', course.name);
-                        // Auto-assign color based on department and type
                         updateForm('color', getAutoColorForCourse(course.code, editing.form.type));
                       }
                     }
                   }}
                 />
               </label>
-              <label className="routine-edit-wide">
+              <label>
                 Course Name
                 <CourseAutocomplete
                   value={editing.form.name}
@@ -473,10 +711,8 @@ export default function WeeklyPlanner() {
                   onCourseSelect={(course) => {
                     if (course) {
                       if (course.partialUpdate) {
-                        // Manual typing - only update the name field
                         updateForm('name', course.name);
                       } else {
-                        // Selected from suggestions - update both fields
                         updateForm('name', course.name);
                         updateForm('course', course.code);
                       }
@@ -488,10 +724,43 @@ export default function WeeklyPlanner() {
                 Room
                 <input className="input" value={editing.form.room} onChange={(event) => updateForm('room', event.target.value)} />
               </label>
-              <label className="routine-edit-wide">
+              <label>
                 Teacher
                 <input className="input" value={editing.form.teacher} onChange={(event) => updateForm('teacher', event.target.value)} />
               </label>
+              {editing.form.type === 'Lab' && (
+                <>
+                  <div className="routine-edit-type-row">
+                    <label className="biweekly-label">
+                      <input
+                        type="checkbox"
+                        checked={editing.form.biWeekly}
+                        onChange={(e) => updateForm('biWeekly', e.target.checked)}
+                      />
+                      <span>0.75 credit (bi-weekly)</span>
+                    </label>
+                  </div>
+                  {editing.form.biWeekly && (
+                    <div className="routine-edit-type-row">
+                      <div className="week-split-box">
+                        <div
+                          className={`week-split-option${editing.form.weekGroup === 'first' ? ' active' : ''}`}
+                          onClick={() => updateForm('weekGroup', 'first')}
+                        >
+                          1st Week
+                        </div>
+                        <div className="week-split-divider" />
+                        <div
+                          className={`week-split-option${editing.form.weekGroup === 'second' ? ' active' : ''}`}
+                          onClick={() => updateForm('weekGroup', 'second')}
+                        >
+                          2nd Week
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
               </div>
             </div>
 

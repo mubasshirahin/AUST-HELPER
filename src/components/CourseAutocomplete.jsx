@@ -374,23 +374,15 @@ export default function CourseAutocomplete({
               borderRadius: '6px',
               backgroundColor: 'var(--accent-green-glow)',
               border: '1px dashed var(--accent-green)',
+              color: 'var(--accent-green)',
               marginTop: suggestions.length > 0 ? '4px' : '0',
-              transition: 'background-color 0.15s ease',
               textAlign: 'center',
               userSelect: 'none',
               WebkitUserSelect: 'none'
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--accent-green)';
-              e.currentTarget.style.color = '#fff';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--accent-green-glow)';
-              e.currentTarget.style.color = '';
-            }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-              <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-medium)', color: 'var(--accent-green)' }}>
+              <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-medium)' }}>
                 + Add custom: <strong>{inputValue.trim()}</strong>
               </span>
             </div>

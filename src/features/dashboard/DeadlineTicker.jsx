@@ -137,8 +137,8 @@ export default function DeadlineTicker() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {displayDeadlines.length === 0 ? (
           <div className="empty-state" style={{ padding: '24px 0' }}>
-            <Hourglass size={32} />
-            <p>No upcoming deadlines</p>
+            <Hourglass size={20} style={{ opacity: 0.25 }} />
+            <p style={{ color: 'var(--text-tertiary)', opacity: 0.6 }}>No upcoming deadlines</p>
           </div>
         ) : displayDeadlines.map(dl => {
           return (

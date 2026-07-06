@@ -1,5 +1,4 @@
 import { useTheme } from '../context/ThemeContext';
-import { useAuth } from '../context/AuthContext';
 import { Search, Bell, Sun, Moon, Menu, Newspaper, Terminal, Check } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
@@ -12,6 +11,7 @@ const pageTitles = {
   '/vault': 'Resource Vault',
   '/campus': 'Campus',
   '/community': 'Community',
+  '/messages': 'Messages',
   '/marketplace': 'Marketplace',
   '/settings': 'Settings',
   '/login': 'Login / Sign up',
@@ -26,7 +26,6 @@ const themeOptions = [
 
 export default function TopNavbar({ onMenuClick }) {
   const { theme, setTheme } = useTheme();
-  const { user, isAuthenticated } = useAuth();
   const location = useLocation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
@@ -35,7 +34,7 @@ export default function TopNavbar({ onMenuClick }) {
   const activeTheme = themeOptions.find((t) => t.id === theme) || themeOptions[0];
   const ThemeIcon = activeTheme.icon;
 
-  const pageTitle = pageTitles[location.pathname] || 'AUST Helper';
+  const pageTitle = pageTitles[location.pathname] || 'AUSTWise';
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -69,11 +68,7 @@ export default function TopNavbar({ onMenuClick }) {
         </button>
         <div className="topbar-page-info">
           <h1 className="topbar-title">{pageTitle}</h1>
-          <span className="topbar-greeting hide-mobile">
-            {isAuthenticated
-              ? `Welcome back, ${user.name.split(' ')[0]}! 👋`
-              : 'Browse freely — login anytime to save your profile'}
-          </span>
+
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import {
-  Map, Sparkles, Building2, ZoomIn, Maximize2, Minimize2,
+  Sparkles, ZoomIn, Maximize2, Minimize2,
   MapPin, Compass, Move, RotateCcw,
 } from 'lucide-react';
 import { campusFloors } from '../../data/mockData';
@@ -11,9 +11,8 @@ import FloorInteractivePlaceholder from './FloorInteractivePlaceholder';
 const floorTabs = campusFloors.map((f) => ({
   id: f.floor,
   label: f.floor,
-  icon: Building2,
-  desc: f.mapImage ? 'Floor plan' : 'Room map',
-  color: f.mapImage ? 'cyan' : 'blue',
+  icon: null,
+  desc: '',
 }));
 
 const zoomLevels = [
@@ -605,20 +604,6 @@ export default function InteractiveMap() {
 
   return (
     <div className="interactive-map-root interactive-map-root-plan">
-      <div className="interactive-map-header">
-        <div className="interactive-map-heading">
-          <div className="interactive-map-heading-icon">
-            <Map size={20} />
-          </div>
-          <div>
-            <h2 className="interactive-map-title">Floor Finder</h2>
-            <p className="interactive-map-desc">
-              Navigate AUST building floors — official plans & room layouts
-            </p>
-          </div>
-        </div>
-      </div>
-
       <GliderTabs
         tabs={floorTabs}
         activeTab={selectedFloor}

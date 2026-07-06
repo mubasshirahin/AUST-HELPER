@@ -1,13 +1,13 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, BookOpen, MapPin, Users, ShoppingBag, Settings } from 'lucide-react';
+import { LayoutDashboard, BarChart3, BookOpen, Users, ShoppingBag, MessageSquare } from 'lucide-react';
 import './MobileNav.css';
 
 const navItems = [
   { path: '/', label: 'Home', icon: LayoutDashboard },
   { path: '/analytics', label: 'Grades', icon: BarChart3 },
   { path: '/vault', label: 'Vault', icon: BookOpen },
-  { path: '/campus', label: 'Campus', icon: MapPin },
   { path: '/community', label: 'Social', icon: Users },
+  { path: '/messages', label: 'Chat', icon: MessageSquare },
   { path: '/marketplace', label: 'Market', icon: ShoppingBag },
 ];
 

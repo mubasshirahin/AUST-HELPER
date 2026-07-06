@@ -152,7 +152,7 @@
 
 .st-th-mark {
   min-width: 68px;
-  border-left: 1px solid var(--border-secondary);
+  border-left: 1.5px solid var(--border-secondary);
 }
 
 .st-th-inner {
@@ -188,7 +188,7 @@
 }
 
 /* ── TR / TD ── */
-.st-row:not(:last-child) .st-td { border-bottom: 1px solid var(--border-secondary); }
+.st-row:not(:last-child) .st-td { border-bottom: 1.5px solid var(--border-secondary); }
 .st-row:hover .st-td            { background: var(--bg-card-hover); }
 .st-row:hover .st-td-course     { background: var(--bg-card-hover); }
 
@@ -201,7 +201,7 @@
 
 .st-td-course {
   padding: var(--sp-3) var(--sp-4);
-  border-right: 2px solid var(--border-primary);
+  border-right: 2.5px solid var(--border-primary);
   background: var(--bg-card);
 }
 
@@ -226,36 +226,49 @@
 
 /* ── Input cells ── */
 .st-td-input {
-  border-left: 1px solid var(--border-secondary);
   text-align: center;
   position: relative;
+  border-left: 1px solid var(--border-secondary);
   transition: background var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .st-td-input.st-td-active {
-  background: color-mix(in srgb, var(--col-color) 10%, transparent) !important;
-  box-shadow: inset 0 0 0 2px var(--col-color);
+  background: color-mix(in srgb, var(--col-color) 15%, transparent) !important;
+  box-shadow: inset 0 0 0 1.5px var(--col-color);
+  border-left-color: transparent;
   z-index: 3;
 }
 
-.cell-green  { background: color-mix(in srgb, var(--accent-emerald) 10%, transparent); }
+.cell-green  {
+  background: color-mix(in srgb, var(--accent-emerald) 12%, transparent);
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--accent-emerald) 40%, transparent);
+}
+
+.st-td-input.st-td-active.cell-green {
+  box-shadow: inset 0 0 0 1.5px var(--accent-emerald);
+}
 .cell-yellow { background: color-mix(in srgb, var(--accent-amber)   10%, transparent); }
 .cell-red    { background: color-mix(in srgb, var(--accent-rose)    10%, transparent); }
 
 .st-cell-input {
   width: 100%;
-  height: 40px;
+  height: 32px;
   text-align: center;
   background: transparent;
   border: none;
   outline: none;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   font-weight: var(--fw-semibold);
   color: var(--text-primary);
-  padding: 0 var(--sp-2);
+  padding: 0 var(--sp-1);
   cursor: cell;
   font-family: 'Courier New', monospace;
   -moz-appearance: textfield;
+}
+.st-cell-input:focus,
+.st-cell-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 .st-cell-input::-webkit-inner-spin-button,
 .st-cell-input::-webkit-outer-spin-button { -webkit-appearance: none; }
@@ -308,8 +321,8 @@
 .st-total-bar-fill {
   height: 100%;
   border-radius: var(--radius-full);
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0.8;
+  width: 0%;
+  transition: width 0.25s ease;
 }
 
 /* ── Grade ── */
@@ -393,12 +406,12 @@
 .st-lab-list {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
+  gap: var(--sp-2);
 }
 
 .st-lab-card {
   border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--bg-card);
   overflow: hidden;
   transition: border-color var(--transition-base);
@@ -410,11 +423,11 @@
 
 /* Card header */
 .st-lab-card-header {
-  padding: var(--sp-3) var(--sp-4);
+  padding: var(--sp-2) var(--sp-3);
   border-bottom: 1px solid var(--border-secondary);
   display: flex;
   flex-direction: column;
-  gap: var(--sp-2);
+  gap: var(--sp-1);
   background: var(--bg-tertiary);
 }
 
@@ -422,21 +435,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--sp-3);
+  gap: var(--sp-2);
   flex-wrap: wrap;
 }
 
 .st-lab-header-actions {
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
+  gap: var(--sp-1);
   flex-shrink: 0;
 }
 
 .st-lab-progress-row {
   display: flex;
   align-items: center;
-  gap: var(--sp-3);
+  gap: var(--sp-2);
 }
 
 /* Icon button */
@@ -474,10 +487,10 @@
 .st-setup-prompt {
   display: flex;
   align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-4) var(--sp-5);
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
   color: var(--text-tertiary);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   cursor: pointer;
   transition: color var(--transition-fast);
 }
@@ -486,16 +499,16 @@
 
 /* ── Setup Panel ── */
 .st-setup-panel {
-  padding: var(--sp-4) var(--sp-5);
+  padding: var(--sp-2) var(--sp-3);
   border-top: 1px solid var(--border-secondary);
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
+  gap: var(--sp-2);
   background: var(--bg-secondary);
 }
 
 .st-setup-heading {
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   color: var(--text-secondary);
   font-weight: var(--fw-medium);
 }
@@ -504,19 +517,19 @@
 .st-type-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--sp-2);
+  gap: 4px;
 }
 
 .st-type-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
+  gap: 4px;
+  padding: 3px 10px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-primary);
   background: var(--bg-input);
   color: var(--text-secondary);
-  font-size: var(--fs-xs);
+  font-size: 0.6rem;
   font-weight: var(--fw-medium);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -712,4 +725,57 @@
 }
 [data-theme="sketchbook"] .st-empty p {
   font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+}
+
+/* ── Raw marks input ── */
+.st-raw-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.st-raw-single {
+  text-align: center;
+  padding: 0 2px !important;
+}
+
+/* ── Quiz config per course ── */
+.st-quiz-config input {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+/* ── Confirm Modal ── */
+.st-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 99999;
+}
+.st-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 360px;
+  width: 90%;
+  box-shadow: var(--shadow-lg);
+  z-index: 100000;
+}
+.st-modal-message {
+  margin: 0 0 20px;
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.5;
+}
+.st-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
 }

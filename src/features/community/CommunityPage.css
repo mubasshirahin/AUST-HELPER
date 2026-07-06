@@ -109,6 +109,29 @@
   border-color: var(--border-focus);
 }
 
+/* ─── Open for Talk banner (alumni self-service) ─── */
+.open-for-talk-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  margin-bottom: 24px;
+}
+
+.open-for-talk-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
 /* ─── Clubs ─── */
 .clubs-grid {
   display: grid;

@@ -1,4 +1,4 @@
-# AUST Student Helper
+# AUSTWise
 
 A comprehensive utility tool designed to assist students at American University of Technology (AUST).
 

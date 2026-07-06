@@ -249,27 +249,6 @@ export default function FirstFloorInteractivePlan({ onZoneSelect }) {
           <text className="ground-small-label" x="1030" y="700" style={{ fontSize: '20px', fontWeight: 'bold' }}>Study Room</text>
         </svg>
       </div>
-
-      {/* Premium tooltip card for selected zone */}
-      {selectedZone && (
-        <div className="ground-zone-tooltip animate-fadeInUp">
-          <div className="ground-zone-tooltip-accent" style={{ background: zones.find((z) => z.id === selectedZone)?.fill }} />
-          <div>
-            <div className="ground-zone-tooltip-name">
-              {zones.find((z) => z.id === selectedZone)?.name}
-            </div>
-            <div className="ground-zone-tooltip-desc">
-              {zones.find((z) => z.id === selectedZone)?.description}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!selectedZone && (
-        <div className="ground-interactive-footer">
-          Click any zone on the map to highlight it — click again or press Clear to reset
-        </div>
-      )}
     </div>
   );
 }

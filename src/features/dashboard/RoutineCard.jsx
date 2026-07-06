@@ -184,7 +184,7 @@ export default function RoutineCard() {
             <Calendar size={20} />
           </div>
           <div>
-            <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Class Routine</h2>
+            <h3 className="section-title" style={{ fontSize: 'var(--fs-md)', margin: 0 }}>Class Routine</h3>
             <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>AUST Semester Schedule</p>
           </div>
         </div>
@@ -239,7 +239,9 @@ export default function RoutineCard() {
 
                 <div style={{ flex: 1 }}>
                   <div className="flex items-center gap-2">
-                    <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)' }}>{cls.course}</span>
+                    <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)' }}>
+                      {cls.course}{cls.biWeekly && <span style={{ color: 'var(--accent-amber)', fontWeight: 'var(--fw-bold)', fontSize: '1.3em', marginLeft: '1px' }}>*</span>}
+                    </span>
                     <span className="badge" style={{ backgroundColor: cls.type === 'Lab' ? 'var(--accent-purple-glow)' : 'var(--accent-blue-glow)', color: cls.type === 'Lab' ? 'var(--accent-purple)' : 'var(--accent-blue)', padding: '2px 6px', fontSize: '10px' }}>
                       {cls.type}
                     </span>

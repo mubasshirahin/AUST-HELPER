@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
-import { Lightbulb, ThumbsUp, AlertTriangle } from 'lucide-react';
+import { Lightbulb, ThumbsUp, AlertTriangle, Lock, Shield, ChevronRight } from 'lucide-react';
 import { seniorSecrets } from '../../data/mockData';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function SeniorSecrets() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [secrets, setSecrets] = useState(seniorSecrets);
+
+  const isSenior = user?.role === 'sr' || user?.role === 'admin';
 
   const handleUpvote = (id) => {
     setSecrets(prev => prev.map(s => {
@@ -16,6 +22,63 @@ export default function SeniorSecrets() {
       return s;
     }));
   };
+
+  // Locked state for non-Senior users
+  if (!isSenior) {
+    return (
+      <div className="glass-card-static animate-fadeInUp" style={{ textAlign: 'center', padding: '60px 30px' }}>
+        <div style={{
+          width: '80px',
+          height: '80px',
+          borderRadius: '50%',
+          background: 'var(--accent-rose-glow, rgba(239,68,68,0.15))',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 24px',
+        }}>
+          <Lock size={36} style={{ color: 'var(--accent-rose, #ef4444)' }} />
+        </div>
+
+        <h2 style={{ fontSize: 'var(--fs-xl, 22px)', fontWeight: 700, marginBottom: 8 }}>
+          🔒 Gate Restricted
+        </h2>
+        <p style={{
+          fontSize: 'var(--fs-sm, 14px)',
+          color: 'var(--text-secondary)',
+          maxWidth: 420,
+          margin: '0 auto 24px',
+          lineHeight: 1.6,
+        }}>
+          Only <strong>Student Representatives (SR)</strong> can access Seniors' Secrets —
+          insider tips, course hacks, and teacher insights shared by seniors.
+          You need the <strong>Senior (SR)</strong> role to enter this section.
+        </p>
+
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 12,
+        }}>
+          <button
+            className="btn btn-primary"
+            onClick={() => navigate('/settings')}
+            style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+          >
+            <Shield size={16} />
+            Apply for SR Role
+            <ChevronRight size={16} />
+          </button>
+
+          <p style={{ fontSize: 'var(--fs-xs, 12px)', color: 'var(--text-tertiary)', marginTop: 8 }}>
+            Go to Settings → Role Application to apply for the Student Representative (SR) position.
+            Your application will be reviewed by the admin.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-card-static secrets-container animate-fadeInUp">

@@ -29,30 +29,223 @@
 
 .sidebar-logo {
   display: flex;
-  align-items: center;
-  gap: var(--sp-3);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   overflow: hidden;
 }
 
+.logo-brand-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+}
+
 .logo-icon {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
+  width: 72px;
+  height: 72px;
+  min-width: 72px;
   border-radius: var(--radius-md);
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-primary);
+  background: transparent;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--accent-blue);
-  transition: background var(--transition-base);
+  transition: transform var(--transition-base), filter var(--transition-base), box-shadow var(--transition-base);
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes logoSpin {
+  0% { transform: scale(1.08) rotate(0deg); }
+  25% { transform: scale(1.12) rotate(5deg); }
+  50% { transform: scale(1.08) rotate(0deg); }
+  75% { transform: scale(1.12) rotate(-5deg); }
+  100% { transform: scale(1.08) rotate(0deg); }
+}
+
+@keyframes textShimmer {
+  0% { background-position: -200% 0; }
+  50% { background-position: 0 0; }
+  100% { background-position: 200% 0; }
+}
+
+.logo-icon:hover {
+  transform: scale(1.08);
+  filter: brightness(1.05);
+}
+
+.logo-icon.clicked {
+  animation: logoSpin 0.6s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.logo-icon:active {
+  transform: scale(0.95);
+}
+
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(1.55);
+  display: block;
 }
 
 .logo-text {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   white-space: nowrap;
+  margin-left: -20px;
 }
+
+.logo-wordmark {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1;
+}
+
+@keyframes charUstSlide {
+  0% { transform: translate(-20px, 0px) rotate(0deg) scale(1); opacity: 0; filter: blur(0); }
+  6.67% { transform: translate(0px, 0px) rotate(0deg) scale(1); opacity: 1; filter: blur(0); }
+  13.33% { transform: translate(0px, 0px) rotate(0deg) scale(1); opacity: 1; filter: blur(0); }
+  20% { transform: translate(20px, 0px) rotate(0deg) scale(1); opacity: 0; filter: blur(0); }
+  53.33% { transform: translate(-20px, 0px) rotate(0deg) scale(1); opacity: 0; filter: blur(0); }
+  60% { transform: translate(0px, 0px) rotate(0deg) scale(1); opacity: 1; filter: blur(0); }
+  93.33% { transform: translate(0px, 0px) rotate(0deg) scale(1); opacity: 1; filter: blur(0); }
+  100% { transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(0); opacity: 0; filter: blur(4px); }
+}
+
+@keyframes charIseSlide {
+  0% { transform: translate(-20px, 0px) rotate(0deg) scale(1); opacity: 0; filter: blur(0); }
+  26.67% { transform: translate(-20px, 0px) rotate(0deg) scale(1); opacity: 0; filter: blur(0); }
+  33.33% { transform: translate(0px, 0px) rotate(0deg) scale(1); opacity: 1; filter: blur(0); }
+  40% { transform: translate(0px, 0px) rotate(0deg) scale(1); opacity: 1; filter: blur(0); }
+  46.67% { transform: translate(20px, 0px) rotate(0deg) scale(1); opacity: 0; filter: blur(0); }
+  53.33% { transform: translate(-20px, 0px) rotate(0deg) scale(1); opacity: 0; filter: blur(0); }
+  60% { transform: translate(0px, 0px) rotate(0deg) scale(1); opacity: 1; filter: blur(0); }
+  93.33% { transform: translate(0px, 0px) rotate(0deg) scale(1); opacity: 1; filter: blur(0); }
+  100% { transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(0); opacity: 0; filter: blur(4px); }
+}
+
+.wm-ust,
+.wm-ise {
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-lg);
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  color: var(--text-primary);
+  position: relative;
+}
+
+.wc {
+  display: inline-block;
+  transform-origin: center center;
+  color: var(--accent-blue);
+  background: linear-gradient(90deg, var(--text-primary), var(--accent-blue), var(--text-primary));
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.wc:nth-child(1) { --x: -20px; --y: -30px; --r: -45deg; }
+.wc:nth-child(2) { --x: 0px; --y: -35px; --r: 0deg; }
+.wc:nth-child(3) { --x: 20px; --y: -30px; --r: 45deg; }
+
+.wm-ust .wc {
+  animation: charUstSlide 15s ease-in-out infinite, textShimmer 6s ease-in-out infinite;
+  animation-delay: 0s, 0s;
+}
+
+.wm-ise .wc {
+  animation: charIseSlide 15s ease-in-out infinite, textShimmer 6s ease-in-out infinite;
+  animation-delay: 0s, 0s;
+}
+
+.wm-ust {
+  top: 0px;
+  left: -5px;
+  margin-bottom: 2px;
+}
+
+.wm-ise .wc {
+  background: linear-gradient(90deg, #999999, #cccccc, #999999);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.wm-ise {
+  top: -4px;
+  left: 5px;
+}
+
+/* ── Particle burst on click ── */
+
+@keyframes particleBurst {
+  0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+  100% { transform: translate(var(--bx), var(--by)) scale(1.2); opacity: 0; }
+}
+
+/* ── Logo wrapper (positioning container for burst) ── */
+.logo-icon-wrapper {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Particle burst container ── */
+.logo-burst {
+  position: absolute;
+  inset: -24px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.logo-burst i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  opacity: 0;
+}
+
+.logo-burst i:nth-child(1) { --bx: -28px; --by: -28px; }
+.logo-burst i:nth-child(2) { --bx: 0px;    --by: -36px; }
+.logo-burst i:nth-child(3) { --bx: 28px;   --by: -28px; }
+.logo-burst i:nth-child(4) { --bx: 36px;   --by: 0px; }
+.logo-burst i:nth-child(5) { --bx: 28px;   --by: 28px; }
+.logo-burst i:nth-child(6) { --bx: 0px;    --by: 36px; }
+.logo-burst i:nth-child(7) { --bx: -28px;  --by: 28px; }
+.logo-burst i:nth-child(8) { --bx: -36px;  --by: 0px; }
+
+.logo-icon.clicked ~ .logo-burst i {
+  animation: particleBurst 0.6s ease-out forwards;
+}
+
+.logo-icon.clicked ~ .logo-burst i:nth-child(1) { animation-delay: 0s; }
+.logo-icon.clicked ~ .logo-burst i:nth-child(2) { animation-delay: 0.03s; }
+.logo-icon.clicked ~ .logo-burst i:nth-child(3) { animation-delay: 0.06s; }
+.logo-icon.clicked ~ .logo-burst i:nth-child(4) { animation-delay: 0.09s; }
+.logo-icon.clicked ~ .logo-burst i:nth-child(5) { animation-delay: 0.12s; }
+.logo-icon.clicked ~ .logo-burst i:nth-child(6) { animation-delay: 0.15s; }
+.logo-icon.clicked ~ .logo-burst i:nth-child(7) { animation-delay: 0.18s; }
+.logo-icon.clicked ~ .logo-burst i:nth-child(8) { animation-delay: 0.21s; }
 
 .logo-title {
   font-size: var(--fs-md);
@@ -131,6 +324,33 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  position: relative;
+}
+
+.nav-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--accent-cyan);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+.nav-badge-inline {
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 9px;
+  background: var(--accent-cyan);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .nav-label {
@@ -161,6 +381,7 @@
 
 .sidebar-footer {
   padding: var(--sp-4) var(--sp-3);
+  padding-top: var(--sp-5);
   border-top: 1px solid var(--border-primary);
 }
 
@@ -168,7 +389,7 @@
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: var(--sp-2) 0;
+  padding: var(--sp-3) 0;
   border-radius: var(--radius-md);
   overflow: hidden;
 }
@@ -198,6 +419,7 @@
   white-space: nowrap;
 }
 
+
 @media (max-width: 768px) {
   .sidebar {
     display: none;
@@ -218,9 +440,9 @@
 }
 [data-theme="sketchbook"] .logo-icon {
   border-radius: var(--radius-sm);
-  border: 2px solid var(--border-primary);
-  background: var(--bg-card);
-  box-shadow: var(--shadow-sm);
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 [data-theme="sketchbook"] .logo-title {
   font-family: 'Kalam', 'Patrick Hand', cursive;

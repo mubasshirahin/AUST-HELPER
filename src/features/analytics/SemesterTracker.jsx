@@ -1,28 +1,77 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
-  Trash2, AlertCircle, BookOpen, FlaskConical,
-  Plus, X, Check, Settings2, ChevronRight, RotateCcw, Info
+  AlertCircle, BookOpen, FlaskConical,
+  Plus, X, Check, Settings2, ChevronRight, RotateCcw, Info, FileSpreadsheet
 } from 'lucide-react';
 import { useRoutine } from '../../context/RoutineContext';
-import { findCourseByCode } from '../../data/courses';
-import { getUserStorageItem, setUserStorageItem } from '../../utils/authStorage';
+import { findCourseByCode, getCourseSemester } from '../../data/courses';
+import { getUserStorageItem, setUserStorageItem, getCurrentUserId } from '../../utils/authStorage';
+import { useAuth } from '../../context/AuthContext';
+import { formatSemesterLabel } from '../../utils/semester';
 import './SemesterTracker.css';
 
-const THEORY_COURSES_KEY = 'semesterTrackerCourses';
-const THEORY_MARKS_KEY  = 'semesterTrackerMarks';
-const LAB_COURSES_KEY   = 'semesterTrackerLabCourses';
-const LAB_CONFIG_KEY    = 'semesterTrackerLabConfig';
-const LAB_MARKS_KEY     = 'semesterTrackerLabMarks';
+const STORAGE_PREFIXES = {
+  courses: 'aust-user-tracker-courses',
+  marks: 'aust-user-tracker-marks',
+  theoryConfig: 'aust-user-tracker-theory-config',
+  labCourses: 'aust-user-tracker-lab-courses',
+  labConfig: 'aust-user-tracker-lab-config',
+  labMarks: 'aust-user-tracker-lab-marks',
+};
+
+const getSemKey = (type, sem) => {
+  const prefix = STORAGE_PREFIXES[type];
+  if (!prefix) return null;
+  const uid = getCurrentUserId();
+  return `${prefix}-${uid || 'guest'}_${sem}`;
+};
+
+const getSemItem = (type, sem) => {
+  const key = getSemKey(type, sem);
+  if (!key) return null;
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+};
+
+const setSemItem = (type, sem, value) => {
+  const key = getSemKey(type, sem);
+  if (!key) return;
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+};
+
+const isLabCourse = (code) => {
+  if (!code) return false;
+  const last = code.trim().slice(-1);
+  const digit = parseInt(last, 10);
+  return !isNaN(digit) && digit % 2 === 0;
+};
+
+const getTotalColor = (total) => {
+  if (total >= 80) return '#22c55e';
+  if (total >= 60) return '#eab308';
+  if (total >= 40) return '#f97316';
+  return '#ef4444';
+};
 
 /* ─── Theory mark fields (fixed) ─── */
-const THEORY_FIELDS = [
+const THEORY_FIXED_FIELDS = [
   { id: 'attendance', label: 'Attend.', fullLabel: 'Attendance', maxMarks: 10, color: 'var(--accent-emerald)' },
-  { id: 'quiz1',      label: 'Quiz 1',  fullLabel: 'Quiz 1',     maxMarks: 10, color: 'var(--accent-cyan)'    },
-  { id: 'quiz2',      label: 'Quiz 2',  fullLabel: 'Quiz 2',     maxMarks: 10, color: 'var(--accent-cyan)'    },
-  { id: 'quiz3',      label: 'Quiz 3',  fullLabel: 'Quiz 3',     maxMarks: 10, color: 'var(--accent-cyan)'    },
-  { id: 'midterm',    label: 'Midterm', fullLabel: 'Midterm',    maxMarks: 20, color: 'var(--accent-amber)'   },
-  { id: 'final',      label: 'Final',   fullLabel: 'Final Exam', maxMarks: 50, color: 'var(--accent-rose)'    },
+  { id: 'midterm',    label: 'Midterm', fullLabel: 'Midterm',     maxMarks: 20, color: 'var(--accent-amber)'   },
+  { id: 'final',      label: 'Final',   fullLabel: 'Final Exam',  maxMarks: 50, color: 'var(--accent-rose)'    },
 ];
+
+const getTheoryFields = (quizCount = 3, bestOf = 2) => {
+  const perQuizMax = Math.round((20 / bestOf) * 100) / 100;
+  const fields = [THEORY_FIXED_FIELDS[0]]; // attendance
+  for (let i = 1; i <= quizCount; i++) {
+    fields.push({ id: `quiz${i}`, label: `Quiz ${i}`, fullLabel: `Quiz ${i}`, maxMarks: perQuizMax, color: 'var(--accent-cyan)' });
+  }
+  fields.push(THEORY_FIXED_FIELDS[1]); // midterm
+  fields.push(THEORY_FIXED_FIELDS[2]); // final
+  return fields;
+};
 
 /* ─── Lab component types ─── */
 const LAB_TYPES = [
@@ -62,39 +111,73 @@ function getCellClass(value, max) {
   return 'cell-red';
 }
 
-/* Expand lab config into flat column list */
+/* Expand lab config into per-item columns, grouped by component */
 function expandLabColumns(config) {
-  if (!config?.components?.length) return [];
-  const cols = [];
+  if (!config?.components?.length) return { groups: [], allCols: [] };
+  const groups = [];
+  const allCols = [];
   config.components.forEach((comp, ci) => {
-    // marksEach = totalMarks ÷ count (auto-calculated)
     const marksEach = comp.totalMarks / comp.count;
+    const items = [];
     for (let i = 0; i < comp.count; i++) {
-      cols.push({
+      const col = {
         key: `${comp.type}_${ci}_${i}`,
         label: comp.count > 1 ? `${comp.label} ${i + 1}` : comp.label,
         max: marksEach,
         compIdx: ci,
         itemIdx: i,
         color: LAB_TYPES.find(t => t.type === comp.type)?.color || 'var(--text-secondary)',
-      });
+      };
+      items.push(col);
+      allCols.push(col);
     }
+    groups.push({ label: comp.label, max: comp.totalMarks, items });
   });
-  return cols;
+  return { groups, allCols };
 }
 
 /* ══════════════════════════════════════════
    Main Component
 ═══════════════════════════════════════════ */
 export default function SemesterTracker() {
-  /* ── Theory state ── */
-  const [theoryCourses, setTheoryCourses] = useState(() => getUserStorageItem(THEORY_COURSES_KEY) || []);
-  const [theoryMarks,   setTheoryMarks]   = useState(() => getUserStorageItem(THEORY_MARKS_KEY)   || {});
+  const { routine } = useRoutine();
+  const { user } = useAuth();
+  const getInitialSem = () => {
+    const saved = localStorage.getItem(`aust-tracker-sem-${getCurrentUserId() || 'guest'}`);
+    if (saved) { const n = parseInt(saved, 10); if (n >= 1 && n <= 8) return n; }
+    const ysMatch = (user?.yearSemester || '').match(/Year (\d+) - Semester (\d+)/);
+    if (ysMatch) { const y = parseInt(ysMatch[1]), s = parseInt(ysMatch[2]); if (y >= 1 && y <= 4 && s >= 1 && s <= 2) return (y - 1) * 2 + s; }
+    if (user?.semester && user.semester >= 1 && user.semester <= 8) return user.semester;
+    return 1;
+  };
+  const [selectedSemester, setSelectedSemester] = useState(getInitialSem);
+  const prevSemRef = useRef(null);
+  const currentSemRef = useRef(getInitialSem());
 
-  /* ── Lab state ── */
-  const [labCourses, setLabCourses] = useState(() => getUserStorageItem(LAB_COURSES_KEY) || []);
-  const [labConfig,  setLabConfig]  = useState(() => getUserStorageItem(LAB_CONFIG_KEY)  || {}); // { [courseId]: { components: [...] } }
-  const [labMarks,   setLabMarks]   = useState(() => getUserStorageItem(LAB_MARKS_KEY)   || {}); // { [courseId]: { [colKey]: value } }
+  /* Persist selected semester */
+  useEffect(() => {
+    localStorage.setItem(`aust-tracker-sem-${getCurrentUserId() || 'guest'}`, selectedSemester);
+  }, [selectedSemester]);
+
+  /* ── Load data for a semester ── */
+  const loadSemesterData = (sem) => ({
+    theoryCourses: getSemItem('courses', sem) || [],
+    theoryMarks:   getSemItem('marks', sem)   || {},
+    theoryConfig:  getSemItem('theoryConfig', sem) || {},
+    labCourses:    getSemItem('labCourses', sem) || [],
+    labConfig:     getSemItem('labConfig', sem)  || {},
+    labMarks:      getSemItem('labMarks', sem)   || {},
+  });
+
+  const initData = loadSemesterData(getInitialSem());
+
+  /* ── State tracks current semester data ── */
+  const [theoryCourses, setTheoryCourses] = useState(initData.theoryCourses);
+  const [theoryMarks,   setTheoryMarks]   = useState(initData.theoryMarks);
+  const [theoryConfig,  setTheoryConfig]  = useState(initData.theoryConfig);
+  const [labCourses, setLabCourses] = useState(initData.labCourses);
+  const [labConfig,  setLabConfig]  = useState(initData.labConfig);
+  const [labMarks,   setLabMarks]   = useState(initData.labMarks);
 
   /* ── Setup wizard state ── */
   const [setupCourseId, setSetupCourseId] = useState(null); // which course is being configured
@@ -104,18 +187,72 @@ export default function SemesterTracker() {
   const [activeCell, setActiveCell] = useState(null);
   const inputRefs = useRef({});
 
-  const { routine } = useRoutine();
+  /* ── Raw marks input state ── */
+  const [rawInputs, setRawInputs] = useState({}); // `${courseId}_${colKey}` → { raw: "8/10" }
 
-  /* ── Persist theory ── */
-  useEffect(() => { setUserStorageItem(THEORY_COURSES_KEY, theoryCourses); }, [theoryCourses]);
-  useEffect(() => { setUserStorageItem(THEORY_MARKS_KEY,   theoryMarks);   }, [theoryMarks]);
+  /* ── Quiz config draft values (strings, to allow free typing) ── */
+  const [quizDrafts, setQuizDrafts] = useState({}); // `${course.id}_q` or `${course.id}_b` → string
 
-  /* ── Persist lab ── */
-  useEffect(() => { setUserStorageItem(LAB_COURSES_KEY, labCourses); }, [labCourses]);
-  useEffect(() => { setUserStorageItem(LAB_CONFIG_KEY,  labConfig);  }, [labConfig]);
-  useEffect(() => { setUserStorageItem(LAB_MARKS_KEY,   labMarks);   }, [labMarks]);
+  const [showQuizCfg, setShowQuizCfg] = useState(false);
 
-  /* ── Auto-add courses from routine ── */
+  /* ── Confirm dialog ── */
+  const [confirm, setConfirm] = useState(null); // { message, onConfirm } | null
+
+  const askConfirm = (message, onConfirm) => setConfirm({ message, onConfirm });
+
+  /* ── Save to per-semester keys (live save for edits within current semester) ── */
+  useEffect(() => { setSemItem('courses', currentSemRef.current, theoryCourses); }, [theoryCourses]);
+  useEffect(() => { setSemItem('marks', currentSemRef.current, theoryMarks); }, [theoryMarks]);
+  useEffect(() => { setSemItem('theoryConfig', currentSemRef.current, theoryConfig); }, [theoryConfig]);
+  useEffect(() => { setSemItem('labCourses', currentSemRef.current, labCourses); }, [labCourses]);
+  useEffect(() => { setSemItem('labConfig', currentSemRef.current, labConfig); }, [labConfig]);
+  useEffect(() => { setSemItem('labMarks', currentSemRef.current, labMarks); }, [labMarks]);
+
+  /* ── When semester changes (or first mount), save old & load new, then populate from transcript ── */
+  useEffect(() => {
+    const prev = prevSemRef.current;
+    if (prev !== null && prev !== selectedSemester) {
+      setSemItem('courses', prev, theoryCourses);
+      setSemItem('marks', prev, theoryMarks);
+      setSemItem('theoryConfig', prev, theoryConfig);
+      setSemItem('labCourses', prev, labCourses);
+      setSemItem('labConfig', prev, labConfig);
+      setSemItem('labMarks', prev, labMarks);
+    }
+    prevSemRef.current = selectedSemester;
+    currentSemRef.current = selectedSemester;
+
+    const nd = loadSemesterData(selectedSemester);
+    setTheoryCourses(nd.theoryCourses);
+    setTheoryMarks(nd.theoryMarks);
+    setTheoryConfig(nd.theoryConfig);
+    setLabCourses(nd.labCourses);
+    setLabConfig(nd.labConfig);
+    setLabMarks(nd.labMarks);
+    setQuizDrafts({});
+
+    // Populate from Academic Transcript if tracker empty
+    const allResults = getUserStorageItem('semesterResults') || [];
+    const semData = allResults.find(r => r.semester === selectedSemester);
+    if (semData?.courses?.length) {
+      const hasTheory = nd.theoryCourses.length > 0;
+      const hasLab = nd.labCourses.length > 0;
+      if (!hasTheory) {
+        const theoryFromTrans = semData.courses
+          .filter(c => c.code && !isLabCourse(c.code))
+          .map(c => ({ id: c.code, code: c.code, name: c.name || '' }));
+        if (theoryFromTrans.length) setTheoryCourses(theoryFromTrans);
+      }
+      if (!hasLab) {
+        const labFromTrans = semData.courses
+          .filter(c => c.code && isLabCourse(c.code))
+          .map(c => ({ id: c.code, code: c.code, name: c.name || '' }));
+        if (labFromTrans.length) setLabCourses(labFromTrans);
+      }
+    }
+  }, [selectedSemester]);
+
+  /* ── Auto-add courses from routine (filtered by semester) ── */
   useEffect(() => {
     const all = Object.values(routine || {}).flat();
 
@@ -130,39 +267,53 @@ export default function SemesterTracker() {
       return { id: rc.course, code: rc.course, name: found ? found.name : rc.name || 'Unknown Course' };
     };
 
+    const sem = selectedSemester;
     setTheoryCourses(prev => {
-      const fresh = theoryItems.filter(rc => !prev.some(c => c.code === rc.course)).map(makeCourse);
+      const fresh = theoryItems
+        .filter(rc => getCourseSemester(rc.course) === sem)
+        .filter(rc => !prev.some(c => c.code === rc.course))
+        .map(makeCourse);
       return fresh.length ? [...prev, ...fresh] : prev;
     });
 
     setLabCourses(prev => {
-      const fresh = labItems.filter(rc => !prev.some(c => c.code === rc.course)).map(makeCourse);
+      const fresh = labItems
+        .filter(rc => getCourseSemester(rc.course) === sem)
+        .filter(rc => !prev.some(c => c.code === rc.course))
+        .map(makeCourse);
       return fresh.length ? [...prev, ...fresh] : prev;
     });
-  }, [routine]);
+  }, [routine, selectedSemester]);
 
   /* ════════════════════
      THEORY LOGIC
   ════════════════════ */
   const theoryBestTwo = (cid) => {
     const m = theoryMarks[cid] || {};
-    return [...[m.quiz1||0, m.quiz2||0, m.quiz3||0].sort((a,b)=>b-a)].slice(0,2).reduce((s,v)=>s+v,0);
+    const cfg = theoryConfig[cid];
+    const qc = cfg?.quizCount || 3;
+    const best = cfg?.bestOf || 2;
+    const quizMarks = [];
+    for (let i = 1; i <= qc; i++) quizMarks.push(m[`quiz${i}`] || 0);
+    return quizMarks.sort((a,b)=>b-a).slice(0, best).reduce((s,v)=>s+v, 0);
   };
   const theoryTotal = (cid) => {
     const m = theoryMarks[cid] || {};
     return (m.attendance||0) + theoryBestTwo(cid) + (m.midterm||0) + (m.final||0);
   };
   const handleTheoryMark = (cid, fid, val) => {
-    const max = THEORY_FIELDS.find(f=>f.id===fid)?.maxMarks || 0;
+    const cfg = theoryConfig[cid];
+    const fields = getTheoryFields(cfg?.quizCount || 3, cfg?.bestOf || 2);
+    const max = fields.find(f=>f.id===fid)?.maxMarks || 0;
     const num = parseFloat(val);
     setTheoryMarks(prev => ({
       ...prev, [cid]: { ...prev[cid], [fid]: isNaN(num) ? undefined : Math.max(0, Math.min(max, num)) }
     }));
   };
-  const removeTheoryCourse = (id) => {
-    if (!window.confirm('Remove this course?')) return;
-    setTheoryCourses(p => p.filter(c=>c.id!==id));
-    setTheoryMarks(p => { const n={...p}; delete n[id]; return n; });
+  const resetTheoryMarks = () => {
+    askConfirm('Reset all theory marks for this semester?', () => {
+      setTheoryMarks({});
+    });
   };
 
   /* ════════════════════
@@ -208,12 +359,40 @@ export default function SemesterTracker() {
   };
 
   const resetLabSetup = (courseId) => {
-    if (!window.confirm('Reset this lab setup? All marks will be cleared.')) return;
-    setLabConfig(prev => { const n={...prev}; delete n[courseId]; return n; });
-    setLabMarks(prev  => { const n={...prev}; delete n[courseId]; return n; });
+    askConfirm('Reset this lab setup? All marks will be cleared.', () => {
+      setLabConfig(prev => { const n={...prev}; delete n[courseId]; return n; });
+      setLabMarks(prev  => { const n={...prev}; delete n[courseId]; return n; });
+    });
   };
 
-  /* ── Lab marks ── */
+  const handleLabKeyDown = (e, courseId, gi, ii, groupCount, maxCols) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const next = ii + 1;
+      if (next < maxCols) {
+        inputRefs.current[`l_${courseId}_${gi}_${next}`]?.focus();
+      } else if (gi + 1 < groupCount) {
+        inputRefs.current[`l_${courseId}_${gi + 1}_0`]?.focus();
+      }
+    }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prev = ii - 1;
+      if (prev >= 0) {
+        inputRefs.current[`l_${courseId}_${gi}_${prev}`]?.focus();
+      } else if (gi - 1 >= 0) {
+        inputRefs.current[`l_${courseId}_${gi - 1}_${maxCols - 1}`]?.focus();
+      }
+    }
+    if (e.key === 'ArrowDown' && gi + 1 < groupCount) {
+      e.preventDefault();
+      inputRefs.current[`l_${courseId}_${gi + 1}_${ii}`]?.focus();
+    }
+    if (e.key === 'ArrowUp' && gi - 1 >= 0) {
+      e.preventDefault();
+      inputRefs.current[`l_${courseId}_${gi - 1}_${ii}`]?.focus();
+    }
+  };
   const handleLabMark = (cid, colKey, val, max) => {
     const num = parseFloat(val);
     setLabMarks(prev => ({
@@ -222,25 +401,164 @@ export default function SemesterTracker() {
     }));
   };
 
+  const handleRawMark = (cid, colKey, rawStr, perExamMax) => {
+    const rawKey = `${cid}_${colKey}`;
+    setRawInputs(prev => ({ ...prev, [rawKey]: { raw: rawStr } }));
+    const parts = rawStr.split('/');
+    if (parts.length === 2) {
+      const s = parseFloat(parts[0].trim());
+      const o = parseFloat(parts[1].trim());
+      if (!isNaN(s) && !isNaN(o) && o > 0) {
+        const converted = (s / o) * perExamMax;
+        handleLabMark(cid, colKey, converted.toFixed(2), perExamMax);
+        return;
+      }
+    }
+    // Plain number → treat as direct mark
+    handleLabMark(cid, colKey, rawStr, perExamMax);
+  };
+
   const labTotal = (cid, cols) =>
     cols.reduce((sum, col) => sum + (labMarks[cid]?.[col.key] || 0), 0);
 
-  const removeLabCourse = (id) => {
-    if (!window.confirm('Remove this lab course?')) return;
-    setLabCourses(p=>p.filter(c=>c.id!==id));
-    setLabConfig(p=>{ const n={...p}; delete n[id]; return n; });
-    setLabMarks(p=>{ const n={...p}; delete n[id]; return n; });
+  const exportSemesterPdf = async () => {
+    const { default: jsPDF } = await import('jspdf');
+    const doc = new jsPDF('l', 'mm', 'a4');
+    const pageW = 277;
+    let y = 20;
+
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.text(`Semester Tracker - ${formatSemesterLabel(selectedSemester)}`, pageW / 2, y, { align: 'center' });
+    y += 12;
+
+    const rowH = 7;
+
+    /* ── Theory section ── */
+    if (theoryCourses.length > 0) {
+      const maxQuizCount = Math.max(...theoryCourses.map(c => theoryConfig[c.id]?.quizCount || 3));
+      const maxBest = Math.max(...theoryCourses.map(c => theoryConfig[c.id]?.bestOf || 2));
+      const maxFields = getTheoryFields(maxQuizCount, maxBest);
+
+      const colW = (pageW - 70) / maxFields.length;
+
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text('Theory Courses', 10, y);
+      y += 8;
+
+      /* header */
+      doc.setFontSize(7);
+      doc.setFont(undefined, 'bold');
+      let x = 10;
+      doc.text('Course', x, y); x += 55;
+      maxFields.forEach(f => { doc.text(f.label, x + colW / 2, y, { align: 'center' }); x += colW; });
+      doc.text('Best2', x + colW / 2, y, { align: 'center' }); x += colW;
+      doc.text('Total', x + colW / 2, y, { align: 'center' }); x += colW;
+      doc.text('Grade', x + colW / 2, y, { align: 'center' });
+      y += 5;
+
+      theoryCourses.forEach(course => {
+        const cfg = theoryConfig[course.id] || {};
+        const qc = cfg.quizCount || 3;
+        const best = cfg.bestOf || 2;
+        const courseFields = getTheoryFields(qc, best);
+        const m = theoryMarks[course.id] || {};
+        const b2 = courseFields.filter(f => f.id.startsWith('quiz')).map(f => m[f.id] || 0).sort((a,b) => b - a).slice(0, best).reduce((s,v) => s + v, 0);
+        const tot = (m.attendance||0) + b2 + (m.midterm||0) + (m.final||0);
+        const grade = getGrade(tot).letter;
+
+        if (y + rowH > 190) { doc.addPage(); y = 20; }
+
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(6.5);
+        x = 10;
+        doc.text(course.code, x, y); x += 55;
+        courseFields.forEach(f => {
+          const val = m[f.id];
+          doc.text(val !== undefined && val !== '' ? String(val) : '-', x + colW / 2, y, { align: 'center' });
+          x += colW;
+        });
+        doc.text(String(b2), x + colW / 2, y, { align: 'center' }); x += colW;
+        doc.text(String(tot), x + colW / 2, y, { align: 'center' }); x += colW;
+        doc.text(grade, x + colW / 2, y, { align: 'center' });
+        y += rowH + 1;
+      });
+      y += 6;
+    }
+
+    /* ── Lab section ── */
+    if (labCourses.length > 0) {
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text('Lab Courses', 10, y);
+      y += 8;
+
+      labCourses.forEach(course => {
+        const config = labConfig[course.id];
+        if (!config) return;
+        const { groups, allCols } = expandLabColumns(config);
+        if (allCols.length === 0) return;
+
+        if (y + 15 > 190) { doc.addPage(); y = 20; }
+
+        doc.setFont(undefined, 'bold');
+        doc.setFontSize(7);
+        doc.text(`${course.code} - ${course.name}`, 10, y); y += 4;
+
+        const colW = Math.min(20, (pageW - 40) / allCols.length);
+        let x = 10;
+        doc.setFont(undefined, 'bold');
+        doc.setFontSize(6);
+        allCols.forEach(col => { doc.text(String(col.itemIdx + 1), x + colW / 2, y, { align: 'center' }); x += colW; });
+        doc.text('Sub', x + colW / 2, y, { align: 'center' }); x += colW;
+        doc.text('Grade', x + colW / 2, y, { align: 'center' });
+        y += 4;
+
+        groups.forEach(comp => {
+          if (y + rowH > 190) { doc.addPage(); y = 20; }
+          doc.setFont(undefined, 'normal');
+          doc.setFontSize(6);
+          x = 10;
+          comp.items.forEach(col => {
+            const val = labMarks[course.id]?.[col.key];
+            doc.text(val !== undefined ? String(val) : '-', x + colW / 2, y - 1, { align: 'center' });
+            x += colW;
+          });
+          const subTotal = comp.items.reduce((s, col) => s + (labMarks[course.id]?.[col.key] || 0), 0);
+          doc.text(String(subTotal), x + colW / 2, y - 1, { align: 'center' }); x += colW;
+          const grade = getGrade(subTotal).letter;
+          doc.text(grade, x + colW / 2, y - 1, { align: 'center' });
+          y += rowH;
+        });
+        y += 4;
+      });
+    }
+
+    doc.save(`semester-tracker-${selectedSemester}.pdf`);
   };
 
   /* ── Keyboard nav ── */
   const handleKeyDown = (e, courses, courseIdx, fieldIdx, fieldCount, prefix) => {
-    if (e.key === 'Tab') {
+    if (e.key === 'ArrowRight') {
       e.preventDefault();
-      const nextF = e.shiftKey ? fieldIdx-1 : fieldIdx+1;
-      if (nextF>=0 && nextF<fieldCount) {
+      const nextF = fieldIdx + 1;
+      if (nextF < fieldCount) {
         inputRefs.current[`${prefix}_${courses[courseIdx].id}_${nextF}`]?.focus();
-      } else if (!e.shiftKey && courseIdx+1<courses.length) {
+      } else if (courseIdx + 1 < courses.length) {
         inputRefs.current[`${prefix}_${courses[courseIdx+1].id}_0`]?.focus();
+      }
+    }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prevF = fieldIdx - 1;
+      if (prevF >= 0) {
+        inputRefs.current[`${prefix}_${courses[courseIdx].id}_${prevF}`]?.focus();
+      } else if (courseIdx - 1 >= 0) {
+        const prevCourseFields = prefix === 't'
+          ? getTheoryFields(theoryConfig[courses[courseIdx-1].id]?.quizCount || 3).length
+          : fieldCount;
+        inputRefs.current[`${prefix}_${courses[courseIdx-1].id}_${prevCourseFields - 1}`]?.focus();
       }
     }
     if (e.key==='ArrowDown' && courseIdx+1<courses.length)
@@ -255,9 +573,46 @@ export default function SemesterTracker() {
 
   /* ════════════════════════════════════════════
      RENDER
-  ════════════════════════════════════════════ */
+  ═══════════════════════════════════════════ */
+  const allResults = useMemo(() => getUserStorageItem('semesterResults') || [], []);
+  const availableSemesters = useMemo(() => {
+    const fromData = allResults
+      .filter(r => r.courses?.some(c => c.code && c.code.trim()))
+      .map(r => r.semester)
+      .sort((a, b) => a - b);
+    return fromData.length > 0 ? fromData : Array.from({ length: 8 }, (_, i) => i + 1);
+  }, [allResults]);
+
+  // Auto-switch to first available if current has no transcript data
+  useEffect(() => {
+    if (allResults.length > 0 && !allResults.some(r => r.semester === selectedSemester && r.courses?.some(c => c.code))) {
+      const first = availableSemesters[0];
+      if (first && first !== selectedSemester) setSelectedSemester(first);
+    }
+  }, []);
+
   return (
     <div className="st-wrapper animate-fadeInUp">
+
+      {/* Semester selector */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 'var(--fw-semibold)', marginRight: '4px' }}>Semester:</span>
+        {availableSemesters.map((sem) => (
+          <button key={sem} onClick={() => setSelectedSemester(sem)}
+            style={{
+              border: 'none', cursor: 'pointer', borderRadius: '6px', padding: '4px 12px',
+              fontSize: '11px', fontWeight: 'bold', whiteSpace: 'nowrap',
+              background: selectedSemester === sem ? 'var(--accent-purple)' : 'var(--bg-input)',
+              color: selectedSemester === sem ? '#fff' : 'var(--text-primary)',
+              transition: 'all 0.15s'
+            }}>
+            {formatSemesterLabel(sem)}
+          </button>
+        ))}
+        <button className="btn btn-secondary btn-sm" onClick={exportSemesterPdf} style={{marginLeft:'auto'}} title="Export this semester as PDF">
+          <FileSpreadsheet size={13} /> PDF
+        </button>
+      </div>
 
       {/* ══════════════════════════════
           THEORY SECTION
@@ -267,9 +622,14 @@ export default function SemesterTracker() {
         <div>
           <h2 className="st-section-title">Theory Courses</h2>
           <p className="st-section-sub">
-            Fixed distribution · Attend 10 · Quiz 10×3 (best 2) · Midterm 20 · Final 50
+            Set quiz count &amp; best-of per course below
           </p>
         </div>
+        {theoryCourses.length > 0 && (
+          <button className="st-icon-btn" onClick={resetTheoryMarks} title="Reset all theory marks" style={{marginLeft:'auto'}}>
+            <RotateCcw size={13}/>
+          </button>
+        )}
       </div>
 
       {/* Legend */}
@@ -278,7 +638,7 @@ export default function SemesterTracker() {
         <div className="st-legend-item"><span className="st-legend-dot" style={{background:'var(--accent-amber)'}}/>60–79%</div>
         <div className="st-legend-item"><span className="st-legend-dot" style={{background:'var(--accent-rose)'}}/>{'<60%'}</div>
         <div className="st-legend-sep">|</div>
-        <div className="st-legend-item"><Info size={11} style={{opacity:0.5}}/> Best 2 of 3 Quizzes count</div>
+        <div className="st-legend-item" onClick={()=>setShowQuizCfg(v=>!v)} style={{cursor:'pointer',userSelect:'none'}}><Info size={11} style={{opacity:0.5}}/> {showQuizCfg ? 'Hide' : 'Show'} quiz config</div>
       </div>
 
       {theoryCourses.length === 0 ? (
@@ -288,41 +648,92 @@ export default function SemesterTracker() {
           <p>Theory courses from your routine will appear here automatically.</p>
         </div>
       ) : (
+        (() => {
+          const maxQuizCount = Math.max(...theoryCourses.map(c => theoryConfig[c.id]?.quizCount || 3));
+          const maxBest = Math.max(...theoryCourses.map(c => theoryConfig[c.id]?.bestOf || 2));
+          const maxFields = getTheoryFields(maxQuizCount, maxBest);
+          return (
         <div className="st-table-scroll">
           <table className="st-table">
             <thead>
               <tr>
                 <th className="st-th st-th-course">Course</th>
-                {THEORY_FIELDS.map(f=>(
+                {maxFields.map(f=>(
                   <th key={f.id} className="st-th st-th-mark" style={{'--col-color':f.color}}>
                     <div className="st-th-inner">
                       <span className="st-th-label">{f.label}</span>
-                      <span className="st-th-max">/{f.maxMarks}</span>
+                      <span className="st-th-max">/{f.id.startsWith('quiz') ? f.maxMarks.toFixed(2) : f.maxMarks}</span>
                     </div>
                   </th>
                 ))}
-                <th className="st-th st-th-best2">Best 2<br/><span className="st-th-sub">/20</span></th>
+                <th className="st-th st-th-best2">Best<br/><span className="st-th-sub">/20</span></th>
                 <th className="st-th st-th-total">Total<br/><span className="st-th-sub">/100</span></th>
                 <th className="st-th st-th-grade">Grade</th>
-                <th className="st-th st-th-action"/>
               </tr>
             </thead>
             <tbody>
               {theoryCourses.map((course, cIdx)=>{
+                const cfg = theoryConfig[course.id] || {};
+                const qc = cfg.quizCount || 3;
+                const best = cfg.bestOf || 2;
+                const courseFields = getTheoryFields(qc, best);
                 const m = theoryMarks[course.id] || {};
                 const b2 = theoryBestTwo(course.id);
                 const tot = theoryTotal(course.id);
                 const grade = getGrade(tot);
-                const hasAny = THEORY_FIELDS.some(f=>m[f.id]!==undefined);
+                const hasAny = courseFields.some(f=>m[f.id]!==undefined);
                 return (
                   <tr key={course.id} className="st-row">
-                    <td className="st-td st-td-course">
-                      <span className="st-course-code">{course.code}</span>
-                      <span className="st-course-name">{course.name}</span>
+                    <td className="st-td st-td-course" style={{minWidth:'130px'}}>
+                      <div>
+                        <span className="st-course-code">{course.code}</span>
+                        <span className="st-course-name">{course.name}</span>
+                      </div>
+                      <div className="st-quiz-config" style={{marginTop:'2px',display:'flex',gap:'4px',alignItems:'center'}}>
+                        {showQuizCfg && <>
+                        <span style={{fontSize:'0.5rem',color:'var(--text-tertiary)'}}>Q:</span>
+                        <input type="text" inputMode="numeric"
+                          value={quizDrafts[`${course.id}_q`] ?? qc}
+                          className="st-cell-input"
+                          style={{width:'26px',height:'20px',fontSize:'0.5rem',textAlign:'center',padding:'0',border:'1px solid var(--border-primary)',borderRadius:'var(--radius-sm)',background:'var(--bg-tertiary)'}}
+                          onChange={e=>{
+                            const v = e.target.value;
+                            setQuizDrafts(p=>({...p,[`${course.id}_q`]:v}));
+                            if (v === '') return;
+                            const n = Number(v);
+                            if (!isNaN(n) && n >= 1 && n <= 10) {
+                              setTheoryConfig(p=>({...p,[course.id]:{...p[course.id],quizCount:n}}));
+                            }
+                          }}
+                          onBlur={() => setQuizDrafts(p=>{const n={...p}; delete n[`${course.id}_q`]; return n;})}
+                        />
+                        <span style={{fontSize:'0.5rem',color:'var(--text-tertiary)'}}>B:</span>
+                        <input type="text" inputMode="numeric"
+                          value={quizDrafts[`${course.id}_b`] ?? best}
+                          className="st-cell-input"
+                          style={{width:'26px',height:'20px',fontSize:'0.5rem',textAlign:'center',padding:'0',border:'1px solid var(--border-primary)',borderRadius:'var(--radius-sm)',background:'var(--bg-tertiary)'}}
+                          onChange={e=>{
+                            const v = e.target.value;
+                            setQuizDrafts(p=>({...p,[`${course.id}_b`]:v}));
+                            if (v === '') return;
+                            const n = Number(v);
+                            if (!isNaN(n) && n >= 1 && n <= qc) {
+                              setTheoryConfig(p=>({...p,[course.id]:{...p[course.id],bestOf:n}}));
+                            }
+                          }}
+                          onBlur={() => setQuizDrafts(p=>{const n={...p}; delete n[`${course.id}_b`]; return n;})}
+                        />
+                        </>}
+                      </div>
                     </td>
-                    {THEORY_FIELDS.map((field,fIdx)=>{
+                    {maxFields.map((field,fIdx)=>{
+                      const belongs = courseFields.some(f=>f.id===field.id);
+                      if (!belongs) {
+                        return <td key={field.id} className="st-td" style={{padding:'2px'}}/>;
+                      }
                       const val = m[field.id];
                       const isActive = activeCell?.key===`t_${course.id}_${fIdx}`;
+                      const cField = courseFields.find(f=>f.id===field.id);
                       return (
                         <td key={field.id}
                           className={`st-td st-td-input ${getCellClass(val,field.maxMarks)} ${isActive?'st-td-active':''}`}
@@ -330,20 +741,21 @@ export default function SemesterTracker() {
                         >
                           <input
                             ref={el=>inputRefs.current[`t_${course.id}_${fIdx}`]=el}
-                            type="number" min="0" max={field.maxMarks} step="0.5"
+                            type="number" min="0" max={field.maxMarks}
+                            step={field.id.startsWith('quiz') ? "0.01" : "0.5"}
                             value={val??''} placeholder="—"
                             className="st-cell-input"
                             onFocus={()=>setActiveCell({key:`t_${course.id}_${fIdx}`})}
                             onBlur={()=>setActiveCell(null)}
                             onChange={e=>handleTheoryMark(course.id,field.id,e.target.value)}
-                            onKeyDown={e=>handleKeyDown(e,theoryCourses,cIdx,fIdx,THEORY_FIELDS.length,'t')}
+                            onKeyDown={e=>handleKeyDown(e,theoryCourses,cIdx,fIdx,maxFields.length,'t')}
                           />
                         </td>
                       );
                     })}
-                    {/* Best 2 */}
+                    {/* Best */}
                     <td className="st-td st-td-computed">
-                      <span className={`st-computed-val ${getCellClass(b2,20)}`}>{b2>0?b2:'—'}</span>
+                      <span className={`st-computed-val ${getCellClass(b2,20)}`}>{b2>0?b2:'—'}/20</span>
                     </td>
                     {/* Total */}
                     <td className="st-td st-td-total-cell">
@@ -353,7 +765,7 @@ export default function SemesterTracker() {
                         </span>
                         {hasAny&&(
                           <div className="st-total-bar">
-                            <div className="st-total-bar-fill" style={{width:`${tot}%`,background:grade.color}}/>
+                            <div className="st-total-bar-fill" style={{width:`${tot}%`,background:getTotalColor(tot)}}/>
                           </div>
                         )}
                       </div>
@@ -367,25 +779,18 @@ export default function SemesterTracker() {
                         </div>
                       ):<span className="st-nil">—</span>}
                     </td>
-                    <td className="st-td st-td-del">
-                      <button className="st-del-btn" onClick={()=>removeTheoryCourse(course.id)} title="Remove">
-                        <Trash2 size={13}/>
-                      </button>
-                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
+          );
+        })()
       )}
 
       {/* Keyboard hint */}
-      {theoryCourses.length>0&&(
-        <p className="st-keyboard-hint">
-          💡 <kbd>Tab</kbd> / <kbd>↑↓</kbd> to navigate cells
-        </p>
-      )}
+
 
       {/* ══════════════════════════════
           LAB SECTION
@@ -412,13 +817,13 @@ export default function SemesterTracker() {
         <div className="st-lab-list">
           {labCourses.map(course=>{
             const config  = labConfig[course.id];
-            const cols    = config ? expandLabColumns(config) : [];
+            const { groups, allCols } = config ? expandLabColumns(config) : { groups: [], allCols: [] };
             const maxTot  = totalPossibleLab(config);
             const lMarks  = labMarks[course.id] || {};
-            const tot     = labTotal(course.id, cols);
+            const tot     = labTotal(course.id, allCols);
             const pct     = maxTot ? (tot/maxTot)*100 : 0;
             const grade   = getGrade(pct);
-            const hasAny  = cols.some(c=>lMarks[c.key]!==undefined);
+            const hasAny  = allCols.some(c=>lMarks[c.key]!==undefined);
             const isSetup = setupCourseId === course.id;
 
             return (
@@ -446,9 +851,6 @@ export default function SemesterTracker() {
                           {config ? 'Edit Setup' : 'Setup Marks'}
                         </span>
                       </button>
-                      <button className="st-del-btn always-show" onClick={()=>removeLabCourse(course.id)} title="Remove">
-                        <Trash2 size={13}/>
-                      </button>
                     </div>
                   </div>
 
@@ -456,7 +858,7 @@ export default function SemesterTracker() {
                   {config && hasAny && (
                     <div className="st-lab-progress-row">
                       <div className="st-total-bar" style={{flex:1}}>
-                        <div className="st-total-bar-fill" style={{width:`${pct}%`,background:grade.color}}/>
+                        <div className="st-total-bar-fill" style={{width:`${pct}%`,background:getTotalColor(pct)}}/>
                       </div>
                       <span style={{fontSize:'var(--fs-xs)',color:grade.color,fontWeight:700,minWidth:'90px',textAlign:'right'}}>
                         {tot.toFixed(1)}/{maxTot} ({pct.toFixed(1)}%)
@@ -569,71 +971,113 @@ export default function SemesterTracker() {
                 )}
 
                 {/* ─ Lab Marks Table ─ */}
-                {config && !isSetup && cols.length > 0 && (
-                  <div className="st-table-scroll" style={{marginTop:'12px'}}>
-                    <table className="st-table">
+                {config && !isSetup && allCols.length > 0 && (
+                  <div className="st-table-scroll" style={{marginTop:'8px'}}>
+                    {(() => {
+                      const maxCount = Math.max(...groups.map(g => g.items.length));
+                      return (
+                    <table className="st-table st-lab-marks-table">
                       <thead>
                         <tr>
-                          {cols.map(col=>(
-                            <th key={col.key} className="st-th st-th-mark" style={{'--col-color':'var(--accent-cyan)'}}>
-                              <div className="st-th-inner">
-                                <span className="st-th-label" style={{fontSize:'0.6rem'}}>{col.label}</span>
-                                <span className="st-th-max">/{col.max}</span>
-                              </div>
+                          <th className="st-th st-th-course" style={{minWidth:'80px',textAlign:'center'}}>Component</th>
+                          {Array.from({length: maxCount}, (_, i) => (
+                            <th key={i} className="st-th st-th-mark" style={{'--col-color':'var(--accent-cyan)',minWidth:'36px'}}>
+                              <span style={{fontSize:'0.55rem'}}>{i + 1}</span>
                             </th>
                           ))}
-                          <th className="st-th st-th-total">Total<br/><span className="st-th-sub">/{maxTot}</span></th>
-                          <th className="st-th st-th-grade">Grade</th>
+                          <th className="st-th st-th-mark" style={{'--col-color':'var(--accent-cyan)',minWidth:'45px',background:'var(--bg-tertiary)'}}>
+                            <span style={{fontSize:'0.5rem',color:'var(--accent-amber)'}}>Sub Total</span>
+                          </th>
+                          <th className="st-th st-th-total" style={{minWidth:'50px'}}>Total<br/><span className="st-th-sub">/{maxTot}</span></th>
+                          <th className="st-th st-th-grade" style={{minWidth:'50px'}}>Grade</th>
                         </tr>
                       </thead>
                       <tbody>
-                        <tr className="st-row">
-                          {cols.map((col,fIdx)=>{
-                            const val = lMarks[col.key];
-                            const isActive = activeCell?.key===`l_${course.id}_${fIdx}`;
-                            return (
-                              <td key={col.key}
-                                className={`st-td st-td-input ${getCellClass(val,col.max)} ${isActive?'st-td-active':''}`}
-                                style={{'--col-color':'var(--accent-cyan)'}}
-                              >
-                                <input
-                                  ref={el=>inputRefs.current[`l_${course.id}_${fIdx}`]=el}
-                                  type="number" min="0" max={col.max} step="0.5"
-                                  value={val??''} placeholder="—"
-                                  className="st-cell-input"
-                                  onFocus={()=>setActiveCell({key:`l_${course.id}_${fIdx}`})}
-                                  onBlur={()=>setActiveCell(null)}
-                                  onChange={e=>handleLabMark(course.id,col.key,e.target.value,col.max)}
-                                  onKeyDown={e=>handleKeyDown(e,[course],0,fIdx,cols.length,'l')}
-                                />
+                        {groups.map((group, gi) => {
+                          const groupTotal = group.items.reduce((s, item) => s + (lMarks[item.key] || 0), 0);
+                          return (
+                            <tr key={gi} className="st-row">
+                              <td className="st-td st-td-course" style={{padding:'2px 8px',fontSize:'0.6rem',textAlign:'center',borderRight:'1.5px solid var(--border-primary)'}}>
+                                <span style={{fontWeight:'var(--fw-bold)',color:'var(--accent-cyan)'}}>{group.label}</span>
                               </td>
-                            );
-                          })}
-                          {/* Total */}
-                          <td className="st-td st-td-total-cell">
-                            <div className="st-total-wrap">
-                              <span className="st-total-val" style={{color:hasAny?grade.color:'var(--text-tertiary)'}}>
-                                {hasAny?tot.toFixed(1):'—'}
-                              </span>
-                              {hasAny&&(
-                                <div className="st-total-bar">
-                                  <div className="st-total-bar-fill" style={{width:`${pct}%`,background:grade.color}}/>
-                                </div>
-                              )}
-                            </div>
+                              {Array.from({length: maxCount}, (_, ii) => {
+                                const col = group.items[ii];
+                                if (!col) {
+                                  return <td key={ii} className="st-td" style={{padding:'2px'}}/>;
+                                }
+                                const val = lMarks[col.key];
+                                const isActive = activeCell?.key===`l_${course.id}_${gi}_${ii}`;
+                                const rawKey = `${course.id}_${col.key}`;
+                                const raw = rawInputs[rawKey] || {};
+                                const displayVal = raw.raw ?? (val != null ? val : '');
+                                return (
+                                  <td key={col.key}
+                                    className={`st-td st-td-input ${getCellClass(val,col.max)} ${isActive?'st-td-active':''}`}
+                                    style={{'--col-color':'var(--accent-cyan)'}}
+                                  >
+                                    <div className="st-raw-wrap">
+                                      <input
+                                        ref={el=>inputRefs.current[`l_${course.id}_${gi}_${ii}`]=el}
+                                        type="text" inputMode="decimal"
+                                        value={displayVal}
+                                        placeholder="—"
+                                        className="st-cell-input st-raw-single"
+                                        style={{height:'28px',fontSize:'0.55rem',width:'52px',textAlign:'center'}}
+                                        onFocus={()=>setActiveCell({key:`l_${course.id}_${gi}_${ii}`})}
+                                        onBlur={()=>setActiveCell(null)}
+                                        onChange={e=>handleRawMark(course.id,col.key,e.target.value,col.max)}
+                                        onKeyDown={e=>handleLabKeyDown(e,course.id,gi,ii,groups.length,maxCount)}
+                                      />
+                                    </div>
+                                  </td>
+                                );
+                              })}
+                              <td className="st-td st-td-computed" style={{padding:'2px',minWidth:'45px',background:'var(--bg-tertiary)'}}>
+                                <span className="st-computed-val" style={{fontSize:'0.6rem',fontWeight:'bold',color:hasAny?'var(--accent-amber)':'var(--text-tertiary)'}}>
+                                  {hasAny ? groupTotal.toFixed(1) : '—'}/{group.max}
+                                </span>
+                              </td>
+                              <td className="st-td" style={{padding:'4px',textAlign:'center'}}>
+                                <span style={{fontSize:'0.7rem',fontWeight:'bold',color:hasAny?grade.color:'var(--text-tertiary)'}}>
+                                  {hasAny?groupTotal.toFixed(1):'—'}
+                                </span>
+                              </td>
+                              <td className="st-td" style={{padding:'2px'}}/>
+                            </tr>
+                          );
+                        })}
+                        {/* Grand total + grade row */}
+                        <tr className="st-row" style={{background:'var(--bg-tertiary)'}}>
+                          <td className="st-td" style={{padding:'2px 8px',fontSize:'0.6rem',textAlign:'center',fontWeight:'bold',borderRight:'1.5px solid var(--border-primary)'}}>
+                            Total
                           </td>
-                          {/* Grade */}
-                          <td className="st-td st-td-grade">
-                            {hasAny?(
-                              <div className="st-grade-badge" style={{'--grade-color':grade.color}}>
-                                <span className="st-grade-letter">{grade.letter}</span>
-                                <span className="st-grade-gpa">{grade.gpa}</span>
+                          {Array.from({length: maxCount}, (_, i) => (
+                            <td key={i} className="st-td" style={{padding:'2px'}}/>
+                          ))}
+                          <td className="st-td" style={{padding:'2px'}}/>
+                          <td className="st-td" style={{padding:'4px',textAlign:'center'}}>
+                            <span style={{fontSize:'0.7rem',fontWeight:'bold',color:hasAny?grade.color:'var(--text-tertiary)'}}>
+                              {hasAny?tot.toFixed(1):'—'}
+                            </span>
+                            {hasAny&&(
+                              <div className="st-total-bar" style={{margin:'2px auto 0',width:'40px'}}>
+                                <div className="st-total-bar-fill" style={{width:`${pct}%`,background:getTotalColor(pct)}}/>
                               </div>
-                            ):<span className="st-nil">—</span>}
+                            )}
+                          </td>
+                          <td className="st-td st-td-grade" style={{textAlign:'center'}}>
+                            {hasAny && (
+                              <div className="st-grade-badge" style={{'--grade-color':grade.color}}>
+                                <span className="st-grade-letter" style={{fontSize:'0.7rem'}}>{grade.letter}</span>
+                                <span className="st-grade-gpa" style={{fontSize:'0.55rem'}}>{grade.gpa}</span>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       </tbody>
                     </table>
+                    );
+                    })()}
                   </div>
                 )}
 
@@ -651,11 +1095,18 @@ export default function SemesterTracker() {
         </div>
       )}
 
-      {/* keyboard hint */}
-      {labCourses.some(c=>labConfig[c.id]) && (
-        <p className="st-keyboard-hint">
-          💡 <kbd>Tab</kbd> / <kbd>↑↓</kbd> to navigate cells
-        </p>
+
+      {/* ─ Confirm Modal ─ */}
+      {confirm && (
+        <div className="st-modal-overlay" onClick={() => setConfirm(null)}>
+          <div className="st-modal" onClick={e => e.stopPropagation()}>
+            <p className="st-modal-message">{confirm.message}</p>
+            <div className="st-modal-actions">
+              <button className="btn btn-secondary btn-sm" onClick={() => setConfirm(null)}>Cancel</button>
+              <button className="btn btn-primary btn-sm" style={{background:'var(--accent-rose)'}} onClick={() => { confirm.onConfirm(); setConfirm(null); }}>Confirm</button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

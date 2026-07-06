@@ -149,10 +149,9 @@ export function getCoursesFromTracker() {
 export function addCourseReview({ course, name, faculty, rating, difficulty, workload, commentText }) {
   const normalizedCourse = String(course || '').trim();
   const normalizedName = String(name || '').trim();
-  const normalizedFaculty = String(faculty || '').trim();
 
-  if (!normalizedCourse || !normalizedName || !normalizedFaculty) {
-    throw new Error('Course code, title, and faculty name are required.');
+  if (!normalizedCourse || !normalizedName) {
+    throw new Error('Course code and title are required.');
   }
 
   const ratingValue = Number(rating);
@@ -169,7 +168,7 @@ export function addCourseReview({ course, name, faculty, rating, difficulty, wor
     contributorId: getContributorId(),
     course: normalizedCourse,
     name: normalizedName,
-    faculty: normalizedFaculty,
+    faculty: String(faculty || '').trim(),
     rating: roundOne(ratingValue),
     difficulty: roundOne(difficultyValue),
     workload: roundOne(workloadValue),
@@ -188,7 +187,7 @@ export function addCourseReview({ course, name, faculty, rating, difficulty, wor
   entries.push(entry);
   saveRawEntries(entries);
 
-  return courseKey(normalizedCourse, normalizedName, normalizedFaculty);
+  return courseKey(normalizedCourse, normalizedName, String(faculty || '').trim());
 }
 
 export function addCommentToCourse(courseId, commentText) {

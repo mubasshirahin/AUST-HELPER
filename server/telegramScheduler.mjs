@@ -18,9 +18,9 @@ import { getStats } from './telegramDB.mjs';
 async function runScheduler(isAttendanceScheduler = false) {
   console.log('='.repeat(50));
   if (isAttendanceScheduler) {
-    console.log('AUST Helper - Telegram Attendance Scheduler');
+    console.log('AUSTWise - Telegram Attendance Scheduler');
   } else {
-    console.log('AUST Helper - Telegram Notification Scheduler');
+    console.log('AUSTWise - Telegram Notification Scheduler');
   }
   console.log('='.repeat(50));
   console.log(`Started at: ${new Date().toISOString()}`);

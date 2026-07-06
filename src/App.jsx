@@ -21,6 +21,7 @@ const CommunityPage = lazy(() => import('./features/community/CommunityPage'));
 const MarketplacePage = lazy(() => import('./features/marketplace/index.jsx'));
 const SettingsPage = lazy(() => import('./features/settings/SettingsPage'));
 const AdminPanelPage = lazy(() => import('./features/admin/AdminPanelPage'));
+const MessagesPage = lazy(() => import('./features/messages/MessagesPage'));
 
 import './App.css';
 
@@ -61,6 +62,7 @@ function AppContent() {
                 <Route path="/community" element={<CommunityPage />} />
                 <Route path="/marketplace" element={<MarketplacePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/messages" element={<MessagesPage />} />
                 <Route path="/admin" element={<AdminPanelPage />} />
                 <Route path="/admin/overview" element={<AdminPanelPage />} />
                 <Route path="/admin/notice-board" element={<AdminPanelPage />} />

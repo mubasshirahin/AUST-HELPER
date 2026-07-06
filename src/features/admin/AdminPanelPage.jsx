@@ -66,6 +66,15 @@ export default function AdminPanelPage() {
     menu: []
   });
 
+  // Canteen food item form
+  const [foodForm, setFoodForm] = useState({
+    name: '',
+    category: 'Meals',
+    price: '',
+    popular: false,
+    available: true
+  });
+
   // Library State
   const [libraryInfo, setLibraryInfo] = useState({
     totalSeats: 120,
@@ -209,6 +218,47 @@ export default function AdminPanelPage() {
   // Update Canteen
   const handleUpdateCanteen = (field, value) => {
     const updated = { ...canteenInfo, [field]: value };
+    setCanteenInfo(updated);
+    localStorage.setItem('aust-canteen-data', JSON.stringify(updated));
+  };
+
+  // Add a food item to the canteen menu
+  const handleAddFood = (e) => {
+    e.preventDefault();
+    const name = foodForm.name.trim();
+    const price = Number(foodForm.price);
+    if (!name || !(price >= 0)) return;
+
+    const newItem = {
+      id: Date.now(),
+      name,
+      category: foodForm.category,
+      price,
+      popular: foodForm.popular,
+      available: foodForm.available
+    };
+
+    const updated = { ...canteenInfo, menu: [...(canteenInfo.menu || []), newItem] };
+    setCanteenInfo(updated);
+    localStorage.setItem('aust-canteen-data', JSON.stringify(updated));
+    setFoodForm({ name: '', category: 'Meals', price: '', popular: false, available: true });
+  };
+
+  // Delete a food item
+  const handleDeleteFood = (id) => {
+    const updated = { ...canteenInfo, menu: (canteenInfo.menu || []).filter(item => item.id !== id) };
+    setCanteenInfo(updated);
+    localStorage.setItem('aust-canteen-data', JSON.stringify(updated));
+  };
+
+  // Toggle a food item's stock availability
+  const handleToggleFoodStock = (id) => {
+    const updated = {
+      ...canteenInfo,
+      menu: (canteenInfo.menu || []).map(item =>
+        item.id === id ? { ...item, available: !item.available } : item
+      )
+    };
     setCanteenInfo(updated);
     localStorage.setItem('aust-canteen-data', JSON.stringify(updated));
   };
@@ -593,57 +643,181 @@ export default function AdminPanelPage() {
 
         {/* CANTEEN PANEL */}
         {activeTab === 'canteen' && (
-          <div className="glass-card-static" style={{ maxWidth: '600px', margin: '0 auto' }}>
-            <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', marginBottom: '16px' }}>Canteen Portal Configuration</h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div>
-                <label className="input-label" style={{ display: 'block', marginBottom: '6px' }}>Canteen Operation Status</label>
-                <div className="flex gap-2">
-                  <button 
-                    className={`btn ${canteenInfo.status === 'open' ? 'btn-primary' : 'btn-secondary'} flex-1`}
-                    onClick={() => handleUpdateCanteen('status', 'open')}
-                  >
-                    Open Portal
-                  </button>
-                  <button 
-                    className={`btn ${canteenInfo.status === 'closed' ? 'btn-rose' : 'btn-secondary'} flex-1`}
-                    onClick={() => handleUpdateCanteen('status', 'closed')}
-                  >
-                    Close Portal
-                  </button>
-                </div>
-              </div>
+          <div className="grid-2" style={{ gridTemplateColumns: '0.9fr 1.1fr', alignItems: 'start' }}>
+            {/* Portal configuration */}
+            <div className="glass-card-static">
+              <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', marginBottom: '16px' }}>Canteen Portal Configuration</h3>
 
-              <div>
-                <label className="input-label" style={{ display: 'block', marginBottom: '6px' }}>Canteen Working Hours</label>
-                <input 
-                  type="text" 
-                  value={canteenInfo.hours}
-                  onChange={(e) => handleUpdateCanteen('hours', e.target.value)}
-                  className="input"
-                  placeholder="8:00 AM - 7:00 PM"
-                />
-              </div>
-
-              {canteenInfo.status === 'open' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="input-label">Live Crowd Index ({canteenInfo.crowdLevel}%)</label>
-                    <span className="badge badge-blue">
-                      {canteenInfo.crowdLevel >= 75 ? 'Busy / Peak' : canteenInfo.crowdLevel >= 40 ? 'Moderate' : 'Quiet / Empty'}
-                    </span>
+                  <label className="input-label" style={{ display: 'block', marginBottom: '6px' }}>Canteen Operation Status</label>
+                  <div className="flex gap-2">
+                    <button
+                      className={`btn ${canteenInfo.status === 'open' ? 'btn-primary' : 'btn-secondary'} flex-1`}
+                      onClick={() => handleUpdateCanteen('status', 'open')}
+                    >
+                      Open Portal
+                    </button>
+                    <button
+                      className={`btn ${canteenInfo.status === 'closed' ? 'btn-rose' : 'btn-secondary'} flex-1`}
+                      onClick={() => handleUpdateCanteen('status', 'closed')}
+                    >
+                      Close Portal
+                    </button>
                   </div>
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="100" 
-                    value={canteenInfo.crowdLevel}
-                    onChange={(e) => handleUpdateCanteen('crowdLevel', Number(e.target.value))}
-                    style={{ width: '100%', cursor: 'pointer' }}
+                </div>
+
+                <div>
+                  <label className="input-label" style={{ display: 'block', marginBottom: '6px' }}>Canteen Working Hours</label>
+                  <input
+                    type="text"
+                    value={canteenInfo.hours}
+                    onChange={(e) => handleUpdateCanteen('hours', e.target.value)}
+                    className="input"
+                    placeholder="8:00 AM - 7:00 PM"
                   />
                 </div>
-              )}
+
+                {canteenInfo.status === 'open' && (
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="input-label">Live Crowd Index ({canteenInfo.crowdLevel}%)</label>
+                      <span className="badge badge-blue">
+                        {canteenInfo.crowdLevel >= 75 ? 'Busy / Peak' : canteenInfo.crowdLevel >= 40 ? 'Moderate' : 'Quiet / Empty'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={canteenInfo.crowdLevel}
+                      onChange={(e) => handleUpdateCanteen('crowdLevel', Number(e.target.value))}
+                      style={{ width: '100%', cursor: 'pointer' }}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Food menu management */}
+            <div className="glass-card-static">
+              <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', marginBottom: '16px' }}>Food Menu &amp; Prices</h3>
+
+              {/* Add food form */}
+              <form onSubmit={handleAddFood} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                <div className="grid-2" style={{ gap: '10px' }}>
+                  <div>
+                    <label className="input-label">Food Name</label>
+                    <input
+                      type="text"
+                      value={foodForm.name}
+                      onChange={(e) => setFoodForm({ ...foodForm, name: e.target.value })}
+                      className="input"
+                      placeholder="e.g., Chicken Khichuri"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="input-label">Price (৳)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={foodForm.price}
+                      onChange={(e) => setFoodForm({ ...foodForm, price: e.target.value })}
+                      className="input"
+                      placeholder="e.g., 60"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid-2" style={{ gap: '10px' }}>
+                  <div>
+                    <label className="input-label">Category</label>
+                    <select
+                      value={foodForm.category}
+                      onChange={(e) => setFoodForm({ ...foodForm, category: e.target.value })}
+                      className="input"
+                      style={{ padding: '8px 12px' }}
+                    >
+                      <option value="Meals">Meals</option>
+                      <option value="Snacks">Snacks</option>
+                      <option value="Beverages">Beverages</option>
+                      <option value="Fast Food">Fast Food</option>
+                      <option value="Dessert">Dessert</option>
+                    </select>
+                  </div>
+                  <div className="flex items-end" style={{ gap: '16px', paddingBottom: '8px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: 'var(--fs-xs)' }}>
+                      <input
+                        type="checkbox"
+                        checked={foodForm.popular}
+                        onChange={(e) => setFoodForm({ ...foodForm, popular: e.target.checked })}
+                      />
+                      Bestseller
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: 'var(--fs-xs)' }}>
+                      <input
+                        type="checkbox"
+                        checked={foodForm.available}
+                        onChange={(e) => setFoodForm({ ...foodForm, available: e.target.checked })}
+                      />
+                      In stock
+                    </label>
+                  </div>
+                </div>
+
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                  <Plus size={16} /> Add Food Item
+                </button>
+              </form>
+
+              {/* Menu list */}
+              <div style={{ borderTop: '1px solid var(--border-primary)', paddingTop: '16px' }}>
+                <label className="input-label" style={{ display: 'block', marginBottom: '10px' }}>
+                  Current Menu ({(canteenInfo.menu || []).length} items)
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '320px', overflowY: 'auto' }}>
+                  {(canteenInfo.menu || []).length === 0 ? (
+                    <div style={{ color: 'var(--text-tertiary)', fontSize: 'var(--fs-xs)', textAlign: 'center', padding: '24px 0' }}>
+                      No food items yet. Add your first item above.
+                    </div>
+                  ) : (
+                    (canteenInfo.menu || []).map(item => (
+                      <div
+                        key={item.id}
+                        className="flex justify-between items-center p-3"
+                        style={{ background: 'var(--bg-input)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-md)' }}
+                      >
+                        <div style={{ minWidth: 0 }}>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="badge badge-blue" style={{ fontSize: '7px', padding: '1px 4px' }}>{item.category}</span>
+                            {item.popular && <span className="badge badge-amber" style={{ fontSize: '7px', padding: '1px 4px' }}>BESTSELLER</span>}
+                          </div>
+                          <h4 style={{ fontSize: '13px', fontWeight: 'bold', margin: '3px 0 0 0' }}>{item.name}</h4>
+                          <span style={{ fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: 'bold' }}>৳ {item.price}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            className="btn btn-sm btn-secondary"
+                            onClick={() => handleToggleFoodStock(item.id)}
+                            style={{ fontSize: '9px', padding: '4px 8px', color: item.available ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}
+                          >
+                            {item.available ? 'In Stock' : 'Stock Out'}
+                          </button>
+                          <button
+                            className="btn btn-secondary btn-icon"
+                            onClick={() => handleDeleteFood(item.id)}
+                            style={{ color: 'var(--accent-rose)', border: 'none', background: 'transparent', padding: '4px', width: '28px', height: '28px' }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )}

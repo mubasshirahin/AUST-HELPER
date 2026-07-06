@@ -1,4 +1,4 @@
-// Mock data for the AUST Student Helper application
+// Mock data for the AUSTWise application
 // All data is realistic but fictional
 
 export const currentUser = {
@@ -33,8 +33,6 @@ export const deadlines = [];
 export const notices = [];
 
 export const semesterResults = [];
-
-export const syllabusData = [];
 
 export const questionBank = [];
 
@@ -170,18 +168,28 @@ export const libraryData = {
     { name: 'Reading Area', seats: 30, occupied: 0, noise: 'quiet' },
   ],
   peakHours: [
-    { hour: '8AM', occupancy: 0 }, { hour: '9AM', occupancy: 0 }, { hour: '10AM', occupancy: 0 },
-    { hour: '11AM', occupancy: 0 }, { hour: '12PM', occupancy: 0 }, { hour: '1PM', occupancy: 0 },
-    { hour: '2PM', occupancy: 0 }, { hour: '3PM', occupancy: 0 }, { hour: '4PM', occupancy: 0 },
-    { hour: '5PM', occupancy: 0 }, { hour: '6PM', occupancy: 0 }, { hour: '7PM', occupancy: 0 },
+    { hour: '8AM', occupancy: 18 }, { hour: '9AM', occupancy: 32 }, { hour: '10AM', occupancy: 55 },
+    { hour: '11AM', occupancy: 68 }, { hour: '12PM', occupancy: 74 }, { hour: '1PM', occupancy: 46 },
+    { hour: '2PM', occupancy: 62 }, { hour: '3PM', occupancy: 81 }, { hour: '4PM', occupancy: 88 },
+    { hour: '5PM', occupancy: 72 }, { hour: '6PM', occupancy: 51 },
   ]
 };
 
 export const canteenData = {
-  status: 'closed',
-  crowdLevel: 0,
+  status: 'open',
+  crowdLevel: 55,
   hours: '8:00 AM - 7:00 PM',
-  menu: []
+  menu: [
+    { id: 1, name: 'Chicken Khichuri', category: 'Meals', price: 70, popular: true, available: true },
+    { id: 2, name: 'Beef Tehari', category: 'Meals', price: 90, popular: true, available: true },
+    { id: 3, name: 'Vegetable Singara', category: 'Snacks', price: 10, popular: false, available: true },
+    { id: 4, name: 'Samosa', category: 'Snacks', price: 12, popular: false, available: true },
+    { id: 5, name: 'Chicken Burger', category: 'Fast Food', price: 120, popular: true, available: true },
+    { id: 6, name: 'French Fries', category: 'Fast Food', price: 60, popular: false, available: false },
+    { id: 7, name: 'Milk Tea', category: 'Beverages', price: 15, popular: true, available: true },
+    { id: 8, name: 'Cold Coffee', category: 'Beverages', price: 50, popular: false, available: true },
+    { id: 9, name: 'Firni', category: 'Dessert', price: 40, popular: false, available: true },
+  ]
 };
 
 export const prerequisiteTree = {
