@@ -986,3 +986,343 @@
   font-family: 'Patrick Hand', cursive;
   border: 1px solid #2d2d2d;
 }
+
+/* ═══════════════════════════════════════════════════════
+   FEATURE: Semantic particle field (canvas)
+   ═══════════════════════════════════════════════════════ */
+.auth-particle-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ARCH blueprint mode — tint the whole scene to drafting-paper blue */
+.auth-page.is-blueprint {
+  background:
+    radial-gradient(ellipse at 50% 0%, #14243c 0%, #0b1523 70%);
+}
+.auth-page.is-blueprint .auth-page-grid {
+  background-image:
+    linear-gradient(rgba(91, 139, 208, 0.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(91, 139, 208, 0.10) 1px, transparent 1px);
+  mask-image: none;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FEATURE: Logo glow scales with password strength
+   ═══════════════════════════════════════════════════════ */
+.auth-brand-outside .topbar-logo-icon {
+  transition: filter var(--transition-slow);
+  filter: drop-shadow(0 0 calc(var(--pw-strength, 0) * 18px)
+    color-mix(in srgb, var(--accent-blue) 70%, transparent));
+}
+
+/* ═══════════════════════════════════════════════════════
+   FEATURE: Password strength — AUST grading scale
+   ═══════════════════════════════════════════════════════ */
+.auth-pw-grade {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: -4px;
+  animation: fadeInUp 0.3s ease both;
+  --grade-color: var(--text-tertiary);
+}
+.auth-pw-grade.tone-rose { --grade-color: var(--accent-rose); }
+.auth-pw-grade.tone-orange { --grade-color: var(--accent-orange); }
+.auth-pw-grade.tone-amber { --grade-color: var(--accent-amber); }
+.auth-pw-grade.tone-cyan { --grade-color: var(--accent-cyan); }
+.auth-pw-grade.tone-emerald { --grade-color: var(--accent-emerald); }
+
+.auth-pw-grade-bar {
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--bg-input);
+  overflow: hidden;
+}
+.auth-pw-grade-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--grade-color);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--grade-color) 60%, transparent);
+  transition: width var(--transition-base), background var(--transition-base);
+}
+.auth-pw-grade-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.auth-pw-grade-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  color: var(--text-inverse);
+  background: var(--grade-color);
+}
+.auth-pw-grade-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--grade-color);
+}
+
+/* ═══════════════════════════════════════════════════════
+   FEATURE: Email domain auto-complete chip
+   ═══════════════════════════════════════════════════════ */
+.auth-email-wrap {
+  position: relative;
+  display: flex;
+}
+.auth-email-wrap .input {
+  width: 100%;
+}
+.auth-domain-hint {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px 3px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--accent-blue) 45%, transparent);
+  background: color-mix(in srgb, var(--accent-blue) 14%, var(--bg-input));
+  color: var(--accent-blue);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  white-space: nowrap;
+  animation: authHintIn 0.18s ease both;
+  max-width: 62%;
+  overflow: hidden;
+}
+.auth-domain-hint-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.auth-domain-hint kbd {
+  font-size: 9px;
+  font-weight: var(--fw-bold);
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent-blue) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-blue) 35%, transparent);
+  font-family: var(--font-primary);
+}
+.auth-domain-hint:hover {
+  background: color-mix(in srgb, var(--accent-blue) 22%, var(--bg-input));
+}
+@keyframes authHintIn {
+  from { opacity: 0; transform: translateY(-50%) translateX(6px); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   FEATURE: Department easter eggs
+   ═══════════════════════════════════════════════════════ */
+.auth-card[data-dept] { --dept-accent: var(--accent-blue); }
+.auth-card[data-dept="CSE"]  { --dept-accent: #6fa386; }
+.auth-card[data-dept="EEE"]  { --dept-accent: #7cc4ff; }
+.auth-card[data-dept="ARCH"] { --dept-accent: #5b8bd0; }
+.auth-card[data-dept="BBA"]  { --dept-accent: #c9a66b; }
+.auth-card.has-dept-egg {
+  border-color: color-mix(in srgb, var(--dept-accent) 40%, transparent);
+  /* Reserve room so the FX strip never overlaps the bottom button. */
+  padding-bottom: 34px;
+}
+
+/* FX strip along the card's bottom edge */
+.auth-dept-fx {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22px;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* CSE — scrolling binary ticker */
+.auth-dept-fx[data-dept="CSE"]::before {
+  content: '01000001 01010101 01010011 01010100 01110111 01101001 01110011 01100101 00100000 01100011 01110011 01100101 00100000 01100100 01100101 01110000 01110100 00101110 ';
+  position: absolute;
+  bottom: 4px;
+  left: 0;
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: color-mix(in srgb, var(--dept-accent) 70%, transparent);
+  animation: deptBinary 18s linear infinite;
+}
+@keyframes deptBinary {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* EEE — neon circuit line with a pulse travelling through it */
+.auth-dept-fx[data-dept="EEE"]::before {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--dept-accent) 90%, transparent) 50%,
+      transparent 100%),
+    repeating-linear-gradient(90deg,
+      color-mix(in srgb, var(--dept-accent) 40%, transparent) 0 14px,
+      transparent 14px 20px);
+  background-size: 40% 100%, 100% 100%;
+  background-repeat: no-repeat, repeat;
+  filter: drop-shadow(0 0 5px var(--dept-accent));
+  animation: deptCircuit 2.2s linear infinite;
+}
+@keyframes deptCircuit {
+  from { background-position: -40% 0, 0 0; }
+  to   { background-position: 140% 0, 0 0; }
+}
+
+/* ARCH — blueprint ruler with measurement ticks + scale label */
+.auth-dept-fx[data-dept="ARCH"] {
+  border-top: 1px solid color-mix(in srgb, var(--dept-accent) 45%, transparent);
+}
+.auth-dept-fx[data-dept="ARCH"]::before {
+  content: '';
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 46px;
+  height: 8px;
+  background-image: repeating-linear-gradient(90deg,
+    color-mix(in srgb, var(--dept-accent) 60%, transparent) 0 1px,
+    transparent 1px 16px);
+}
+.auth-dept-fx[data-dept="ARCH"]::after {
+  content: 'SCALE 1:100';
+  position: absolute;
+  bottom: 5px;
+  right: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: color-mix(in srgb, var(--dept-accent) 75%, transparent);
+}
+
+/* BBA — stock-ticker slide */
+.auth-dept-fx[data-dept="BBA"]::before {
+  content: '▲ AUST 2450.75  +2.4%     ▲ CGPA 3.98  +0.12     ▲ PLACEMENTS  +18%     ▲ AUST 2450.75  +2.4%     ';
+  position: absolute;
+  bottom: 5px;
+  left: 0;
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: var(--fw-bold);
+  color: color-mix(in srgb, var(--dept-accent) 80%, transparent);
+  animation: deptTicker 16s linear infinite;
+}
+@keyframes deptTicker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   FEATURE: "Drop the mic" origami success animation
+   ═══════════════════════════════════════════════════════ */
+.auth-shell.is-sending {
+  perspective: 900px;
+}
+.auth-card--sending {
+  transform-origin: center 40%;
+  animation: cardFold 0.7s cubic-bezier(0.6, 0, 0.4, 1) forwards;
+  pointer-events: none;
+}
+@keyframes cardFold {
+  0%   { transform: scale(1) rotateX(0deg); opacity: 1; }
+  45%  { transform: scaleY(0.16) translateY(6px) rotateX(62deg); opacity: 1; }
+  100% { transform: scale(0.12) translateY(26px) rotateX(80deg); opacity: 0; }
+}
+
+.auth-envelope {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120px;
+  height: 80px;
+  margin: -40px 0 0 -60px;
+  z-index: 5;
+  animation: envelopeSend 0.85s cubic-bezier(0.5, 0, 0.3, 1) 0.4s both;
+}
+.auth-envelope-body {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-md);
+  background: linear-gradient(160deg,
+    color-mix(in srgb, var(--accent-blue) 92%, white) 0%,
+    var(--accent-blue) 100%);
+  box-shadow: var(--shadow-xl);
+}
+.auth-envelope-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  z-index: 2;
+  border-left: 60px solid transparent;
+  border-right: 60px solid transparent;
+  border-top: 42px solid color-mix(in srgb, var(--accent-blue) 78%, black);
+  transform-origin: top;
+  animation: envelopeFlap 0.4s ease 0.42s both;
+}
+@keyframes envelopeFlap {
+  from { transform: rotateX(0deg); }
+  to   { transform: rotateX(180deg); }
+}
+.auth-envelope-check {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  z-index: 3;
+  font-size: 34px;
+  font-weight: var(--fw-black);
+  color: var(--text-inverse);
+  animation: envelopeCheck 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) 0.75s both;
+}
+@keyframes envelopeCheck {
+  from { transform: translate(-50%, -50%) scale(0); }
+  to   { transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes envelopeSend {
+  0%   { opacity: 0; transform: scale(0.4) translateY(0); }
+  22%  { opacity: 1; transform: scale(1) translateY(0); }
+  60%  { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: scale(0.7) translateY(-130vh) rotate(-14deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-dept-fx::before,
+  .auth-domain-hint,
+  .auth-card--sending,
+  .auth-envelope,
+  .auth-envelope-flap,
+  .auth-envelope-check {
+    animation: none;
+  }
+}

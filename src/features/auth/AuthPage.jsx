@@ -4,9 +4,13 @@ import { GraduationCap, Briefcase, BookOpen, Moon, Sun, Newspaper, Terminal, Spa
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { getYearSemOptions } from '../../utils/semester';
+import { getPasswordGrade } from '../../utils/passwordStrength';
+import ParticleField from './ParticleField';
 import logoSilver from '../../assets/logo-silver.png';
 import logoRed from '../../assets/logo-red.png';
 import './AuthPage.css';
+
+const EMAIL_DOMAIN = '@aust.edu';
 
 const departments = ['CSE', 'EEE', 'CE', 'ME', 'IPE', 'TE', 'ARCH', 'BBA'];
 
@@ -58,6 +62,7 @@ export default function AuthPage() {
   const [showLoginPw, setShowLoginPw] = useState(false);
   const [showSignupPw, setShowSignupPw] = useState(false);
   const [focusKind, setFocusKind] = useState(null);
+  const [sending, setSending] = useState(false);
   const signupFormRef = useRef(null);
   const [logoVariant, setLogoVariant] = useState(
     () => localStorage.getItem('logoVariant') || 'silver'
@@ -196,10 +201,19 @@ export default function AuthPage() {
         company: signupForm.company,
         graduationYear: signupForm.graduationYear,
       });
-      navigate(redirectPath, { replace: true });
+
+      // ─── "Drop the mic" success ───
+      // Reward the long form: fold the card up like an exam paper into an
+      // envelope and zip it away, then slide into the dashboard.
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduced) {
+        navigate(redirectPath, { replace: true });
+        return;
+      }
+      setSending(true);
+      setTimeout(() => navigate(redirectPath, { replace: true }), 1150);
     } catch (signupError) {
       setError(signupError.message || 'Signup failed.');
-    } finally {
       setSubmitting(false);
     }
   };
@@ -221,16 +235,50 @@ export default function AuthPage() {
     mascotMood = 'look';
   }
 
+  // ─── Password strength (AUST grading scale) ───
+  const activePassword = mode === 'login' ? loginForm.password : signupForm.password;
+  const pwGrade = getPasswordGrade(activePassword);
+  // The grid "powers up" while a password field is focused; its intensity
+  // (and the logo glow) scale with how strong the password is.
+  const energized = focusKind === 'password' || focusKind === 'confirm';
+  const energyIntensity = energized ? Math.max(0.15, pwGrade.strength || 0) : 0;
+
+  // ─── Department easter egg ───
+  const activeDept = mode === 'signup' && signupStep === 2 ? signupForm.department : null;
+  const blueprintMode = activeDept === 'ARCH';
+
+  // ─── Email domain auto-complete ───
+  const emailSuggestion = (value) => {
+    const v = (value || '').trim();
+    return v.length > 0 && !v.includes('@') ? `${v}${EMAIL_DOMAIN}` : null;
+  };
+  const completeLoginEmail = () =>
+    setLoginForm((c) => ({ ...c, email: `${c.email.trim()}${EMAIL_DOMAIN}` }));
+  const completeSignupEmail = () =>
+    setSignupForm((c) => ({ ...c, email: `${c.email.trim()}${EMAIL_DOMAIN}` }));
+  const onEmailKeyDown = (complete, suggestion) => (e) => {
+    if (suggestion && (e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+      e.preventDefault();
+      complete();
+    }
+  };
+  const loginEmailSug = emailSuggestion(loginForm.email);
+  const signupEmailSug = emailSuggestion(signupForm.email);
+
   return (
-    <div className="auth-page animate-fadeIn">
+    <div
+      className={`auth-page animate-fadeIn ${blueprintMode ? 'is-blueprint' : ''}`}
+      style={{ '--pw-strength': energyIntensity }}
+    >
       <div className="auth-page-bg">
         <div className="auth-page-grid" />
+        <ParticleField energized={energized} intensity={energyIntensity} blueprint={blueprintMode} />
         <div className="auth-page-orb auth-page-orb-1" />
         <div className="auth-page-orb auth-page-orb-2" />
         <div className="auth-page-orb auth-page-orb-3" />
         <div className="auth-page-noise" aria-hidden="true" />
       </div>
-      <div className="auth-shell">
+      <div className={`auth-shell ${sending ? 'is-sending' : ''}`}>
         <div className="auth-brand-outside">
           <div className="auth-logo-wrapper">
             <div className="topbar-logo">
@@ -275,7 +323,11 @@ export default function AuthPage() {
           </p>
         </div>
 
-        <div className="auth-card glass-card-static stagger-children">
+        <div
+          className={`auth-card glass-card-static stagger-children ${activeDept ? 'has-dept-egg' : ''} ${sending ? 'auth-card--sending' : ''}`}
+          data-dept={activeDept || undefined}
+        >
+          {activeDept && <span className="auth-dept-fx" aria-hidden="true" data-dept={activeDept} />}
           <div className="auth-theme-switcher">
             <button
               type="button"
@@ -343,16 +395,30 @@ export default function AuthPage() {
           <form className="auth-form" onSubmit={handleLogin}>
             <label className="auth-field">
               Email
-              <input
-                className="input"
-                type="email"
-                value={loginForm.email}
-                onChange={(e) => setLoginForm((c) => ({ ...c, email: e.target.value }))}
-                onFocus={() => setFocusKind('text')}
-                onBlur={() => setFocusKind(null)}
-                placeholder="you@aust.edu"
-                required
-              />
+              <div className="auth-email-wrap">
+                <input
+                  className="input"
+                  type="email"
+                  value={loginForm.email}
+                  onChange={(e) => setLoginForm((c) => ({ ...c, email: e.target.value }))}
+                  onFocus={() => setFocusKind('text')}
+                  onBlur={() => setFocusKind(null)}
+                  onKeyDown={onEmailKeyDown(completeLoginEmail, loginEmailSug)}
+                  placeholder="you@aust.edu"
+                  required
+                />
+                {loginEmailSug && (
+                  <button
+                    type="button"
+                    className="auth-domain-hint"
+                    onMouseDown={(e) => { e.preventDefault(); completeLoginEmail(); }}
+                    tabIndex={-1}
+                  >
+                    <span className="auth-domain-hint-text">{loginEmailSug}</span>
+                    <kbd>Tab</kbd>
+                  </button>
+                )}
+              </div>
             </label>
             <label className="auth-field">
               Password
@@ -424,16 +490,30 @@ export default function AuthPage() {
 
             <label className="auth-field">
               Email
-              <input
-                className="input"
-                type="email"
-                value={signupForm.email}
-                onChange={(e) => setSignupForm((c) => ({ ...c, email: e.target.value }))}
-                onFocus={() => setFocusKind('text')}
-                onBlur={() => setFocusKind(null)}
-                placeholder="you@aust.edu"
-                required
-              />
+              <div className="auth-email-wrap">
+                <input
+                  className="input"
+                  type="email"
+                  value={signupForm.email}
+                  onChange={(e) => setSignupForm((c) => ({ ...c, email: e.target.value }))}
+                  onFocus={() => setFocusKind('text')}
+                  onBlur={() => setFocusKind(null)}
+                  onKeyDown={onEmailKeyDown(completeSignupEmail, signupEmailSug)}
+                  placeholder="you@aust.edu"
+                  required
+                />
+                {signupEmailSug && (
+                  <button
+                    type="button"
+                    className="auth-domain-hint"
+                    onMouseDown={(e) => { e.preventDefault(); completeSignupEmail(); }}
+                    tabIndex={-1}
+                  >
+                    <span className="auth-domain-hint-text">{signupEmailSug}</span>
+                    <kbd>Tab</kbd>
+                  </button>
+                )}
+              </div>
             </label>
 
             <div className="grid-2" style={{ gap: '10px' }}>
@@ -486,6 +566,21 @@ export default function AuthPage() {
                 </div>
               </label>
             </div>
+
+            {signupForm.password && (
+              <div className={`auth-pw-grade tone-${pwGrade.tone}`}>
+                <div className="auth-pw-grade-bar">
+                  <span
+                    className="auth-pw-grade-fill"
+                    style={{ width: `${pwGrade.pct}%` }}
+                  />
+                </div>
+                <div className="auth-pw-grade-row">
+                  <span className="auth-pw-grade-badge">{pwGrade.grade}</span>
+                  <span className="auth-pw-grade-label">{pwGrade.label}</span>
+                </div>
+              </div>
+            )}
 
             <button type="button" className="btn btn-primary auth-submit" onClick={handleContinue}>
               Continue →
@@ -641,6 +736,13 @@ export default function AuthPage() {
           Continue without account
         </button>
         </div>
+        {sending && (
+          <div className="auth-envelope" aria-hidden="true">
+            <div className="auth-envelope-flap" />
+            <div className="auth-envelope-body" />
+            <span className="auth-envelope-check">✓</span>
+          </div>
+        )}
       </div>
     </div>
   );
