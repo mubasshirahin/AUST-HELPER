@@ -61,6 +61,8 @@ export function AuthProvider({ children }) {
     return true;
   };
 
+  const hasRole = (roleType) => user?.hasRole ? user.hasRole(roleType) : user?.role === roleType;
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -71,8 +73,8 @@ export function AuthProvider({ children }) {
       signup,
       logout,
       updateUser,
-    }}
-    >
+      hasRole,
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Shield, BellRing, Coffee, Activity, Users, Trash2, Plus, Check, AlertCircle, Eye, Edit3, Search, X, Save, User, FileText, CheckCircle2, XCircle, Clock3, ClipboardList, CalendarDays } from 'lucide-react';
 import { notices, canteenData, libraryData } from '../../data/mockData';
-import { getRoleLabel, getRoleBadgeClass, updateAccountProfile, getAccountById, getAllRoleApplications, reviewRoleApplication, getAccountById as getUserById } from '../../utils/authStorage';
+import { getRoleLabel, getRoleBadgeClass, updateAccountProfile, getAccountById, getAllRoleApplications, reviewRoleApplication, getAccountById as getUserById, resetAllLocalData } from '../../utils/authStorage';
 import { loadTemplates, saveTemplates, addTemplate, updateTemplate, deleteTemplate, defaultTemplates } from '../../utils/routineTemplates';
 import RoutineTemplatesPanel from './RoutineTemplatesPanel';
 import TranscriptTemplatesPanel from './TranscriptTemplatesPanel';
@@ -370,6 +370,67 @@ export default function AdminPanelPage() {
     return stats;
   };
 
+  const [resetConfirm, setResetConfirm] = useState('');
+  const [resetNotification, setResetNotification] = useState(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const hideResetNotification = () => setResetNotification(null);
+
+  const handleFactoryReset = async () => {
+    if (resetConfirm !== 'DELETE_ALL_DATA') {
+      setResetNotification({ type: 'error', text: 'Type DELETE_ALL_DATA to confirm.' });
+      return;
+    }
+
+    setShowResetConfirm(true);
+  };
+
+  const confirmFactoryReset = async () => {
+    setShowResetConfirm(false);
+
+    try {
+      const res = await fetch('/api/admin/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: 'RESET_ALL_DATA' }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        setResetNotification({ type: 'error', text: 'Server reset failed with status ' + res.status + ': ' + (text || 'Empty response') });
+        return;
+      }
+
+      const text = await res.text();
+      if (!text) {
+        setResetNotification({ type: 'warning', text: 'Server reset succeeded but returned empty response.' });
+      } else {
+        try {
+          const data = JSON.parse(text);
+          if (!data.success) {
+            setResetNotification({ type: 'error', text: 'Server reset failed: ' + (data.error || 'Unknown error') });
+            return;
+          }
+        } catch {
+          setResetNotification({ type: 'error', text: 'Server reset returned invalid JSON: ' + text });
+          return;
+        }
+      }
+    } catch (e) {
+      setResetNotification({ type: 'error', text: 'Server reset failed: ' + e.message });
+      return;
+    }
+
+    const result = resetAllLocalData();
+    if (!result.success) {
+      setResetNotification({ type: 'error', text: 'Local reset failed: ' + (result.error || 'Unknown error') });
+      return;
+    }
+
+    setResetNotification({ type: 'success', text: 'Factory reset complete. All data has been removed. The default admin account (admin@aust.edu / 12345678) has been restored. The page will now reload.' });
+    setTimeout(() => window.location.reload(), 3000);
+  };
+
 
   // Helper stats
   const stats = {
@@ -393,6 +454,76 @@ export default function AdminPanelPage() {
           </div>
         </div>
       </div>
+
+      {/* In-app notification banner */}
+      {resetNotification && (
+        <div className="animate-fadeIn" style={{
+          padding: '12px 16px',
+          borderRadius: 'var(--radius-md)',
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          background: resetNotification.type === 'success' ? 'var(--accent-emerald-glow)' :
+            resetNotification.type === 'error' ? 'var(--accent-rose-glow)' :
+            'var(--accent-amber-glow)',
+          border: `1px solid ${resetNotification.type === 'success' ? 'var(--accent-emerald)' :
+            resetNotification.type === 'error' ? 'var(--accent-rose)' :
+            'var(--accent-amber)'}`,
+          color: resetNotification.type === 'success' ? 'var(--accent-emerald)' :
+            resetNotification.type === 'error' ? 'var(--accent-rose)' :
+            'var(--accent-amber)',
+          fontSize: 'var(--fs-sm)',
+          fontWeight: 'bold'
+        }}>
+          {resetNotification.type === 'success' ? <CheckCircle2 size={18} /> :
+            resetNotification.type === 'error' ? <XCircle size={18} /> :
+            <AlertCircle size={18} />}
+          <span style={{ flex: 1 }}>{resetNotification.text}</span>
+          <button onClick={hideResetNotification} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'inherit' }}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showResetConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }} onClick={() => setShowResetConfirm(false)}>
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--accent-rose)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '24px',
+            maxWidth: '420px',
+            width: '90%',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.4)'
+          }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: 'var(--fs-lg)', fontWeight: 'bold', marginBottom: '12px', color: 'var(--accent-rose)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Trash2 size={20} /> Confirm Factory Reset
+            </h3>
+            <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.6' }}>
+              This will permanently delete <strong>ALL</strong> users, messages, marketplace listings, notices, canteen data, library data, and all other stored data. Only the default admin account will be restored. This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button className="btn btn-secondary" onClick={() => setShowResetConfirm(false)}>Cancel</button>
+              <button className="btn btn-rose" onClick={confirmFactoryReset} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Trash2 size={16} /> Yes, Delete Everything
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Overview Cards */}
       <div className="grid-4 mb-6">
@@ -534,10 +665,36 @@ export default function AdminPanelPage() {
                 </div>
               </div>
             </div>
+
+            {/* Factory Reset */}
+            <div className="glass-card-static" style={{ border: '1px solid var(--accent-rose)' }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--fs-md)', fontWeight: 'bold', marginBottom: '16px', color: 'var(--accent-rose)' }}>
+                <Trash2 size={16} /> Factory Reset
+              </h3>
+              <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+                Permanently delete ALL data including users, messages, marketplace listings, notices, canteen data, and library records. Only the default admin account will be restored.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <input
+                  type="text"
+                  placeholder='Type DELETE_ALL_DATA to confirm'
+                  value={resetConfirm}
+                  onChange={(e) => setResetConfirm(e.target.value)}
+                  className="input"
+                  style={{ fontSize: 'var(--fs-xs)' }}
+                />
+                <button
+                  className="btn btn-rose"
+                  onClick={handleFactoryReset}
+                  disabled={resetConfirm !== 'DELETE_ALL_DATA'}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                  <Trash2 size={16} /> Reset Everything
+                </button>
+              </div>
+            </div>
           </div>
         )}
-
-        {/* NOTICES PANEL */}
         {activeTab === 'notices' && (
           <div className="grid-2" style={{ gridTemplateColumns: '1.1fr 0.9fr' }}>
             {/* Publisher Form */}

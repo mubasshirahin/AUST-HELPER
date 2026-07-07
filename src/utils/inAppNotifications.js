@@ -1,0 +1,179 @@
+const NOTIFS_KEY = 'aust-inapp-notifs-v1';
+
+/**
+ * @typedef {Object} AppNotification
+ * @property {string} id - unique id
+ * @property {string} title - notification title
+ * @property {string} body - notification body/content
+ * @property {string} type - 'deadline' | 'notice' | 'class' | 'task' | 'info'
+ * @property {string} icon - lucide icon name
+ * @property {string} path - route to navigate to on click
+ * @property {number} timestamp - epoch ms
+ * @property {boolean} read - whether user has seen it
+ * @property {'low'|'medium'|'high'} [priority]
+ */
+
+// ─── Storage helpers ───
+
+export function loadNotifications() {
+  try {
+    const raw = localStorage.getItem(NOTIFS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveNotifications(items) {
+  try {
+    // Keep max 200 notifications
+    const sorted = items.slice(-200);
+    localStorage.setItem(NOTIFS_KEY, JSON.stringify(sorted));
+  } catch {
+    // storage full – silently fail
+  }
+}
+
+// ─── Read / Mutate ───
+
+export function getUnreadCount() {
+  return loadNotifications().filter((n) => !n.read).length;
+}
+
+export function getUnreadNotifications() {
+  return loadNotifications().filter((n) => !n.read);
+}
+
+export function markAsRead(id) {
+  const items = loadNotifications();
+  const idx = items.findIndex((n) => n.id === id);
+  if (idx !== -1) {
+    items[idx].read = true;
+    saveNotifications(items);
+  }
+}
+
+export function markAllAsRead() {
+  const items = loadNotifications();
+  let changed = false;
+  items.forEach((n) => {
+    if (!n.read) {
+      n.read = true;
+      changed = true;
+    }
+  });
+  if (changed) saveNotifications(items);
+}
+
+export function addNotification(item) {
+  const items = loadNotifications();
+  // Avoid duplicates by checking id
+  if (items.some((n) => n.id === item.id)) return;
+  items.push(item);
+  saveNotifications(items);
+}
+
+export function clearAllNotifications() {
+  localStorage.removeItem(NOTIFS_KEY);
+}
+
+// ─── ID generator ───
+
+let _counter = Date.now();
+
+export function makeNotifId(prefix = 'n') {
+  _counter += 1;
+  return `${prefix}-${_counter}`;
+}
+
+// ─── Seed from data sources (call on mount) ───
+
+export function seedFromNotices(notices) {
+  if (!notices || !notices.length) return;
+  const existing = loadNotifications();
+  const existingIds = new Set(existing.map((n) => n.id));
+
+  notices.forEach((notice) => {
+    const id = `notice-${notice.id}`;
+    if (existingIds.has(id)) return;
+    existing.push({
+      id,
+      title: notice.title || 'New Notice',
+      body: notice.content?.slice(0, 120) || '',
+      type: 'notice',
+      icon: 'BellRing',
+      path: '/',
+      timestamp: new Date(notice.date || notice.createdAt || Date.now()).getTime(),
+      read: false,
+      priority: notice.pinned ? 'high' : 'medium',
+    });
+  });
+
+  saveNotifications(existing);
+}
+
+export function seedFromDeadlines(deadlines) {
+  if (!deadlines || !deadlines.length) return;
+  const existing = loadNotifications();
+  const existingIds = new Set(existing.map((n) => n.id));
+
+  deadlines.forEach((dl) => {
+    const due = dl.dueDate ? new Date(dl.dueDate).getTime() : Date.now();
+    const now = Date.now();
+    const diff = due - now;
+    // Only generate for upcoming deadlines within 48h or passed within 1h
+    if (diff < -3600000) return; // passed more than 1h ago
+
+    const id = `deadline-${dl.id}`;
+    if (existingIds.has(id)) return;
+    existing.push({
+      id,
+      title: dl.course ? `${dl.course} Deadline` : 'Deadline Approaching',
+      body: dl.title || 'Assignment due',
+      type: 'deadline',
+      icon: diff < 0 ? 'AlertTriangle' : 'Hourglass',
+      path: '/',
+      timestamp: due,
+      read: false,
+      priority: diff < 7200000 ? 'high' : diff < 86400000 ? 'medium' : 'low',
+    });
+  });
+
+  saveNotifications(existing);
+}
+
+export function seedFromTasks(tasks) {
+  if (!tasks || !tasks.length) return;
+  const existing = loadNotifications();
+  const existingIds = new Set(existing.map((n) => n.id));
+
+  tasks.forEach((task) => {
+    const taskDate = new Date(task.date);
+    if (task.time) {
+      const [h, m] = task.time.split(':');
+      taskDate.setHours(parseInt(h, 10), parseInt(m, 10), 0);
+    } else {
+      taskDate.setHours(23, 59);
+    }
+    const now = Date.now();
+    const diff = taskDate.getTime() - now;
+    if (diff < -3600000) return; // passed more than 1h ago
+
+    const id = `task-${task.id}`;
+    if (existingIds.has(id)) return;
+    existing.push({
+      id,
+      title: `Task: ${task.title}`,
+      body: task.courseCode || task.courseName || 'General',
+      type: 'task',
+      icon: 'CalendarCheck',
+      path: '/',
+      timestamp: taskDate.getTime(),
+      read: false,
+      priority: diff < 7200000 ? 'high' : 'medium',
+    });
+  });
+
+  saveNotifications(existing);
+}
+

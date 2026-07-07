@@ -1,326 +1,84 @@
-/**
- * Telegram User Database
- * Simple JSON file-based database for storing user Chat IDs
- * 
- * Data structure:
- * {
- *   "users": [
- *     {
- *       "chatId": "123456789",
- *       "routine": { ... },
- *       "enabled": true,
- *       "createdAt": "2024-01-01T00:00:00.000Z",
- *       "updatedAt": "2024-01-01T00:00:00.000Z"
- *     }
- *   ]
- * }
- * 
- * The bot token is configured via environment variable TELEGRAM_BOT_TOKEN
- */
+import { query, sql } from './db.mjs';
 
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const DB_PATH = path.join(__dirname, '..', '.telegram_users.json');
-
-// Default database structure
-const DEFAULT_DB = { users: [] };
-
-/**
- * Read the database from file
- * @returns {Object} The database object
- */
-function readDB() {
-  try {
-    if (!fs.existsSync(DB_PATH)) {
-      // Create the file with default structure
-      fs.writeFileSync(DB_PATH, JSON.stringify(DEFAULT_DB, null, 2));
-      return DEFAULT_DB;
-    }
-    
-    const data = fs.readFileSync(DB_PATH, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error reading telegram database:', error.message);
-    return { ...DEFAULT_DB };
-  }
+export async function registerUser(chatId, routine = null) {
+  const r = routine ? JSON.stringify(routine) : null;
+  const result = await query(`
+    MERGE TelegramUsers AS target
+    USING (SELECT @chatId AS ChatId) AS source
+    ON target.ChatId = source.ChatId
+    WHEN MATCHED THEN UPDATE SET Routine = COALESCE(@routine, target.Routine), Enabled = 1, UpdatedAt = GETDATE()
+    WHEN NOT MATCHED THEN INSERT (ChatId, Routine, Enabled, CreatedAt, UpdatedAt) VALUES (@chatId, @routine, 1, GETDATE(), GETDATE())
+    OUTPUT inserted.*;
+  `, {
+    chatId: { value: String(chatId) },
+    routine: { type: sql.NVarChar(sql.MAX), value: r },
+  });
+  return result.recordset[0] || null;
 }
 
-/**
- * Write the database to file
- * @param {Object} db - The database object to write
- */
-function writeDB(db) {
-  try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
-  } catch (error) {
-    console.error('Error writing telegram database:', error.message);
-    throw new Error('Failed to save user data');
-  }
+export async function unregisterUser(chatId) {
+  const r = await query('DELETE FROM TelegramUsers WHERE ChatId = @chatId; SELECT @@ROWCOUNT AS deleted', { chatId: { value: String(chatId) } });
+  return (r.recordset[0]?.deleted || 0) > 0;
 }
 
-/**
- * Register a new user or update existing user
- * @param {string} chatId - Telegram Chat ID
- * @param {Object} routine - User's routine data
- * @returns {Object} The registered user object
- */
-export function registerUser(chatId, routine = null) {
-  const db = readDB();
-  const now = new Date().toISOString();
-  
-  // Check if user already exists
-  const existingIndex = db.users.findIndex(u => u.chatId === String(chatId));
-  
-  if (existingIndex !== -1) {
-    // Update existing user
-    db.users[existingIndex] = {
-      ...db.users[existingIndex],
-      routine: routine || db.users[existingIndex].routine,
-      enabled: true,
-      updatedAt: now
-    };
-    writeDB(db);
-    return db.users[existingIndex];
-  }
-  
-  // Create new user
-  const newUser = {
-    chatId: String(chatId),
-    routine: routine || {
-      Sunday: [],
-      Monday: [],
-      Tuesday: [],
-      Wednesday: [],
-      Thursday: [],
-      Friday: [],
-      Saturday: []
-    },
-    enabled: true,
-    createdAt: now,
-    updatedAt: now
-  };
-  
-  db.users.push(newUser);
-  writeDB(db);
-  
-  return newUser;
+export async function getUser(chatId) {
+  const r = await query('SELECT * FROM TelegramUsers WHERE ChatId = @chatId', { chatId: { value: String(chatId) } });
+  return r.recordset[0] || null;
 }
 
-/**
- * Unregister a user by Chat ID
- * @param {string} chatId - Telegram Chat ID
- * @returns {boolean} True if user was removed, false if not found
- */
-export function unregisterUser(chatId) {
-  const db = readDB();
-  const initialLength = db.users.length;
-  db.users = db.users.filter(u => u.chatId !== String(chatId));
-  
-  if (db.users.length < initialLength) {
-    writeDB(db);
-    return true;
-  }
-  
-  return false;
+export async function getAllUsers() {
+  const r = await query('SELECT * FROM TelegramUsers WHERE Enabled = 1');
+  return r.recordset;
 }
 
-/**
- * Get a user by Chat ID
- * @param {string} chatId - Telegram Chat ID
- * @returns {Object|null} The user object or null if not found
- */
-export function getUser(chatId) {
-  const db = readDB();
-  return db.users.find(u => u.chatId === String(chatId)) || null;
+export async function updateUserRoutine(chatId, routine) {
+  const r = await query("UPDATE TelegramUsers SET Routine = @routine, UpdatedAt = GETDATE() WHERE ChatId = @chatId; SELECT * FROM TelegramUsers WHERE ChatId = @chatId", {
+    chatId: { value: String(chatId) },
+    routine: { type: sql.NVarChar(sql.MAX), value: JSON.stringify(routine) },
+  });
+  return r.recordset[0] || null;
 }
 
-/**
- * Get all registered users
- * @returns {Array} Array of user objects
- */
-export function getAllUsers() {
-  const db = readDB();
-  return db.users.filter(u => u.enabled);
+export async function toggleUserStatus(chatId) {
+  const r = await query("UPDATE TelegramUsers SET Enabled = CASE WHEN Enabled = 1 THEN 0 ELSE 1 END, UpdatedAt = GETDATE() WHERE ChatId = @chatId; SELECT * FROM TelegramUsers WHERE ChatId = @chatId", { chatId: { value: String(chatId) } });
+  return r.recordset[0] || null;
 }
 
-/**
- * Update user's routine
- * @param {string} chatId - Telegram Chat ID
- * @param {Object} routine - New routine data
- * @returns {Object|null} Updated user object or null if not found
- */
-export function updateUserRoutine(chatId, routine) {
-  const db = readDB();
-  const userIndex = db.users.findIndex(u => u.chatId === String(chatId));
-  
-  if (userIndex === -1) {
-    return null;
-  }
-  
-  db.users[userIndex].routine = routine;
-  db.users[userIndex].updatedAt = new Date().toISOString();
-  writeDB(db);
-  
-  return db.users[userIndex];
+export async function getStats() {
+  const r = await query('SELECT COUNT(*) AS totalUsers, SUM(CASE WHEN Enabled = 1 THEN 1 ELSE 0 END) AS enabledUsers, SUM(CASE WHEN Enabled = 0 THEN 1 ELSE 0 END) AS disabledUsers FROM TelegramUsers');
+  const row = r.recordset[0] || {};
+  return { totalUsers: row.totalUsers || 0, enabledUsers: row.enabledUsers || 0, disabledUsers: row.disabledUsers || 0, lastUpdated: new Date().toISOString() };
 }
 
-/**
- * Toggle user notification status
- * @param {string} chatId - Telegram Chat ID
- * @returns {Object|null} Updated user object or null if not found
- */
-export function toggleUserStatus(chatId) {
-  const db = readDB();
-  const userIndex = db.users.findIndex(u => u.chatId === String(chatId));
-  
-  if (userIndex === -1) {
-    return null;
-  }
-  
-  db.users[userIndex].enabled = !db.users[userIndex].enabled;
-  db.users[userIndex].updatedAt = new Date().toISOString();
-  writeDB(db);
-  
-  return db.users[userIndex];
+export async function isRegistered(chatId) {
+  const r = await query('SELECT COUNT(1) AS cnt FROM TelegramUsers WHERE ChatId = @chatId', { chatId: { value: String(chatId) } });
+  return (r.recordset[0]?.cnt || 0) > 0;
 }
 
-/**
- * Get statistics about registered users
- * @returns {Object} Statistics object
- */
-export function getStats() {
-  const db = readDB();
-  const totalUsers = db.users.length;
-  const enabledUsers = db.users.filter(u => u.enabled).length;
-  const disabledUsers = totalUsers - enabledUsers;
-  
-  return {
-    totalUsers,
-    enabledUsers,
-    disabledUsers,
-    lastUpdated: new Date().toISOString()
-  };
+export async function saveAttendanceRecord(chatId, courseCode, attended) {
+  const r = await query(`
+    MERGE AttendanceRecords AS target
+    USING (SELECT @chatId AS ChatId, @course AS CourseCode, CAST(GETDATE() AS DATE) AS RecordDate) AS source
+    ON target.ChatId = source.ChatId AND target.CourseCode = source.CourseCode AND target.RecordDate = source.RecordDate
+    WHEN MATCHED THEN UPDATE SET Attended = @attended, Timestamp = GETDATE()
+    WHEN NOT MATCHED THEN INSERT (ChatId, CourseCode, Attended, RecordDate, Timestamp) VALUES (@chatId, @course, @attended, CAST(GETDATE() AS DATE), GETDATE())
+    OUTPUT inserted.*;
+  `, { chatId: { value: String(chatId) }, course: { value: courseCode }, attended: { type: sql.Bit, value: attended } });
+  return r.recordset[0] || null;
 }
 
-/**
- * Check if a chat ID is already registered
- * @param {string} chatId - Telegram Chat ID
- * @returns {boolean} True if registered, false otherwise
- */
-export function isRegistered(chatId) {
-  const db = readDB();
-  return db.users.some(u => u.chatId === String(chatId));
+export async function getTodayAttendanceRecord(chatId, courseCode) {
+  const r = await query("SELECT * FROM AttendanceRecords WHERE ChatId = @chatId AND CourseCode = @course AND RecordDate = CAST(GETDATE() AS DATE)", { chatId: { value: String(chatId) }, course: { value: courseCode } });
+  return r.recordset[0] || null;
 }
 
-/**
- * Save attendance record for a user
- * @param {string} chatId - Telegram Chat ID
- * @param {string} courseCode - Course code
- * @param {boolean} attended - Whether the class was attended
- * @returns {Object} Updated attendance record
- */
-export function saveAttendanceRecord(chatId, courseCode, attended) {
-  const db = readDB();
-  const userIndex = db.users.findIndex(u => u.chatId === String(chatId));
-  
-  if (userIndex === -1) {
-    return null;
-  }
-  
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-  
-  // Initialize attendance array if not exists
-  if (!db.users[userIndex].attendance) {
-    db.users[userIndex].attendance = [];
-  }
-  
-  // Check if record for today and this course already exists
-  const existingIndex = db.users[userIndex].attendance.findIndex(
-    record => record.date === today && record.course === courseCode
-  );
-  
-  const attendanceRecord = {
-    date: today,
-    course: courseCode,
-    attended: attended,
-    timestamp: new Date().toISOString()
-  };
-  
-  if (existingIndex !== -1) {
-    // Update existing record
-    db.users[userIndex].attendance[existingIndex] = attendanceRecord;
-  } else {
-    // Add new record
-    db.users[userIndex].attendance.push(attendanceRecord);
-  }
-  
-  db.users[userIndex].updatedAt = new Date().toISOString();
-  writeDB(db);
-  
-  return attendanceRecord;
+export async function getUserAttendanceRecords(chatId) {
+  const r = await query('SELECT * FROM AttendanceRecords WHERE ChatId = @chatId ORDER BY RecordDate DESC, Timestamp DESC', { chatId: { value: String(chatId) } });
+  return r.recordset;
 }
 
-/**
- * Get today's attendance record for a user and course
- * @param {string} chatId - Telegram Chat ID
- * @param {string} courseCode - Course code
- * @returns {Object|null} Attendance record or null
- */
-export function getTodayAttendanceRecord(chatId, courseCode) {
-  const db = readDB();
-  const user = db.users.find(u => u.chatId === String(chatId));
-  
-  if (!user || !user.attendance) {
-    return null;
-  }
-  
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-  
-  return user.attendance.find(
-    record => record.date === today && record.course === courseCode
-  ) || null;
-}
-
-/**
- * Get all attendance records for a user
- * @param {string} chatId - Telegram Chat ID
- * @returns {Array} Array of attendance records
- */
-export function getUserAttendanceRecords(chatId) {
-  const db = readDB();
-  const user = db.users.find(u => u.chatId === String(chatId));
-  
-  if (!user || !user.attendance) {
-    return [];
-  }
-  
-  return user.attendance;
-}
-
-/**
- * Get attendance summary for a user by course
- * @param {string} chatId - Telegram Chat ID
- * @param {string} courseCode - Course code
- * @returns {Object} Attendance summary with total, attended, and percentage
- */
-export function getAttendanceSummary(chatId, courseCode) {
-  const records = getUserAttendanceRecords(chatId);
-  
-  const courseRecords = records.filter(r => r.course === courseCode);
-  const attended = courseRecords.filter(r => r.attended).length;
-  const total = courseRecords.length;
-  const percentage = total > 0 ? Math.round((attended / total) * 100) : 0;
-  
-  return {
-    course: courseCode,
-    total,
-    attended,
-    absent: total - attended,
-    percentage
-  };
+export async function getAttendanceSummary(chatId, courseCode) {
+  const r = await query("SELECT COUNT(1) AS total, SUM(CASE WHEN Attended = 1 THEN 1 ELSE 0 END) AS attended, SUM(CASE WHEN Attended = 0 THEN 1 ELSE 0 END) AS absent FROM AttendanceRecords WHERE ChatId = @chatId AND CourseCode = @course", { chatId: { value: String(chatId) }, course: { value: courseCode } });
+  const row = r.recordset[0] || {};
+  return { course: courseCode, total: row.total || 0, attended: row.attended || 0, absent: row.absent || 0, percentage: row.total > 0 ? Math.round((row.attended / row.total) * 100) : 0 };
 }

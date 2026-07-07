@@ -249,7 +249,7 @@ export async function sendNotificationToUser(chatId, routine, isTest = false) {
  * @returns {Object} Summary of all notification attempts
  */
 export async function sendDailyNotifications() {
-  const users = getAllUsers();
+  const users = await getAllUsers();
   
   if (users.length === 0) {
     console.log('No registered users found. Skipping notification.');
@@ -372,11 +372,11 @@ export async function registerUserForNotifications(chatId, routine) {
  * @returns {Object} Summary of updates
  */
 export async function updateAllUserRoutines(routine) {
-  const users = getAllUsers();
+  const users = await getAllUsers();
   const updatedUsers = [];
   
   for (const user of users) {
-    const updatedUser = updateUserRoutine(user.chatId, routine);
+    const updatedUser = await updateUserRoutine(user.chatId, routine);
     if (updatedUser) {
       updatedUsers.push(updatedUser);
     }
@@ -631,7 +631,7 @@ export async function sendAttendanceMessageToUser(chatId, routine, isTest = fals
  * @returns {Object} Summary of all attendance message attempts
  */
 export async function sendDailyAttendanceMessages() {
-  const users = getAllUsers();
+  const users = await getAllUsers();
   
   if (users.length === 0) {
     console.log('No registered users found. Skipping attendance notification.');
@@ -738,9 +738,9 @@ export async function handleAttendanceCallback(botToken, callbackQueryId, chatId
   const courseCode = parts.slice(3).join('_');
   
   // Save attendance record first
-  const user = getUser(chatId);
+  const user = await getUser(chatId);
   if (user) {
-    saveAttendanceRecord(chatId, courseCode, isAttended);
+    await saveAttendanceRecord(chatId, courseCode, isAttended);
     console.log(`✅ Attendance recorded for user ${chatId}: ${courseCode} = ${isAttended ? 'Present' : 'Absent'}`);
   }
   

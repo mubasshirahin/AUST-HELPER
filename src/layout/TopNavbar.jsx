@@ -1,40 +1,91 @@
 import { useTheme } from '../context/ThemeContext';
-import { Search, Bell, Sun, Moon, Menu, Newspaper, Terminal, Check } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { getRoleLabel, getRoleBadgeClass, AUTH_ROLES } from '../utils/authStorage';
+import {
+  Search, Bell, BellRing, Sun, Moon, Menu, Newspaper, Terminal, Check, User,
+  Clock, Hourglass, AlertTriangle, CalendarCheck, Info, CheckCheck, Trash2,
+  Settings, LogOut, Sparkles, Gauge, MoonStar, Pen, PenTool,
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import SearchModal from './SearchModal';
+import { useInAppNotifications } from '../hooks/useInAppNotifications';
+import logoSilver from '../assets/logo-silver.png';
+import logoRed from '../assets/logo-red.png';
 import './TopNavbar.css';
 
-const pageTitles = {
-  '/': 'Dashboard',
-  '/analytics': 'Grade Lab',
-  '/vault': 'Resource Vault',
-  '/campus': 'Campus',
-  '/community': 'Community',
-  '/messages': 'Messages',
-  '/marketplace': 'Marketplace',
-  '/settings': 'Settings',
-  '/login': 'Login / Sign up',
-};
+// ─── Helpers ───
+
+function getNotifIcon(iconName) {
+  switch (iconName) {
+    case 'BellRing': case 'notice': return BellRing;
+    case 'Hourglass': case 'deadline': return Hourglass;
+    case 'AlertTriangle': return AlertTriangle;
+    case 'CalendarCheck': case 'task': return CalendarCheck;
+    case 'Clock': case 'class': return Clock;
+    default: return Info;
+  }
+}
+
+function formatNotifTime(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts;
+  if (diff < 60000) return 'Just now';
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`;
+  const d = new Date(ts);
+  return `${d.getDate()}/${d.getMonth() + 1}`;
+}
+
+// ─── Constants ───
+
+
 
 const themeOptions = [
   { id: 'dark', label: 'Dark', icon: Moon },
   { id: 'light', label: 'Light', icon: Sun },
   { id: 'newsprint', label: 'Newsprint', icon: Newspaper },
   { id: 'cyberpunk', label: 'Cyberpunk', icon: Terminal },
+  { id: 'maximalism', label: 'Maximalism', icon: Sparkles },
+  { id: 'industrial', label: 'Industrial', icon: Gauge },
+  { id: 'midnight', label: 'Midnight', icon: MoonStar },
+  { id: 'sketchbook', label: 'Sketchbook', icon: PenTool },
+  { id: 'minimalist-monochrome', label: 'Monochrome', icon: Pen },
 ];
 
 export default function TopNavbar({ onMenuClick }) {
   const { theme, setTheme } = useTheme();
-  const location = useLocation();
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [logoVariant, setLogoVariant] = useState(
+    () => localStorage.getItem('logoVariant') || 'silver'
+  );
+  const [logoClicked, setLogoClicked] = useState(false);
+
+  const toggleLogo = () => {
+    setLogoClicked(true);
+    setTimeout(() => setLogoClicked(false), 600);
+    setLogoVariant((prev) => {
+      const next = prev === 'silver' ? 'red' : 'silver';
+      localStorage.setItem('logoVariant', next);
+      return next;
+    });
+  };
   const themeSwitcherRef = useRef(null);
+  const notifRef = useRef(null);
+  const profileRef = useRef(null);
+
+  const { notifications, unread, markAsRead, markAllAsRead, clearAll } = useInAppNotifications();
 
   const activeTheme = themeOptions.find((t) => t.id === theme) || themeOptions[0];
   const ThemeIcon = activeTheme.icon;
 
-  const pageTitle = pageTitles[location.pathname] || 'AUSTWise';
+
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -42,38 +93,78 @@ export default function TopNavbar({ onMenuClick }) {
         e.preventDefault();
         setIsSearchOpen(true);
       }
-      if (e.key === 'Escape') setThemeMenuOpen(false);
+      if (e.key === 'Escape') {
+        setThemeMenuOpen(false);
+        setNotifOpen(false);
+        setProfileMenuOpen(false);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Click-outside closes the menu (touch / click fallback for hover-open).
+  // Click-outside closes the menus
   useEffect(() => {
-    if (!themeMenuOpen) return undefined;
     const handleClick = (e) => {
       if (themeSwitcherRef.current && !themeSwitcherRef.current.contains(e.target)) {
         setThemeMenuOpen(false);
       }
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [themeMenuOpen]);
+  }, []);
 
   return (
     <header className="topbar">
       <div className="topbar-left">
+        <div className="topbar-logo">
+          <div className="logo-icon-wrapper">
+            <button
+              type="button"
+              className={`topbar-logo-icon ${logoClicked ? 'clicked' : ''}`}
+              onClick={toggleLogo}
+              title="Click to switch logo"
+              aria-label="Toggle logo color"
+            >
+              <img
+                src={logoVariant === 'silver' ? logoSilver : logoRed}
+                alt="AUSTWise logo"
+                className="topbar-logo-img"
+              />
+            </button>          <div className="logo-burst" aria-hidden="true">
+              <i></i><i></i><i></i><i></i>
+              <i></i><i></i><i></i><i></i>
+            </div>
+          </div>
+          <div className="logo-text">
+            <div className="logo-wordmark">
+              <span className="wm-ust">
+                <span className="wc">u</span>
+                <span className="wc">s</span>
+                <span className="wc">t</span>
+              </span>
+              <span className="wm-ise">
+                <span className="wc">i</span>
+                <span className="wc">s</span>
+                <span className="wc">e</span>
+              </span>
+            </div>
+          </div>
+        </div>
         <button className="topbar-menu-btn hide-desktop" onClick={onMenuClick}>
           <Menu size={20} />
         </button>
-        <div className="topbar-page-info">
-          <h1 className="topbar-title">{pageTitle}</h1>
 
-        </div>
       </div>
 
-      <div className="topbar-right">
-        <div className="topbar-search hide-mobile" onClick={() => setIsSearchOpen(true)} role="button" tabIndex={0}>
+      <div className="topbar-mid">
+        <div className="topbar-search" onClick={() => setIsSearchOpen(true)} role="button" tabIndex={0}>
           <Search size={16} />
           <input
             type="text"
@@ -81,7 +172,6 @@ export default function TopNavbar({ onMenuClick }) {
             readOnly
           />
         </div>
-
         <div
           className={`theme-switcher ${themeMenuOpen ? 'open' : ''}`}
           ref={themeSwitcherRef}
@@ -124,11 +214,234 @@ export default function TopNavbar({ onMenuClick }) {
             })}
           </div>
         </div>
+      </div>
 
-        <button className="topbar-icon-btn" aria-label="Notifications">
-          <Bell size={18} />
-          <span className="notification-badge">3</span>
-        </button>
+      <div className="topbar-right">
+        <div className="notif-wrapper" ref={notifRef}>
+          <button
+            className="topbar-icon-btn"
+            aria-label={`Notifications${unread ? ` (${unread} unread)` : ''}`}
+            onClick={() => setNotifOpen((o) => !o)}
+          >
+            {unread > 0 ? <BellRing size={18} /> : <Bell size={18} />}
+            {unread > 0 && <span className="notification-badge">{unread > 99 ? '99+' : unread}</span>}
+          </button>
+
+          {notifOpen && (
+            <div className="notif-dropdown" role="menu" aria-label="Notifications">
+              <div className="notif-header">
+                <span className="notif-header-title">
+                  <BellRing size={14} />
+                  Notifications
+                </span>
+                <div className="notif-header-actions">
+                  {unread > 0 && (
+                    <button className="notif-action-btn" onClick={markAllAsRead} title="Mark all as read">
+                      <CheckCheck size={14} />
+                      Mark all read
+                    </button>
+                  )}
+                  {notifications.length > 0 && (
+                    <button className="notif-action-btn notif-action-danger" onClick={clearAll} title="Clear all">
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="notif-list">
+                {notifications.length === 0 ? (
+                  <div className="notif-empty">
+                    <Bell size={24} />
+                    <p>No notifications yet</p>
+                  </div>
+                ) : (
+                  [...notifications].reverse().slice(0, 50).map((n) => {
+                    const Icon = getNotifIcon(n.icon || n.type);
+                    return (
+                      <div
+                        key={n.id}
+                        className={`notif-item ${n.read ? 'read' : 'unread'} notif-${n.type || 'info'}`}
+                        onClick={() => {
+                          markAsRead(n.id);
+                          setNotifOpen(false);
+                          if (n.path) navigate(n.path);
+                        }}
+                        role="menuitem"
+                      >
+                        <div className="notif-item-icon">
+                          <Icon size={16} />
+                        </div>
+                        <div className="notif-item-body">
+                          <span className="notif-item-title">{n.title}</span>
+                          {n.body && <span className="notif-item-body-text">{n.body}</span>}
+                          <span className="notif-item-time">
+                            {formatNotifTime(n.timestamp)}
+                            {n.priority === 'high' && (
+                              <span className="notif-priority-dot" />
+                            )}
+                          </span>
+                        </div>
+                        {!n.read && <span className="notif-unread-dot" />}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {notifications.length > 50 && (
+                <div className="notif-footer">
+                  <span>+{notifications.length - 50} older notifications</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* User profile */}
+        {isAuthenticated ? (
+          <div className="profile-wrapper" ref={profileRef}>
+            <button
+              type="button"
+              className={`topbar-profile-btn ${profileMenuOpen ? 'open' : ''}`}
+              onClick={() => setProfileMenuOpen((o) => !o)}
+              title={`${user.name} · ${user.role}`}
+              aria-haspopup="true"
+              aria-expanded={profileMenuOpen}
+            >
+              <div className="avatar" style={{ width: 32, height: 32, fontSize: '0.65rem' }}>
+                {user?.initials}
+              </div>
+              <div className="profile-info">
+                <span className="profile-info-name">{user.name}</span>
+                <span className="profile-info-role">{
+                  ['admin', 'moderator', 'faculty', 'alumni'].includes(user.role) 
+                    ? getRoleLabel(user.role) 
+                    : 'Student'
+                }</span>
+              </div>
+            </button>
+
+            {profileMenuOpen && (
+              <div className="profile-dropdown" role="menu" aria-label="User menu">
+                <div className="profile-dropdown-header">
+                  <div className="avatar" style={{ width: 40, height: 40 }}>
+                    {user?.initials}
+                  </div>
+                  <div className="profile-dropdown-info">
+                    <span className="profile-dropdown-name">{user.name}</span>
+                    <span className="profile-dropdown-email">{user.email || user.id}</span>
+                    {user.department && (
+                      <span className="profile-dropdown-dept">
+                        {user.department}{user.batch ? ` • Batch ${user.batch}` : ''}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="profile-dropdown-body">
+                  {/* Role + Dept pills — organized in rows */}
+                  <div className="profile-role-pills">
+                    <div className="profile-pills-label">roles:</div>
+                    {/* Row 1: Primary role (Student / Faculty / Alumni / Admin / Moderator) */}
+                    <div className="profile-role-pills-row">
+                      {/* For student sub-roles (CR/SR/Senior): show 'Student' pill */}
+                      {['cr', 'sr', 'senior'].includes(user.role) && (
+                        <span className="role-pill badge-blue">{getRoleLabel('student')}</span>
+                      )}
+                      {/* For direct primary roles: show role pill */}
+                      {!['cr', 'sr', 'senior'].includes(user.role) && AUTH_ROLES.includes(user.role) && (
+                        <span className={`role-pill ${getRoleBadgeClass(user.role)}`}>
+                          {getRoleLabel(user.role)}
+                        </span>
+                      )}
+                      {/* Extra primary-type roles from roles array */}
+                      {user?.roles?.filter(r => r !== user.role && !['cr', 'sr', 'senior'].includes(r) && AUTH_ROLES.includes(r)).map(role => (
+                        <span key={role} className={`role-pill ${getRoleBadgeClass(role)}`}>
+                          {getRoleLabel(role)}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Row 2: Dept / Quanta / Lab Group */}
+                    {(user.department || user.batchNo || user.labSection) && (
+                      <div className="profile-role-pills-row">
+                        {user.department && (
+                          <span className="role-pill badge-dept">{user.department}</span>
+                        )}
+                        {user.batchNo && (
+                          <span className="role-pill badge-dept">Quanta {user.batchNo}</span>
+                        )}
+                        {user.labSection && (
+                          <span className="role-pill badge-dept">{user.labSection}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Row 3: CR / SR roles */}
+                    {[...new Set([user.role, ...(user?.roles || [])].filter(r => ['cr', 'sr'].includes(r)))].length > 0 && (
+                      <div className="profile-role-pills-row">
+                        {[...new Set([user.role, ...(user?.roles || [])].filter(r => ['cr', 'sr'].includes(r)))].map(role => (
+                          <span key={role} className={`role-pill ${getRoleBadgeClass(role)}`}>
+                            {getRoleLabel(role)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Row 4: Senior role */}
+                    {[...new Set([user.role, ...(user?.roles || [])].filter(r => r === 'senior'))].length > 0 && (
+                      <div className="profile-role-pills-row">
+                        {[...new Set([user.role, ...(user?.roles || [])].filter(r => r === 'senior'))].map(role => (
+                          <span key={role} className={`role-pill ${getRoleBadgeClass(role)}`}>
+                            {getRoleLabel(role)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="profile-dropdown-item"
+                    role="menuitem"
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                      navigate('/settings');
+                    }}
+                  >
+                    <Settings size={16} />
+                    <span>Edit Profile</span>
+                  </button>
+
+                  <div className="profile-dropdown-divider" />
+
+                  <button
+                    type="button"
+                    className="profile-dropdown-item profile-dropdown-danger"
+                    role="menuitem"
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                      logout();
+                    }}
+                  >
+                    <LogOut size={16} />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="topbar-icon-btn"
+            onClick={() => navigate('/login')}
+            aria-label="Login"
+          >
+            <User size={18} />
+          </button>
+        )}
       </div>
 
       <SearchModal key={isSearchOpen ? 'open' : 'closed'} isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />

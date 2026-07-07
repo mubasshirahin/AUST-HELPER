@@ -1,9 +1,5 @@
-import SkillRoadmap from './SkillRoadmap';
+import CareerRoadmapPage from './CareerRoadmapPage';
 
 export default function CareerRoadmapsPage() {
-  return (
-    <div className="animate-fadeIn">
-      <SkillRoadmap vaultContext={{ course: null, courseName: 'All courses' }} />
-    </div>
-  );
+  return <CareerRoadmapPage />;
 }

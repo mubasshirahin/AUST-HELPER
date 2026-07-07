@@ -34,6 +34,7 @@ import {
   recordCheckOut,
   getOccupancy
 } from './libraryDB.mjs';
+import { initializeDatabase, resetDatabase } from './db.mjs';
 
 // Helper function to answer callback query
 async function answerCallbackQueryFn(botToken, callbackQueryId, text) {
@@ -216,6 +217,12 @@ const vite = useViteMiddleware
     })
   : null;
 
+// Auto-create database & tables on startup
+initializeDatabase().catch(err => {
+  console.warn('⚠️  SQL Server init failed:', err.message);
+  console.warn('   Server will still start, but DB features won\'t work.');
+});
+
 const server = http.createServer(async (req, res) => {
   // CORS preflight
   if (req.method === 'OPTIONS') {
@@ -279,7 +286,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       // Check if already registered
-      if (isRegistered(chatId)) {
+      if (await isRegistered(chatId)) {
         sendJson(res, 409, {
           success: false,
           error: 'This Chat ID is already registered.'
@@ -317,7 +324,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const removed = unregisterUser(chatId);
+      const removed = await unregisterUser(chatId);
       
       if (removed) {
         sendJson(res, 200, {
@@ -340,7 +347,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Get user registration status
-  if (req.url === '/api/telegram/status' && req.method === 'GET') {
+  if (req.url.startsWith('/api/telegram/status') && req.method === 'GET') {
     try {
       const url = new URL(req.url, `http://${req.headers.host}`);
       const chatId = url.searchParams.get('chatId');
@@ -353,8 +360,8 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const registered = isRegistered(chatId);
-      const user = getUser(chatId);
+      const registered = await isRegistered(chatId);
+      const user = await getUser(chatId);
       
       sendJson(res, 200, {
         success: true,
@@ -388,7 +395,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const user = updateUserRoutine(chatId, routine);
+      const user = await updateUserRoutine(chatId, routine);
       
       if (user) {
         sendJson(res, 200, {
@@ -423,7 +430,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const user = toggleUserStatus(chatId);
+      const user = await toggleUserStatus(chatId);
       
       if (user) {
         sendJson(res, 200, {
@@ -448,8 +455,8 @@ const server = http.createServer(async (req, res) => {
   // Get all registered users (admin endpoint)
   if (req.url === '/api/telegram/users' && req.method === 'GET') {
     try {
-      const users = getAllUsers();
-      const stats = getStats();
+      const users = await getAllUsers();
+      const stats = await getStats();
       
       // Remove sensitive data from response
       const sanitizedUsers = users.map(u => ({
@@ -568,9 +575,9 @@ const server = http.createServer(async (req, res) => {
             const courseCode = parts.slice(3).join('_');
 
             // Save attendance record
-            const user = getUser(chatId);
+            const user = await getUser(chatId);
             if (user) {
-              saveAttendanceRecord(chatId, courseCode, isAttended);
+              await saveAttendanceRecord(chatId, courseCode, isAttended);
               console.log(`✅ Attendance saved for user ${chatId}: ${courseCode} = ${isAttended ? 'Present' : 'Absent'}`);
             }
 
@@ -639,7 +646,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Get webhook info
-  if (req.url === '/api/telegram/webhook-info' && req.method === 'GET') {
+  if (req.url.startsWith('/api/telegram/webhook-info') && req.method === 'GET') {
     try {
       const botToken = process.env.TELEGRAM_BOT_TOKEN;
       if (!botToken) {
@@ -678,8 +685,8 @@ const server = http.createServer(async (req, res) => {
       
       if (courseCode) {
         // Get summary for specific course
-        const summary = getAttendanceSummary(chatId, courseCode);
-        const todayRecord = getTodayAttendanceRecord(chatId, courseCode);
+        const summary = await getAttendanceSummary(chatId, courseCode);
+        const todayRecord = await getTodayAttendanceRecord(chatId, courseCode);
         sendJson(res, 200, {
           success: true,
           summary,
@@ -687,7 +694,7 @@ const server = http.createServer(async (req, res) => {
         });
       } else {
         // Get all attendance records
-        const records = getUserAttendanceRecords(chatId);
+        const records = await getUserAttendanceRecords(chatId);
         sendJson(res, 200, {
           success: true,
           records
@@ -715,7 +722,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       
-      const record = saveAttendanceRecord(chatId, courseCode, attended === true);
+      const record = await saveAttendanceRecord(chatId, courseCode, attended === true);
       
       if (record) {
         sendJson(res, 200, {
@@ -738,7 +745,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Get today's classes for a user
-  if (req.url === '/api/telegram/today-classes' && req.method === 'GET') {
+  if (req.url.startsWith('/api/telegram/today-classes') && req.method === 'GET') {
     try {
       const url = new URL(req.url, `http://${req.headers.host}`);
       const routine = JSON.parse(url.searchParams.get('routine') || '{}');
@@ -764,7 +771,7 @@ const server = http.createServer(async (req, res) => {
   if (req.url === '/api/library/checkin' && req.method === 'POST') {
     try {
       const { deviceId, lat, lng } = await readJsonBody(req);
-      const result = recordCheckIn(deviceId, Number(lat), Number(lng));
+      const result = await recordCheckIn(deviceId, Number(lat), Number(lng));
       sendJson(res, 200, { success: true, ...result });
     } catch (error) {
       sendJson(res, 400, {
@@ -783,7 +790,7 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 400, { success: false, error: 'deviceId is required.' });
         return;
       }
-      const result = recordCheckOut(deviceId);
+      const result = await recordCheckOut(deviceId);
       sendJson(res, 200, { success: true, ...result });
     } catch (error) {
       sendJson(res, 500, {
@@ -797,13 +804,29 @@ const server = http.createServer(async (req, res) => {
   // Current live occupancy (anyone can read this).
   if (req.url === '/api/library/occupancy' && req.method === 'GET') {
     try {
-      const result = getOccupancy();
+      const result = await getOccupancy();
       sendJson(res, 200, { success: true, ...result });
     } catch (error) {
       sendJson(res, 500, {
         success: false,
         error: error.message || 'Failed to get occupancy.',
       });
+    }
+    return;
+  }
+
+  // Admin: full database reset
+  if (req.url === '/api/admin/reset' && req.method === 'POST') {
+    try {
+      const body = await readJsonBody(req);
+      if (body?.confirm !== 'RESET_ALL_DATA') {
+        sendJson(res, 400, { success: false, error: 'Missing confirmation token.' });
+        return;
+      }
+      await resetDatabase();
+      sendJson(res, 200, { success: true, message: 'Database tables truncated.' });
+    } catch (error) {
+      sendJson(res, 500, { success: false, error: error.message || 'Database reset failed.' });
     }
     return;
   }

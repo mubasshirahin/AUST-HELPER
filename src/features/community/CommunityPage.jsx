@@ -3,6 +3,7 @@ import StoryFeed from './StoryFeed';
 import SeniorSecrets from './SeniorSecrets';
 import AlumniDirectory from './AlumniDirectory';
 import ClubPortal from './ClubPortal';
+import StudentDirectory from './StudentDirectory';
 import './CommunityPage.css';
 
 export default function CommunityPage() {
@@ -14,6 +15,7 @@ export default function CommunityPage() {
       case 'secrets': return <SeniorSecrets />;
       case 'alumni': return <AlumniDirectory />;
       case 'clubs': return <ClubPortal />;
+      case 'students': return <StudentDirectory />;
       default: return <StoryFeed />;
     }
   };
@@ -30,6 +32,7 @@ export default function CommunityPage() {
         <button className={`tab ${activeTab === 'secrets' ? 'active' : ''}`} onClick={() => setActiveTab('secrets')}>Seniors' Secrets</button>
         <button className={`tab ${activeTab === 'alumni' ? 'active' : ''}`} onClick={() => setActiveTab('alumni')}>Alumni Directory</button>
         <button className={`tab ${activeTab === 'clubs' ? 'active' : ''}`} onClick={() => setActiveTab('clubs')}>Clubs Hub</button>
+        <button className={`tab ${activeTab === 'students' ? 'active' : ''}`} onClick={() => setActiveTab('students')}>Student Directory</button>
       </div>
 
       <div className="community-content-area">

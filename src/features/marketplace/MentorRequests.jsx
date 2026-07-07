@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { MessageSquarePlus, X, Send, UserCheck, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { MessageSquarePlus, X, Send, UserCheck, Trash2, Mail } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
   listMentorRequests,
   addMentorRequest,
-  addMentorResponse,
   deleteMentorRequest,
   formatPostedDate,
   getUserInitials,
   getBatchNoFromUser,
 } from '../../utils/marketplaceStorage';
+import { sendMessage } from '../../utils/messageStorage';
 import ConfirmDialog from './ConfirmDialog';
 
 const defaultForm = {
@@ -25,8 +26,6 @@ export default function MentorRequests() {
   const [form, setForm] = useState({ ...defaultForm, requesterName: user?.name || '' });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [respondingTo, setRespondingTo] = useState(null);
-  const [responseForm, setResponseForm] = useState({ message: '', contact: '', responderName: user?.name || '' });
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const refresh = () => setRequests(listMentorRequests());
@@ -45,26 +44,29 @@ export default function MentorRequests() {
       setShowForm(false);
       setForm({ ...defaultForm, requesterName: user?.name || '' });
       refresh();
-      setMessage('Mentor request published. Seniors will respond here.');
+      setMessage('Mentor request published. Someone will respond soon.');
     } catch (submitError) {
       setError(submitError.message || 'Could not publish request.');
     }
   };
 
-  const handleResponseSubmit = (e, requestId) => {
-    e.preventDefault();
+  const navigate = useNavigate();
+
+  const handleRespondAsMentor = (req) => {
+    if (user?.isGuest) {
+      setError('Please login to respond as a mentor.');
+      return;
+    }
     try {
-      addMentorResponse(requestId, {
-        ...responseForm,
-        responderBatch: getBatchNoFromUser(user),
-      });
-      setRespondingTo(null);
-      setResponseForm({ message: '', contact: '', responderName: user?.name || '' });
-      refresh();
-      setMessage('Response sent successfully.');
-      setTimeout(() => setMessage(''), 3000);
+      sendMessage(
+        user.id,
+        req.contributorId,
+        `📚 Mentor Request: I can help you with "${req.topic}"! Let's connect.`
+      );
+      setMessage('Mentor request sent to your inbox. Continue the conversation there.');
+      setTimeout(() => navigate(`/messages?peer=${req.contributorId}`), 800);
     } catch (err) {
-      setError(err.message || 'Could not send response.');
+      setError(err.message || 'Could not send message.');
     }
   };
 
@@ -93,7 +95,7 @@ export default function MentorRequests() {
           <div>
             <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Find a Mentor</h2>
             <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
-              Need help with a topic? Post what you need and seniors will respond.
+              Need help with a topic? Post what you need and mentors will respond.
             </p>
           </div>
         </div>
@@ -132,7 +134,7 @@ export default function MentorRequests() {
             <textarea className="input" value={form.description} onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))} placeholder="Describe what you need help with..." rows={2} />
           </label>
           <label style={{ fontSize: 'var(--fs-xs)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            Your contact (for seniors to reach you)
+            Your contact (for mentors to reach you)
             <input className="input" value={form.contact} onChange={(e) => setForm((c) => ({ ...c, contact: e.target.value }))} placeholder="Phone / Telegram / Email" required />
           </label>
           <button type="submit" className="btn btn-primary btn-sm" style={{ alignSelf: 'flex-start' }}>
@@ -146,7 +148,7 @@ export default function MentorRequests() {
           <MessageSquarePlus size={36} />
           <h3>No mentor requests yet</h3>
           <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
-            Be the first to ask for help. Seniors are here to guide you.
+            Be the first to ask for help. Mentors are here to guide you.
           </p>
         </div>
       ) : (
@@ -210,39 +212,14 @@ export default function MentorRequests() {
                 </div>
               )}
 
-              {respondingTo === req.id ? (
-                <form onSubmit={(e) => handleResponseSubmit(e, req.id)} style={{ marginTop: '12px', marginLeft: '48px', display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--bg-secondary)', padding: '12px', borderRadius: 'var(--radius-md)' }}>
-                  <label style={{ fontSize: 'var(--fs-xs)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    Your name
-                    <input className="input" value={responseForm.responderName} onChange={(e) => setResponseForm((c) => ({ ...c, responderName: e.target.value }))} required />
-                  </label>
-                  <label style={{ fontSize: 'var(--fs-xs)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    How can you help?
-                    <textarea className="input" value={responseForm.message} onChange={(e) => setResponseForm((c) => ({ ...c, message: e.target.value }))} placeholder="Share your experience..." rows={2} required />
-                  </label>
-                  <label style={{ fontSize: 'var(--fs-xs)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    Your contact
-                    <input className="input" value={responseForm.contact} onChange={(e) => setResponseForm((c) => ({ ...c, contact: e.target.value }))} placeholder="Phone / Telegram / Email" required />
-                  </label>
-                  <div className="flex gap-2">
-                    <button type="submit" className="btn btn-primary btn-sm">
-                      <Send size={12} /> Send Response
-                    </button>
-                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => setRespondingTo(null)}>
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  style={{ marginTop: '10px', marginLeft: '48px', fontSize: '10px' }}
-                  onClick={() => setRespondingTo(req.id)}
-                >
-                  <Send size={12} /> Respond as Mentor
-                </button>
-              )}
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                style={{ marginTop: '10px', marginLeft: '48px', fontSize: '10px' }}
+                onClick={() => handleRespondAsMentor(req)}
+              >
+                <Mail size={12} /> Respond as Mentor
+              </button>
             </div>
           ))}
         </div>

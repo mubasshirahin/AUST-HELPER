@@ -25,16 +25,16 @@ const MessagesPage = lazy(() => import('./features/messages/MessagesPage'));
 
 import './App.css';
 
-// Admin Route - redirects admin users to admin panel
+// Admin Route - redirects admin/moderator users to admin panel
 function AdminRoute() {
-  const { user } = useAuth();
-  if (user?.role === 'admin') {
+  const { user, hasRole } = useAuth();
+  if (hasRole?.('admin') || hasRole?.('moderator')) {
     return <Navigate to="/admin" replace />;
   }
   return <DashboardPage />;
 }
 
-// Main App Content Component
+// Main App Content Component (authenticated routes)
 function AppContent() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -82,7 +82,7 @@ function AppContent() {
   );
 }
 
-// Root App Shell with Auth Check
+// Root App Shell with Auth Check — no BrowserRouter here, uses parent's single instance
 function AppShell() {
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -107,30 +107,26 @@ function AppShell() {
   // If not authenticated, show only the login page
   if (!isAuthenticated) {
     return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<AuthPage />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
     );
   }
 
   // If authenticated, show the full app
-  return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
-  );
+  return <AppContent />;
 }
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppShell />
-      </AuthProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppShell />
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 

@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useRoutine } from '../../context/RoutineContext';
 import { Camera, CheckCircle, Pencil, Settings, User, Bell, Info, Save, BellOff, BellRing, Clock, AlertTriangle, ShieldCheck, GraduationCap, Users, Send, CheckCircle2, Clock3, Moon, Sun, Newspaper, Terminal, Sparkles, Gauge, MoonStar, Pen, PenTool } from 'lucide-react';
 import AboutUs from './AboutUs';
 import { useNotifications } from '../../hooks/useNotifications';
-import { submitRoleApplication, getApplicationsByUserId, getUserApplicationStatus } from '../../utils/authStorage';
+import { submitRoleApplication, getApplicationsByUserId, getUserApplicationStatus, checkSlotVacancy, getSlotVacancyMap, resignFromRole } from '../../utils/authStorage';
 import './SettingsPage.css';
 
 const departments = ['CSE', 'EEE', 'CE', 'ME', 'IPE', 'TE', 'ARCH', 'BBA'];
@@ -111,7 +112,16 @@ export default function SettingsPage() {
   const { routine, weekDays } = useRoutine();
   const { supported, permission, settings: notifSettings, enable: enableNotifs, disable: disableNotifs, updateSetting } = useNotifications(routine, weekDays);
 
-  const [activeSubTab, setActiveSubTab] = useState('profile');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeSubTab, setActiveSubTab] = useState(() => {
+    return searchParams.get('tab') || 'profile';
+  });
+
+  // Sync activeSubTab to URL search params so refresh preserves the tab
+  const handleSetActiveSubTab = useCallback((tab) => {
+    setActiveSubTab(tab);
+    setSearchParams(tab === 'profile' ? {} : { tab }, { replace: true });
+  }, [setSearchParams]);
   const [roleApplicationForm, setRoleApplicationForm] = useState({ appliedRole: 'cr' });
   const [applicationStatus, setApplicationStatus] = useState(null);
   const [userApplications, setUserApplications] = useState([]);
@@ -121,6 +131,9 @@ export default function SettingsPage() {
   const [notifEnabling, setNotifEnabling] = useState(false);
   const [notifMsg, setNotifMsg] = useState('');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [vacancyMap, setVacancyMap] = useState(null);
+  const [resignConfirm, setResignConfirm] = useState(false);
+  const [resigning, setResigning] = useState(false);
   
   // Telegram notification settings
   const [telegramEnabled, setTelegramEnabled] = useState(() => {
@@ -175,7 +188,7 @@ export default function SettingsPage() {
     }
   }, [isTelegramRegistered]);
 
-  // Load application status on mount
+  // Load application status & vacancy map on mount
   useEffect(() => {
     if (isAuthenticated && user?.id) {
       const status = getUserApplicationStatus(user.id);
@@ -184,6 +197,15 @@ export default function SettingsPage() {
       setUserApplications(applications);
     }
   }, [isAuthenticated, user?.id]);
+
+  // Load vacancy map when department/semester is known
+  useEffect(() => {
+    if (user?.department && (user?.semester || user?.yearSemester)) {
+      const sem = user.semester || 1;
+      const map = getSlotVacancyMap(user.department, sem);
+      setVacancyMap(map);
+    }
+  }, [user?.department, user?.semester, isAuthenticated]);
   const initialBatchNo = getBatchNoFromUser(user);
   const [profileDetails, setProfileDetails] = useState({
     id: user.id || '',
@@ -298,6 +320,7 @@ export default function SettingsPage() {
         userName: user.name,
         userEmail: user.email,
         department: user.department,
+        semester: user.semester || 1,
         batch: user.batch,
         appliedRole: roleApplicationForm.appliedRole,
         targetLabSection: roleApplicationForm.targetLabSection,
@@ -307,11 +330,13 @@ export default function SettingsPage() {
       setApplicationMessage('Application submitted successfully! Admin will review it soon.');
       setRoleApplicationForm({ appliedRole: 'cr', targetLabSection: '', targetSection: '' });
       
-      // Refresh status
+      // Refresh status & vacancy
       const status = getUserApplicationStatus(user.id);
       setApplicationStatus(status);
       const applications = getApplicationsByUserId(user.id);
       setUserApplications(applications);
+      const map = getSlotVacancyMap(user.department, user.semester || 1);
+      setVacancyMap(map);
     } catch (err) {
       setApplicationMessage(err.message || 'Failed to submit application.');
     } finally {
@@ -445,32 +470,29 @@ export default function SettingsPage() {
         <div className="glass-card-static" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px', height: 'fit-content' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <button 
-              onClick={() => setActiveSubTab('profile')}
+              onClick={() => handleSetActiveSubTab('profile')}
               className={`settings-nav-item ${activeSubTab === 'profile' ? 'active' : ''}`}
             >
               <User size={16} /> Student Profile
             </button>
-            <button 
-              onClick={() => setActiveSubTab('theme')}
+            <button                    onClick={() => handleSetActiveSubTab('theme')}
               className={`settings-nav-item ${activeSubTab === 'theme' ? 'active' : ''}`}
             >
               <Settings size={16} /> Display & Theme
             </button>
-            <button 
-              onClick={() => setActiveSubTab('notifications')}
+            <button                    onClick={() => handleSetActiveSubTab('notifications')}
               className={`settings-nav-item ${activeSubTab === 'notifications' ? 'active' : ''}`}
             >
               <Bell size={16} /> Notifications
             </button>
-            <button 
-              onClick={() => setActiveSubTab('about')}
+            <button                    onClick={() => handleSetActiveSubTab('about')}
               className={`settings-nav-item ${activeSubTab === 'about' ? 'active' : ''}`}
             >
               <Info size={16} /> About Us
             </button>
-            {isAuthenticated && (user?.role === 'student') && (
+            {isAuthenticated && (
               <button 
-                onClick={() => setActiveSubTab('roleApplication')}
+                onClick={() => handleSetActiveSubTab('roleApplication')}
                 className={`settings-nav-item ${activeSubTab === 'roleApplication' ? 'active' : ''}`}
               >
                 <GraduationCap size={16} /> Apply for CR/SR
@@ -616,6 +638,38 @@ export default function SettingsPage() {
                   </div>
                 )}
               </div>
+
+              {/* Prominent Apply for CR/SR CTA - for all authenticated users */}
+              {isAuthenticated && !isEditingProfile && (
+                <div style={{
+                  marginTop: '16px',
+                  padding: '20px 24px',
+                  background: 'linear-gradient(135deg, var(--accent-amber-glow) 0%, var(--bg-card) 100%)',
+                  border: '1px solid var(--accent-amber)',
+                  borderRadius: 'var(--radius-lg)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '16px',
+                  flexWrap: 'wrap',
+                }}>
+                  <div>
+                    <h4 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', color: 'var(--accent-amber)', margin: 0 }}>
+                      🎓 Apply for CR / SR Position
+                    </h4>
+                    <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+                      Become a Class Representative (CR) or Student Representative (SR) for your batch.
+                    </p>
+                  </div>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => handleSetActiveSubTab('roleApplication')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
+                  >
+                    <GraduationCap size={16} /> Apply Now
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -1158,11 +1212,36 @@ export default function SettingsPage() {
                     <div className="p-4" style={{ background: 'var(--accent-emerald-glow)', border: '1px solid var(--accent-emerald)', borderRadius: 'var(--radius-lg)' }}>
                       <div className="flex items-center gap-3">
                         <CheckCircle2 size={20} style={{ color: 'var(--accent-emerald)' }} />
-                        <div>
+                        <div style={{ flex: 1 }}>
                           <p style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', color: 'var(--accent-emerald)' }}>
                             You are currently a {applicationStatus.activeRole === 'cr' ? 'Class Representative (CR)' : 'Student Representative (SR)'}
                           </p>
+                          <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                            {user?.department} • Semester {user?.semester} • {applicationStatus.activeRole === 'cr' ? `Lab ${user?.labSection}` : `Section ${user?.section}`}
+                          </p>
                         </div>
+                        <button
+                          className="btn btn-sm"
+                          onClick={() => setResignConfirm(true)}
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '6px',
+                            background: 'var(--accent-rose-glow)',
+                            border: '1px solid var(--accent-rose)',
+                            color: 'var(--accent-rose)',
+                            padding: '6px 14px',
+                            borderRadius: 'var(--radius-md)',
+                            fontWeight: 'bold',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-rose)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'var(--accent-rose-glow)'}
+                        >
+                          Resign / Step Down
+                        </button>
                       </div>
                     </div>
                   )}
@@ -1201,7 +1280,7 @@ export default function SettingsPage() {
                   </p>
                   <button 
                     className="btn btn-primary btn-sm" 
-                    onClick={() => setActiveSubTab('profile')}
+                    onClick={() => handleSetActiveSubTab('profile')}
                     style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
                     <Pencil size={14} /> Complete Your Profile
@@ -1240,29 +1319,77 @@ export default function SettingsPage() {
                       </label>
                       {roleApplicationForm.appliedRole === 'cr' ? (
                         <div className="flex gap-2 flex-wrap">
-                          {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((lab) => (
-                            <button
-                              key={lab}
-                              type="button"
-                              className={`btn btn-sm ${roleApplicationForm.targetLabSection === lab ? 'btn-primary' : 'btn-secondary'}`}
-                              onClick={() => setRoleApplicationForm({ ...roleApplicationForm, targetLabSection: lab })}
-                            >
-                              {lab}
-                            </button>
-                          ))}
+                          {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((lab) => {
+                            const slotInfo = vacancyMap?.crSlots?.find(s => s.key === lab);
+                            const isVacant = slotInfo?.vacant !== false;
+                            const occupantName = slotInfo?.occupant?.name;
+                            const isSelected = roleApplicationForm.targetLabSection === lab;
+                            const isDisabled = !isVacant;
+                            return (
+                              <button
+                                key={lab}
+                                type="button"
+                                className={`btn btn-sm ${isSelected ? 'btn-primary' : isVacant ? 'btn-secondary' : 'btn-ghost'}`}
+                                onClick={() => {
+                                  if (!isVacant) return;
+                                  setRoleApplicationForm({ ...roleApplicationForm, targetLabSection: lab });
+                                }}
+                                disabled={isDisabled}
+                                title={isVacant ? `${lab} - Vacant` : `${lab} - Taken by ${occupantName}`}
+                                style={{
+                                  opacity: isDisabled ? 0.5 : 1,
+                                  cursor: isDisabled ? 'not-allowed' : 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                }}
+                              >
+                                {lab}
+                                {isVacant ? (
+                                  <span style={{ fontSize: '9px', color: 'var(--accent-emerald)' }}>✅</span>
+                                ) : (
+                                  <span style={{ fontSize: '9px', color: 'var(--accent-rose)' }}>❌</span>
+                                )}
+                              </button>
+                            );
+                          })}
                         </div>
                       ) : (
                         <div className="flex gap-2 flex-wrap">
-                          {['A', 'B', 'C'].map((section) => (
-                            <button
-                              key={section}
-                              type="button"
-                              className={`btn btn-sm ${roleApplicationForm.targetSection === section ? 'btn-primary' : 'btn-secondary'}`}
-                              onClick={() => setRoleApplicationForm({ ...roleApplicationForm, targetSection: section })}
-                            >
-                              {section}
-                            </button>
-                          ))}
+                          {['A', 'B', 'C'].map((section) => {
+                            const slotInfo = vacancyMap?.srSlots?.find(s => s.key === section);
+                            const isVacant = slotInfo?.vacant !== false;
+                            const occupantName = slotInfo?.occupant?.name;
+                            const isSelected = roleApplicationForm.targetSection === section;
+                            const isDisabled = !isVacant;
+                            return (
+                              <button
+                                key={section}
+                                type="button"
+                                className={`btn btn-sm ${isSelected ? 'btn-primary' : isVacant ? 'btn-secondary' : 'btn-ghost'}`}
+                                onClick={() => {
+                                  if (!isVacant) return;
+                                  setRoleApplicationForm({ ...roleApplicationForm, targetSection: section });
+                                }}
+                                disabled={isDisabled}
+                                title={isVacant ? `Section ${section} - Vacant` : `Section ${section} - Taken by ${occupantName}`}
+                                style={{
+                                  opacity: isDisabled ? 0.5 : 1,
+                                  cursor: isDisabled ? 'not-allowed' : 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                }}
+                              >
+                                {section}
+                                {isVacant ? (
+                                  <span style={{ fontSize: '9px', color: 'var(--accent-emerald)' }}>✅</span>
+                                ) : (
+                                  <span style={{ fontSize: '9px', color: 'var(--accent-rose)' }}>❌</span>
+                                )}
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -1286,6 +1413,109 @@ export default function SettingsPage() {
                     <Send size={16} /> {submittingApplication ? 'Submitting...' : 'Submit Application'}
                   </button>
                 </form>
+              )}
+
+              {/* Resign Confirmation Dialog */}
+              {resignConfirm && (
+                <div style={{
+                  position: 'fixed',
+                  top: 0, left: 0, right: 0, bottom: 0,
+                  background: 'rgba(0,0,0,0.6)',
+                  backdropFilter: 'blur(4px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 1000,
+                  padding: '16px',
+                }}
+                  onClick={() => setResignConfirm(false)}
+                >
+                  <div
+                    onClick={e => e.stopPropagation()}
+                    style={{
+                      maxWidth: '440px',
+                      width: '100%',
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border-primary)',
+                      borderRadius: 'var(--radius-lg)',
+                      padding: '28px 24px',
+                      boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                      <div style={{
+                        width: '44px', height: '44px',
+                        borderRadius: 'var(--radius-full)',
+                        background: 'var(--accent-rose-glow)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--accent-rose)',
+                        flexShrink: 0,
+                      }}>
+                        <AlertTriangle size={22} />
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', margin: 0 }}>Resign from Position?</h4>
+                        <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+                          You are currently a {applicationStatus?.activeRole === 'cr' ? 'Class Representative (CR)' : 'Student Representative (SR)'}
+                          {user?.labSection && ` (${user.labSection})`}
+                          {user?.section && !user?.labSection && ` (Section ${user.section})`}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 0 20px' }}>
+                      Are you sure you want to step down? Your position will become vacant and others can apply for it.
+                    </p>
+
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button
+                        className="btn btn-secondary flex-1"
+                        onClick={() => setResignConfirm(false)}
+                        disabled={resigning}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="btn flex-1"
+                        onClick={async () => {
+                          setResigning(true);
+                          try {
+                            await resignFromRole(user.id);
+                            // Sync AuthContext so role updates everywhere immediately
+                            updateUser({ role: 'student' });
+                            setApplicationMessage('You have successfully resigned from your position.');
+                            setResignConfirm(false);
+                            // Refresh status
+                            const status = getUserApplicationStatus(user.id);
+                            setApplicationStatus(status);
+                            const applications = getApplicationsByUserId(user.id);
+                            setUserApplications(applications);
+                            const map = getSlotVacancyMap(user.department, user.semester || 1);
+                            setVacancyMap(map);
+                          } catch (err) {
+                            setApplicationMessage(err.message || 'Failed to resign.');
+                          } finally {
+                            setResigning(false);
+                            setTimeout(() => setApplicationMessage(''), 5000);
+                          }
+                        }}
+                        style={{
+                          background: 'var(--accent-rose)',
+                          border: 'none',
+                          color: '#fff',
+                          fontWeight: 'bold',
+                          opacity: resigning ? 0.6 : 1,
+                          cursor: resigning ? 'not-allowed' : 'pointer',
+                        }}
+                        disabled={resigning}
+                      >
+                        {resigning ? 'Resigning...' : 'Yes, Resign'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Application History */}

@@ -84,7 +84,17 @@ export function clearUserStorage() {
   }
 }
 
-export const AUTH_ROLES = ['student', 'faculty', 'alumni', 'admin', 'cr', 'sr'];
+export function resetAllLocalData() {
+  try {
+    localStorage.clear();
+    const accounts = loadAccounts();
+    return { success: true, adminCreated: accounts.some(acc => acc.email === 'admin@aust.edu') };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
+export const AUTH_ROLES = ['student', 'faculty', 'alumni', 'admin', 'cr', 'sr', 'senior', 'moderator'];
 export const ALLOWED_EMAIL_DOMAINS = ['aust.edu', 'www.aust.edu'];
 
 export const guestUser = {
@@ -92,12 +102,14 @@ export const guestUser = {
   name: 'Guest',
   email: '',
   role: 'guest',
+  roles: ['guest'],
   department: '',
   batch: '',
   batchNo: '',
   initials: 'GU',
   isGuest: true,
   designation: '',
+  hasRole(roleType) { return this.roles?.includes(roleType) || this.role === roleType; },
 };
 
 const rolePrefixes = {
@@ -106,6 +118,8 @@ const rolePrefixes = {
   alumni: 'ALU',
   cr: 'CR',
   sr: 'SR',
+  senior: 'SNR',
+  moderator: 'MOD',
 };
 
 export function getInitials(name) {
@@ -129,42 +143,32 @@ export function verifyPassword(password, encoded) {
 function loadAccounts() {
   try {
     const raw = localStorage.getItem(accountsKey);
-    const list = raw ? JSON.parse(raw) : [];
-    const adminExists = list.some(acc => acc.email === 'asp@admin.com');
+    let list = raw ? JSON.parse(raw) : [];
+
+    // Remove leftover dummy/DEV accounts that were previously seeded
+    const before = list.length;
+    list = list.filter(acc => !acc.id?.startsWith('DEV-') && !acc.id?.startsWith('ALU-DEMO-'));
+    if (list.length !== before) {
+      localStorage.setItem(accountsKey, JSON.stringify(list));
+    }
+
+    const adminExists = list.some(acc => acc.email === 'admin@aust.edu');
     if (!adminExists) {
       list.push({
         id: 'ADM-001',
-        name: 'System Administrator',
-        email: 'asp@admin.com',
+        name: 'Prof. Dr. Md. Abdur Rahim',
+        email: 'admin@aust.edu',
         password: btoa('12345678'),
         role: 'admin',
         department: 'Admin Department',
+        designation: 'Registrar',
+        company: 'Ahsanullah University of Science and Technology',
+        initials: 'AR',
         createdAt: new Date().toISOString(),
       });
       localStorage.setItem(accountsKey, JSON.stringify(list));
     }
 
-    // Demo alumni with "Open for Talk" enabled so messaging can be tried
-    // immediately from any logged-in account.
-    const demoAlumniExists = list.some(acc => acc.id === 'ALU-DEMO-001');
-    if (!demoAlumniExists) {
-      list.push({
-        id: 'ALU-DEMO-001',
-        name: 'Rafi Ahmed (Demo Alumni)',
-        email: 'demo.alumni@aust.edu',
-        password: btoa('demo1234'),
-        role: 'alumni',
-        department: 'CSE',
-        batch: 'Batch 30',
-        batchNo: '30',
-        designation: 'Software Engineer',
-        company: 'Demo Tech Ltd.',
-        graduationYear: '2020',
-        openForTalk: true,
-        createdAt: new Date().toISOString(),
-      });
-      localStorage.setItem(accountsKey, JSON.stringify(list));
-    }
     return list;
   } catch {
     return [];
@@ -254,11 +258,26 @@ function createAccountId(role) {
 }
 
 export function accountToUser(account) {
+  const baseRoles = [account.role];
+  const extraRoles = Array.isArray(account.roles) ? account.roles : [];
+  // Merge all role-like attributes so hasRole() can check them:
+  // department, year-semester (1.2, 2.1), lab group, batch, section
+  const metadataRoles = [
+    account.department,
+    account.yearSemester,
+    account.labSection ? `lab.${account.labSection}` : null,
+    account.batchNo ? `batch.${account.batchNo}` : null,
+    account.section ? `sec.${account.section}` : null,
+  ].filter(Boolean);
+  const mergedRoles = [...new Set([...baseRoles, ...extraRoles, ...metadataRoles])];
+
   return {
     id: account.id,
     name: account.name,
     email: account.email,
     role: account.role,
+    roles: mergedRoles,
+    hasRole(roleType) { return this.roles?.includes(roleType) || this.role === roleType; },
     department: account.department || '',
     batch: account.batch || '',
     batchNo: account.batchNo || '',
@@ -379,18 +398,22 @@ export function getRoleLabel(role) {
   if (role === 'faculty') return 'Faculty';
   if (role === 'alumni') return 'Alumni';
   if (role === 'admin') return 'Admin';
+  if (role === 'moderator') return 'Moderator';
   if (role === 'cr') return 'Class Representative (CR)';
   if (role === 'sr') return 'Student Representative (SR)';
+  if (role === 'senior') return 'Senior';
   return 'Student';
 }
 
 export function getRoleBadgeClass(role) {
   switch (role) {
     case 'admin': return 'badge-rose';
+    case 'moderator': return 'badge-rose';
     case 'faculty': return 'badge-purple';
     case 'alumni': return 'badge-cyan';
     case 'cr': return 'badge-amber';
     case 'sr': return 'badge-emerald';
+    case 'senior': return 'badge-purple';
     default: return 'badge-blue';
   }
 }
@@ -399,7 +422,7 @@ export function getPortalSubtitle(role) {
   if (!role || role === 'guest') return 'AUST Campus Hub';
   if (role === 'faculty') return 'Faculty Portal';
   if (role === 'alumni') return 'Alumni Portal';
-  if (role === 'admin') return 'Admin Panel';
+  if (role === 'admin' || role === 'moderator') return 'Admin Panel';
   return 'Student Portal';
 }
 
@@ -421,6 +444,8 @@ export function submitRoleApplication(payload) {
   const applications = loadApplications();
   const userId = payload.userId;
   const appliedRole = payload.appliedRole; // 'cr' or 'sr'
+  const department = payload.department;
+  const semester = payload.semester;
 
   // Check if user already has an active application
   const existingPending = applications.find(
@@ -436,20 +461,38 @@ export function submitRoleApplication(payload) {
     throw new Error('You already have this role.');
   }
 
+  // ─── Slot vacancy check ───
+  const targetSection = appliedRole === 'sr' ? payload.targetSection : null;
+  const targetLabSection = appliedRole === 'cr' ? payload.targetLabSection : null;
+
+  const { vacant, occupant } = checkSlotVacancy(
+    department,
+    semester,
+    appliedRole,
+    targetSection,
+    targetLabSection
+  );
+
+  if (!vacant && occupant) {
+    if (occupant.id === userId) {
+      throw new Error('You already hold this position.');
+    }
+    throw new Error(`This position is already taken by ${occupant.name}. You can only apply for vacant positions.`);
+  }
+
   const application = {
     id: `APP-${Date.now()}`,
     userId,
     userName: user?.name || payload.userName,
     userEmail: user?.email || payload.userEmail,
-    userDepartment: user?.department || payload.department,
+    userDepartment: department,
     userBatch: user?.batch || user?.batchNo || payload.batch,
+    userSemester: String(semester),
     userSection: user?.section || payload.userSection,
     userLabSection: user?.labSection || payload.userLabSection,
     appliedRole,
-    // For CR: targetLabSection (which lab group they're applying for)
-    // For SR: targetSection (which section they're applying for)
-    targetLabSection: appliedRole === 'cr' ? payload.targetLabSection : null,
-    targetSection: appliedRole === 'sr' ? payload.targetSection : null,
+    targetLabSection,
+    targetSection,
     statement: payload.statement || '',
     status: 'pending',
     createdAt: new Date().toISOString(),
@@ -498,15 +541,106 @@ export function reviewRoleApplication(applicationId, status, adminId) {
   return application;
 }
 
+/** ─── Slot Vacancy ─── */
+
+/**
+ * Check if a CR/SR slot is vacant for a given department + semester.
+ * @param {string} department - e.g. 'CSE'
+ * @param {number|string} semester - e.g. 3
+ * @param {string} appliedRole - 'cr' or 'sr'
+ * @param {string} [targetSection] - 'A', 'B', or 'C' (for SR)
+ * @param {string} [targetLabSection] - 'A1', 'A2', etc. (for CR)
+ * @returns {{ vacant: boolean, occupant: object|null }}
+ */
+export function checkSlotVacancy(department, semester, appliedRole, targetSection, targetLabSection) {
+  const accounts = loadAccounts();
+  
+  const occupant = accounts.find(acc => {
+    if (acc.role !== appliedRole) return false;
+    if (acc.department !== department) return false;
+    if (Number(acc.semester) !== Number(semester)) return false;
+    
+    if (appliedRole === 'sr') {
+      return acc.section === targetSection;
+    }
+    if (appliedRole === 'cr') {
+      return acc.labSection === targetLabSection;
+    }
+    return false;
+  });
+
+  return {
+    vacant: !occupant,
+    occupant: occupant || null,
+  };
+}
+
+/**
+ * Get the full vacancy map for all CR/SR slots in a department+semester.
+ */
+export function getSlotVacancyMap(department, semester) {
+  const accounts = loadAccounts();
+  
+  const srSlots = ['A', 'B', 'C'].map(sec => ({
+    slot: `Section ${sec}`,
+    key: sec,
+    type: 'sr',
+    ...checkSlotVacancy(department, semester, 'sr', sec, null),
+  }));
+
+  const crSlots = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map(lab => ({
+    slot: `Lab ${lab}`,
+    key: lab,
+    type: 'cr',
+    ...checkSlotVacancy(department, semester, 'cr', null, lab),
+  }));
+
+  return { srSlots, crSlots };
+}
+
+/** ─── Resign from CR/SR ─── */
+
+/**
+ * Resign from CR/SR role — revert account role back to 'student'.
+ * Also marks the application as 'resigned'.
+ */
+export function resignFromRole(userId) {
+  const account = getAccountById(userId);
+  if (!account) throw new Error('Account not found.');
+  if (account.role !== 'cr' && account.role !== 'sr') {
+    throw new Error('You do not have a CR or SR role to resign from.');
+  }
+
+  const resignedRole = account.role;
+
+  // Update account role back to student
+  updateAccountProfile(userId, { role: 'student' });
+
+  // Mark all approved applications for this role as resigned
+  const applications = loadApplications();
+  const updated = applications.map(app => {
+    if (app.userId === userId && app.status === 'approved') {
+      return { ...app, status: 'resigned', reviewedAt: new Date().toISOString() };
+    }
+    return app;
+  });
+  saveApplications(updated);
+
+  return { resignedRole };
+}
+
 export function getUserApplicationStatus(userId) {
   const applications = getApplicationsByUserId(userId);
   const pending = applications.find(app => app.status === 'pending');
-  const approved = applications.find(app => app.status === 'approved' && app.appliedRole === 'cr' || app.appliedRole === 'sr');
+  
+  // Check actual account role for active CR/SR status
+  const account = getAccountById(userId);
+  const hasActiveCrSr = account && (account.role === 'cr' || account.role === 'sr');
   
   return {
     hasPending: !!pending,
     pendingApplication: pending || null,
-    hasActiveRole: !!approved,
-    activeRole: approved?.appliedRole || null,
+    hasActiveRole: hasActiveCrSr,
+    activeRole: hasActiveCrSr ? account.role : null,
   };
 }
