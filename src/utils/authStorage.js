@@ -188,7 +188,7 @@ export function loadSession() {
   }
 }
 
-function saveSession(session) {
+export function saveSession(session) {
   localStorage.setItem(sessionKey, JSON.stringify(session));
 }
 
@@ -217,7 +217,7 @@ export function getAlumniAccounts() {
       email: account.email,
       department: account.department || 'Undeclared',
       batchNo: String(account.batchNo || '').trim(),
-      batch: account.batch || (account.batchNo ? `Batch ${account.batchNo}` : 'N/A'),
+      batch: account.batch || account.batchNo || 'N/A',
       company: account.company || '',
       designation: account.designation || '',
       graduationYear: account.graduationYear || '',
@@ -231,6 +231,12 @@ export function setOpenForTalk(userId, value) {
   return updateAccountProfile(userId, { openForTalk: Boolean(value) });
 }
 
+export function deleteAccountById(userId) {
+  const accounts = loadAccounts();
+  const filtered = accounts.filter((a) => a.id !== userId && a.id !== 'guest');
+  saveAccounts(filtered);
+}
+
 export function getAccountByEmail(email) {
   const normalized = String(email || '').trim().toLowerCase();
   return loadAccounts().find((account) => account.email === normalized) ?? null;
@@ -238,7 +244,10 @@ export function getAccountByEmail(email) {
 
 export function updateAccountProfile(userId, patch) {
   const accounts = loadAccounts();
-  const index = accounts.findIndex((account) => account.id === userId);
+  let index = accounts.findIndex((account) => account.id === userId);
+  if (index === -1 && patch.email) {
+    index = accounts.findIndex((account) => account.email === patch.email);
+  }
   if (index === -1) return null;
 
   accounts[index] = {
@@ -250,6 +259,18 @@ export function updateAccountProfile(userId, patch) {
 
   saveAccounts(accounts);
   return accounts[index];
+}
+
+export function createAwid(department) {
+  const dept = (department || 'GEN').toUpperCase();
+  const accounts = loadAccounts();
+  const existing = accounts.filter((a) => a.awid && a.awid.includes(`-${dept}-AW`));
+  const maxNum = existing.reduce((max, a) => {
+    const match = a.awid.match(/AW(\d+)$/);
+    return match ? Math.max(max, parseInt(match[1], 10)) : max;
+  }, 0);
+  const nextNum = String(maxNum + 1).padStart(6, '0');
+  return `STU-${dept}-AW${nextNum}`;
 }
 
 function createAccountId(role) {
@@ -273,6 +294,7 @@ export function accountToUser(account) {
 
   return {
     id: account.id,
+    awid: account.awid || createAwid(account.department),
     name: account.name,
     email: account.email,
     role: account.role,
@@ -292,13 +314,15 @@ export function accountToUser(account) {
     semester: account.semester ?? 1,
     avatar: account.avatar || null,
     initials: getInitials(account.name),
+    bloodGroup: account.bloodGroup || '',
+    linkedSocial: account.linkedSocial || {},
     cgpa: account.cgpa ?? 0,
     creditsCompleted: account.creditsCompleted ?? 0,
     totalCredits: account.totalCredits ?? 160,
   };
 }
 
-function persistUserProfile(user) {
+export function persistUserProfile(user) {
   localStorage.setItem(profileKey, JSON.stringify(user));
 }
 
@@ -307,6 +331,60 @@ function isValidAustEmail(email) {
   return ALLOWED_EMAIL_DOMAINS.some(domain => 
     normalized.endsWith(`@${domain}`) || normalized.endsWith(`@www.${domain}`)
   );
+}
+
+/**
+ * Signup with Google OAuth data — creates an account with minimal fields
+ * since the user's identity is verified by Google. No @aust.edu email
+ * requirement or department/batch validation needed.
+ */
+export function signupWithGoogle(googlePayload) {
+  const name = String(googlePayload.name || '').trim();
+  const email = String(googlePayload.email || '').trim().toLowerCase();
+  const picture = googlePayload.picture || null;
+
+  if (!name) throw new Error('Full name is required.');
+  if (!email || !email.includes('@')) throw new Error('Enter a valid email address.');
+
+  if (getAccountByEmail(email)) {
+    throw new Error('An account with this email already exists.');
+  }
+
+  // Generate a random password since the user will only log in via Google
+  const randomPassword = crypto.randomUUID();
+
+  // Extract student ID from email: "cse.12345@aust.edu" or "cse12345@aust.edu" -> "12345"
+  const emailPrefix = email.split('@')[0] || '';
+  const studentId = emailPrefix.replace(/^[a-z.]+/i, '');
+
+  const generatedId = createAccountId('student');
+  const account = {
+    id: studentId || generatedId,
+    awid: createAwid('Undeclared'),
+    name,
+    email,
+    password: encodePassword(randomPassword),
+    role: 'student',
+    department: 'Undeclared',
+    batch: '',
+    batchNo: '',
+    batchName: '',
+    designation: '',
+    company: '',
+    graduationYear: '',
+    yearSemester: '',
+    section: '',
+    semester: 1,
+    avatar: picture,
+    linkedSocial: { gmail: email },
+    createdAt: new Date().toISOString(),
+  };
+
+  const accounts = loadAccounts();
+  accounts.push(account);
+  saveAccounts(accounts);
+
+  return account;
 }
 
 export function signupAccount(payload) {
@@ -318,7 +396,7 @@ export function signupAccount(payload) {
 
   if (!name) throw new Error('Full name is required.');
   if (!email || !email.includes('@')) throw new Error('Enter a valid email address.');
-  if (!isValidAustEmail(email)) {
+  if (role !== 'alumni' && !isValidAustEmail(email)) {
     throw new Error('Only AUST university email addresses (@aust.edu) are allowed for registration.');
   }
   if (password.length < 6) throw new Error('Password must be at least 6 characters.');
@@ -339,14 +417,20 @@ export function signupAccount(payload) {
   }
 
   const batchNo = String(payload.batchNo || '').trim();
+  // Extract student ID from email: "cse.12345@aust.edu" or "cse12345@aust.edu" -> "12345"
+  const emailPrefix = email.split('@')[0] || '';
+  const studentId = emailPrefix.replace(/^[a-z.]+/i, '');
+  const generatedId = createAccountId(role);
+  const awid = createAwid(department);
   const account = {
-    id: createAccountId(role),
+    id: studentId || generatedId,
+    awid,
     name,
     email,
     password: encodePassword(password),
     role,
     department,
-    batch: batchNo ? `Batch ${batchNo}` : String(payload.batch || '').trim(),
+    batch: String(payload.batch || batchNo || '').trim(),
     batchNo,
     batchName: String(payload.batchName || batchNo).trim(),
     designation: String(payload.designation || '').trim(),
@@ -373,6 +457,18 @@ export function loginAccount(email, password) {
   return account;
 }
 
+/**
+ * Login directly via an account object (skips password verification).
+ * Used by social/OAuth login flows where identity is already verified
+ * by the provider (Google, Facebook, etc.)
+ */
+export function loginByAccount(account) {
+  if (!account || !account.id) {
+    throw new Error('Invalid account.');
+  }
+  return account;
+}
+
 export function startSession(account) {
   const user = accountToUser(account);
   saveSession({ userId: account.id, role: account.role, startedAt: new Date().toISOString() });
@@ -383,6 +479,13 @@ export function startSession(account) {
 export function restoreSessionUser() {
   const session = loadSession();
   if (!session?.userId) return null;
+
+  // Guest sessions don't have an account entry — restore directly.
+  if (session.userId === 'guest') {
+    persistUserProfile(guestUser);
+    return guestUser;
+  }
+
   const account = getAccountById(session.userId);
   if (!account) {
     clearSession();

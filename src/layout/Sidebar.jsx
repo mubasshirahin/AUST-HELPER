@@ -22,6 +22,7 @@ const navItems = [
   { path: '/career-roadmaps', label: 'Career Roadmaps', icon: Map },
   { path: '/cheatsheets', label: 'Cheatsheets', icon: ScrollText },
   { path: '/settings', label: 'Settings', icon: Settings },
+  { id: 'toggle', label: 'Collapse', icon: ChevronLeft },
 ];
 
 export default function Sidebar({ collapsed, onToggle }) {
@@ -54,6 +55,7 @@ export default function Sidebar({ collapsed, onToggle }) {
       { path: '/admin/cr-sr-directory', label: 'CR/SR Directory', icon: FolderOpen },
       { path: '/messages', label: 'Messages', icon: MessageSquare },
       { path: '/settings', label: 'Settings', icon: Settings },
+      { id: 'toggle', label: 'Collapse', icon: ChevronLeft },
     ];
   }
 
@@ -61,45 +63,52 @@ export default function Sidebar({ collapsed, onToggle }) {
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header" />
 
-      {/* Floating toggle handle at the right edge */}
-      <button
-        type="button"
-        className={`sidebar-edge-handle ${collapsed ? 'collapsed' : ''}`}
-        onClick={onToggle}
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      >
-        <div className="handle-bar">
-          <ChevronLeft size={14} />
-        </div>
-      </button>
 
       <nav className="sidebar-nav">
-        {navList.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              `nav-item ${isActive ? 'active' : ''} ${collapsed ? 'collapsed' : ''}`
-            }
-            end={item.path === '/'}
-          >
-            <div className="nav-icon-wrapper">
-              <item.icon size={20} />
-              {item.path === '/messages' && unread > 0 && (
-                <span className="nav-badge">{unread > 99 ? '99+' : unread}</span>
-              )}
-            </div>
-            {!collapsed && (
-              <span className="nav-label">
-                {item.label}
+        {navList.map((item) => {
+          if (item.id === 'toggle') {
+            const ToggleIcon = collapsed ? ChevronRight : ChevronLeft;
+            return (
+              <button
+                key="toggle"
+                type="button"
+                className={`nav-item sidebar-toggle-btn ${collapsed ? 'collapsed' : ''}`}
+                onClick={onToggle}
+                style={{ width: '100%', border: 'none', cursor: 'pointer', background: 'transparent' }}
+              >
+                <div className="nav-icon-wrapper">
+                  <ToggleIcon size={20} />
+                </div>
+              </button>
+            );
+          }
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `nav-item ${isActive ? 'active' : ''} ${collapsed ? 'collapsed' : ''}`
+              }
+              end={item.path === '/'}
+            >
+              <div className="nav-icon-wrapper">
+                <item.icon size={20} />
                 {item.path === '/messages' && unread > 0 && (
-                  <span className="nav-badge-inline">{unread > 99 ? '99+' : unread}</span>
+                  <span className="nav-badge">{unread > 99 ? '99+' : unread}</span>
                 )}
-              </span>
-            )}
-            {collapsed && <div className="nav-tooltip">{item.label}</div>}
-          </NavLink>
-        ))}
+              </div>
+              {!collapsed && (
+                <span className="nav-label">
+                  {item.label}
+                  {item.path === '/messages' && unread > 0 && (
+                    <span className="nav-badge-inline">{unread > 99 ? '99+' : unread}</span>
+                  )}
+                </span>
+              )}
+              {collapsed && <div className="nav-tooltip">{item.label}</div>}
+            </NavLink>
+          );
+        })}
       </nav>
 
       <div className="sidebar-footer">

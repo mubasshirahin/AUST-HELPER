@@ -1,0 +1,1250 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   BITCOIN DEFI  —  "digital gold" crypto aesthetic
+   ────────────────────────────────────────────────────────────────────────────
+   Dark-only theme that fuses Bitcoin orange energy with DeFi-grade technical
+   precision. True-void background, luminescent orange/gold accents, glass
+   morphism, blockchain grid textures, and colored glow shadows — no generic
+   dark mode here. Every surface breathes with the warmth of digital gold.
+
+   Architecture: this file mirrors the per-theme convention in index.css —
+   a [data-theme="bitcoindefi"] TOKEN block plus a scoped PERSONALITY layer.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ─── Token remap ─────────────────────────────────────────────────────────────
+   Redefines the shared custom-property contract. Every feature in the app reads
+   from these tokens, so the entire UI re-skins automatically.
+   ──────────────────────────────────────────────────────────────────────────── */
+[data-theme="bitcoindefi"] {
+  /* Typography */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-code: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-label: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Surfaces — Warmer dark, not pure black */
+  --bg-primary: #1a1b1e;            /* Warm dark charcoal */
+  --bg-secondary: #232529;          /* Elevated surface */
+  --bg-tertiary: #2c2e33;           /* Muted elevation for inputs/wells */
+  --bg-card: #232529;               /* Card surface */
+  --bg-card-hover: #2a2c31;         /* Card hover */
+  --bg-glass: rgba(35, 37, 41, 0.8);     /* Glass morphism base */
+  --bg-glass-heavy: rgba(26, 27, 30, 0.9); /* Dense glass */
+  --bg-input: rgba(44, 46, 51, 0.85);     /* Input well */
+
+  /* Type — Bright and readable */
+  --text-primary: #FFFFFF;           /* Pure white */
+  --text-secondary: #c8d0da;        /* Light gray — readable secondary */
+  --text-tertiary: #9aa4b5;         /* Muted but still readable */
+  --text-inverse: #030304;          /* Dark ink on bright accents */
+
+  /* Borders — Dim Boundary at rest, orange on interaction */
+  --border-primary: rgba(30, 41, 59, 0.6);  /* Dim Boundary (slate-800 @ 60%) */
+  --border-secondary: rgba(30, 41, 59, 0.35);
+  --border-focus: rgba(247, 147, 26, 0.6);  /* Bitcoin orange focus */
+
+  /* Accents — Bitcoin Fire palette */
+  --accent-blue: #F7931A;            /* Bitcoin Orange — PRIMARY interactive */
+  --accent-blue-glow: rgba(247, 147, 26, 0.15);
+  --accent-purple: #EA580C;          /* Burnt Orange — secondary accent */
+  --accent-purple-glow: rgba(234, 88, 12, 0.15);
+  --accent-amber: #FFD600;           /* Digital Gold — value accent */
+  --accent-amber-glow: rgba(255, 214, 0, 0.15);
+  --accent-emerald: #22C55E;         /* Success green */
+  --accent-emerald-glow: rgba(34, 197, 94, 0.13);
+  --accent-rose: #EF4444;            /* Alert red */
+  --accent-rose-glow: rgba(239, 68, 68, 0.13);
+  --accent-cyan: #06B6D4;            /* Info teal */
+  --accent-cyan-glow: rgba(6, 182, 212, 0.13);
+  --accent-orange: #F97316;          /* Warm orange — category chip */
+  --accent-orange-glow: rgba(249, 115, 22, 0.13);
+
+  /* Gradients — the signature Bitcoin Fire blend */
+  --gradient-primary: linear-gradient(135deg, #EA580C 0%, #F7931A 100%);
+  --gradient-secondary: linear-gradient(135deg, #15181D 0%, #0F1115 100%);
+  --gradient-accent: linear-gradient(135deg, #F7931A 0%, #FFD600 100%);
+  --gradient-warm: linear-gradient(135deg, #EA580C 0%, #F97316 100%);
+  --gradient-success: linear-gradient(135deg, #22C55E 0%, #06B6D4 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(247, 147, 26, 0.06) 0%, rgba(255, 255, 255, 0.015) 100%);
+  --gradient-gold: linear-gradient(135deg, #F7931A 0%, #FFD600 100%);
+
+  /* Radius — geometric precision with soft curves */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+
+  /* Shadows — NO pure black shadows. Every shadow has orange/gold tint. */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.45);
+  --shadow-glow-blue: 0 0 20px rgba(247, 147, 26, 0.15), 0 0 40px rgba(247, 147, 26, 0.08);
+  --shadow-glow-purple: 0 0 20px rgba(234, 88, 12, 0.15), 0 0 40px rgba(234, 88, 12, 0.08);
+  --shadow-glow-amber: 0 0 20px rgba(255, 214, 0, 0.12), 0 0 40px rgba(255, 214, 0, 0.06);
+
+  /* Bitcoin DeFi specific tokens */
+  --btc-orange: #F7931A;
+  --btc-orange-dark: #EA580C;
+  --btc-gold: #FFD600;
+  --btc-void: #1a1b1e;
+  --btc-surface: #0F1115;
+  --btc-border-glow: 0 0 0 1px rgba(247, 147, 26, 0.2), 0 0 20px rgba(247, 147, 26, 0.08);
+  --btc-btn-glow: 0 0 20px rgba(234, 88, 12, 0.4);
+  --btc-card-shadow: 0 0 30px -10px rgba(247, 147, 26, 0.1);
+  --btc-card-glow: 0 0 30px -5px rgba(247, 147, 26, 0.25);
+  --btc-blur: blur(12px);
+  --btc-grid-color: rgba(30, 41, 59, 0.4);
+
+  --scrollbar-track: #030304;
+  --scrollbar-thumb: #1E293B;
+  --scrollbar-thumb-hover: #F7931A;
+
+  --status-online: #22C55E;
+  --status-away: #F7931A;
+  --status-offline: #64748B;
+  --status-busy: #EF4444;
+
+  --danger: #EF4444;
+  --warning: #F7931A;
+  --success: #22C55E;
+  --info: #06B6D4;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PERSONALITY LAYER  —  scoped to [data-theme="bitcoindefi"]
+   Restyles shared component classes into the Bitcoin DeFi aesthetic.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Reusable helpers ─── */
+
+/* Gradient text — apply to final 1-2 words of hero headlines */
+.btc-gradient-text {
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Orange glow effect for interactive elements */
+.btc-glow {
+  box-shadow: var(--btc-btn-glow);
+}
+
+/* Pulsing live indicator dot */
+.btc-pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--btc-orange);
+  animation: btcPulse 2s ease-in-out infinite;
+}
+
+/* Holographic node container (icon wrapper) */
+.btc-icon-node {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+  background: rgba(234, 88, 12, 0.15);
+  border: 1px solid rgba(234, 88, 12, 0.4);
+  color: var(--btc-orange);
+  transition: all var(--transition-base);
+}
+.btc-icon-node:hover {
+  box-shadow: 0 0 20px rgba(234, 88, 12, 0.35);
+}
+
+/* Corner border accent — used on feature cards */
+.btc-corner-accent {
+  position: relative;
+}
+.btc-corner-accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  border-top: 2px solid var(--btc-orange);
+  border-left: 2px solid var(--btc-orange);
+  border-radius: 4px 0 0 0;
+  pointer-events: none;
+}
+.btc-corner-accent::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  border-bottom: 2px solid var(--btc-orange);
+  border-right: 2px solid var(--btc-orange);
+  border-radius: 0 0 4px 0;
+  pointer-events: none;
+}
+
+/* ─── Grid pattern background (blockchain network) ─── */
+.btc-grid-bg {
+  background-image:
+    linear-gradient(to right, var(--btc-grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--btc-grid-color) 1px, transparent 1px);
+  background-size: 50px 50px;
+  mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+}
+
+/* ─── Base / Body — True Void with grid texture + ambient orbs ─── */
+[data-theme="bitcoindefi"] body {
+  font-family: var(--font-body);
+  background-color: var(--btc-void);
+  background-image:
+    linear-gradient(to right, var(--btc-grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--btc-grid-color) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-attachment: fixed;
+}
+
+/* Ambient orange glow orbs — massive blurred light behind the UI */
+[data-theme="bitcoindefi"] body::before,
+[data-theme="bitcoindefi"] body::after {
+  content: '';
+  position: fixed;
+  border-radius: 9999px;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(120px);
+}
+[data-theme="bitcoindefi"] body::before {
+  top: -200px;
+  left: 50%;
+  width: 500px;
+  height: 500px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(247, 147, 26, 0.12), transparent 70%);
+}
+[data-theme="bitcoindefi"] body::after {
+  bottom: -240px;
+  right: -140px;
+  width: 560px;
+  height: 560px;
+  background: radial-gradient(circle, rgba(234, 88, 12, 0.08), transparent 70%);
+}
+
+[data-theme="bitcoindefi"] #root {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Typography ─── */
+[data-theme="bitcoindefi"] .page-title,
+[data-theme="bitcoindefi"] .section-title,
+[data-theme="bitcoindefi"] .stat-value,
+[data-theme="bitcoindefi"] h1,
+[data-theme="bitcoindefi"] h2,
+[data-theme="bitcoindefi"] h3,
+[data-theme="bitcoindefi"] h4,
+[data-theme="bitcoindefi"] h5,
+[data-theme="bitcoindefi"] h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
+}
+
+[data-theme="bitcoindefi"] .page-title {
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.03em;
+}
+
+[data-theme="bitcoindefi"] .section-title {
+  font-weight: var(--fw-semibold);
+}
+
+[data-theme="bitcoindefi"] .stat-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-bold);
+}
+
+[data-theme="bitcoindefi"] .stat-label,
+[data-theme="bitcoindefi"] .countdown-label,
+[data-theme="bitcoindefi"] .badge,
+[data-theme="bitcoindefi"] .page-description,
+[data-theme="bitcoindefi"] .dash-hero-subtitle {
+  font-family: var(--font-mono);
+}
+
+[data-theme="bitcoindefi"] .stat-label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+}
+
+[data-theme="bitcoindefi"] .badge {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ─── Cards: Dark Matter surface with orange glow on hover ─── */
+[data-theme="bitcoindefi"] .glass-card,
+[data-theme="bitcoindefi"] .glass-card-static,
+[data-theme="bitcoindefi"] .card-list-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  transition: background var(--transition-base), border-color var(--transition-base),
+              box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+[data-theme="bitcoindefi"] .glass-card:hover,
+[data-theme="bitcoindefi"] .card-list-item:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(247, 147, 26, 0.4);
+  box-shadow: var(--btc-card-shadow), 0 0 30px -5px rgba(247, 147, 26, 0.2);
+  transform: translateY(-2px);
+}
+
+[data-theme="bitcoindefi"] .glass-card-static {
+  box-shadow: var(--shadow-sm);
+}
+
+/* ─── Buttons: pill-shaped with orange gradient and glow ─── */
+[data-theme="bitcoindefi"] .btn {
+  font-family: var(--font-body);
+  font-weight: var(--fw-semibold);
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: all var(--transition-base);
+  padding: 10px 20px;
+  min-height: 44px;
+}
+
+[data-theme="bitcoindefi"] .btn:active {
+  transform: scale(0.97);
+}
+
+[data-theme="bitcoindefi"] .btn-primary {
+  background: var(--gradient-primary);
+  color: #fff;
+  border: none;
+  box-shadow: 0 0 20px -5px rgba(234, 88, 12, 0.5);
+}
+
+[data-theme="bitcoindefi"] .btn-primary:hover {
+  box-shadow: 0 0 30px -5px rgba(247, 147, 26, 0.6);
+  filter: brightness(1.05);
+  transform: scale(1.02);
+}
+
+[data-theme="bitcoindefi"] .btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="bitcoindefi"] .btn-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="bitcoindefi"] .btn-ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border: none;
+}
+
+[data-theme="bitcoindefi"] .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--btc-orange);
+}
+
+[data-theme="bitcoindefi"] .btn-danger {
+  background: var(--accent-rose);
+  color: #fff;
+  border: none;
+}
+
+[data-theme="bitcoindefi"] .btn-danger:hover {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.35);
+  filter: brightness(1.08);
+}
+
+[data-theme="bitcoindefi"] .btn-sm {
+  padding: 6px 14px;
+  font-size: var(--fs-xs);
+  min-height: 32px;
+}
+
+[data-theme="bitcoindefi"] .btn-lg {
+  padding: 14px 28px;
+  font-size: var(--fs-md);
+  min-height: 52px;
+}
+
+[data-theme="bitcoindefi"] .btn-icon {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: var(--radius-full);
+}
+
+/* ─── Inputs: glass wells with bottom-border and orange focus glow ─── */
+[data-theme="bitcoindefi"] .input,
+[data-theme="bitcoindefi"] .search-box input {
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  padding: 10px 14px;
+  height: 44px;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+[data-theme="bitcoindefi"] .input:focus,
+[data-theme="bitcoindefi"] .search-box input:focus {
+  border-color: var(--btc-orange);
+  box-shadow: 0 0 0 2px rgba(247, 147, 26, 0.15), 0 10px 20px -10px rgba(247, 147, 26, 0.25);
+  outline: none;
+}
+
+[data-theme="bitcoindefi"] .input::placeholder,
+[data-theme="bitcoindefi"] .search-box input::placeholder {
+  color: rgba(148, 163, 184, 0.4);
+}
+
+[data-theme="bitcoindefi"] .input:disabled,
+[data-theme="bitcoindefi"] .search-box input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Tabs: glass rail with orange-lit active key ─── */
+[data-theme="bitcoindefi"] .tabs {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+  gap: 2px;
+}
+
+[data-theme="bitcoindefi"] .tab {
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
+  padding: 8px 16px;
+  transition: all var(--transition-fast);
+}
+
+[data-theme="bitcoindefi"] .tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+[data-theme="bitcoindefi"] .tab.active {
+  background: var(--accent-blue-glow);
+  color: var(--btc-orange);
+  box-shadow: none;
+  font-weight: var(--fw-semibold);
+}
+
+/* ─── Badges: orange/gold glowing chips ─── */
+[data-theme="bitcoindefi"] .badge {
+  border-radius: var(--radius-full);
+  padding: 3px 10px;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.03em;
+  border: 1px solid transparent;
+}
+
+[data-theme="bitcoindefi"] .badge-blue {
+  background: var(--accent-blue-glow);
+  color: var(--btc-orange);
+  border-color: rgba(247, 147, 26, 0.3);
+}
+
+[data-theme="bitcoindefi"] .badge-purple {
+  background: var(--accent-purple-glow);
+  color: var(--accent-purple);
+  border-color: rgba(234, 88, 12, 0.3);
+}
+
+[data-theme="bitcoindefi"] .badge-amber {
+  background: var(--accent-amber-glow);
+  color: var(--btc-gold);
+  border-color: rgba(255, 214, 0, 0.3);
+}
+
+[data-theme="bitcoindefi"] .badge-emerald {
+  background: var(--accent-emerald-glow);
+  color: var(--accent-emerald);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+[data-theme="bitcoindefi"] .badge-rose {
+  background: var(--accent-rose-glow);
+  color: var(--accent-rose);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="bitcoindefi"] .badge-cyan {
+  background: var(--accent-cyan-glow);
+  color: var(--accent-cyan);
+  border-color: rgba(6, 182, 212, 0.3);
+}
+
+[data-theme="bitcoindefi"] .badge-orange {
+  background: var(--accent-orange-glow);
+  color: var(--accent-orange);
+  border-color: rgba(249, 115, 22, 0.3);
+}
+
+/* ─── Tags: glass chips with orange active state ─── */
+[data-theme="bitcoindefi"] .tag {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  padding: 4px 12px;
+}
+
+[data-theme="bitcoindefi"] .tag:hover,
+[data-theme="bitcoindefi"] .tag.active {
+  background: var(--accent-blue-glow);
+  border-color: rgba(247, 147, 26, 0.4);
+  color: var(--btc-orange);
+}
+
+/* ─── Progress bar: orange energy bar with glow ─── */
+[data-theme="bitcoindefi"] .progress-bar {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-full);
+  height: 6px;
+  overflow: hidden;
+}
+
+[data-theme="bitcoindefi"] .progress-bar-fill {
+  background: var(--gradient-primary);
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 12px rgba(247, 147, 26, 0.4);
+  height: 100%;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Toggle switch: orange-lit track ─── */
+[data-theme="bitcoindefi"] .toggle-switch {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-full);
+  width: 44px;
+  height: 24px;
+  position: relative;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+[data-theme="bitcoindefi"] .toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform var(--transition-base);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="bitcoindefi"] .toggle-switch.active {
+  background: var(--gradient-primary);
+  border-color: transparent;
+  box-shadow: 0 0 12px rgba(247, 147, 26, 0.3);
+}
+
+[data-theme="bitcoindefi"] .toggle-switch.active::after {
+  transform: translateX(20px);
+}
+
+/* ─── Modal: heavy glass panel with orange border ─── */
+[data-theme="bitcoindefi"] .modal {
+  background: var(--bg-glass-heavy);
+  backdrop-filter: var(--btc-blur);
+  border: 1px solid rgba(247, 147, 26, 0.2);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl), 0 0 40px -10px rgba(247, 147, 26, 0.15);
+}
+
+[data-theme="bitcoindefi"] .modal-overlay {
+  background: rgba(3, 3, 4, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+/* ─── Info banner: glass strip with orange status rule ─── */
+[data-theme="bitcoindefi"] .info-banner {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  border-left: 3px solid currentColor;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+
+[data-theme="bitcoindefi"] .info-banner.info {
+  border-left-color: var(--btc-orange);
+  color: var(--btc-orange);
+  background: var(--accent-blue-glow);
+}
+
+[data-theme="bitcoindefi"] .info-banner.success {
+  border-left-color: var(--accent-emerald);
+  color: var(--accent-emerald);
+  background: var(--accent-emerald-glow);
+}
+
+[data-theme="bitcoindefi"] .info-banner.warning {
+  border-left-color: var(--btc-gold);
+  color: var(--btc-gold);
+  background: var(--accent-amber-glow);
+}
+
+[data-theme="bitcoindefi"] .info-banner.danger {
+  border-left-color: var(--accent-rose);
+  color: var(--accent-rose);
+  background: var(--accent-rose-glow);
+}
+
+/* ─── Empty state ─── */
+[data-theme="bitcoindefi"] .empty-state {
+  font-family: var(--font-body);
+  color: var(--text-tertiary);
+}
+
+[data-theme="bitcoindefi"] .empty-state h3 {
+  font-family: var(--font-display);
+  color: var(--text-secondary);
+}
+
+/* ─── Select / dropdown ─── */
+[data-theme="bitcoindefi"] select.input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* ─── Divider ─── */
+[data-theme="bitcoindefi"] .divider {
+  background: var(--border-primary);
+}
+
+/* ─── Skeleton loading ─── */
+[data-theme="bitcoindefi"] .skeleton {
+  background: linear-gradient(90deg, var(--bg-tertiary) 25%, rgba(247, 147, 26, 0.05) 50%, var(--bg-tertiary) 75%);
+  background-size: 200% 100%;
+}
+
+/* ─── Keyboard focus: orange ring everywhere ─── */
+[data-theme="bitcoindefi"] :focus-visible {
+  outline: 2px solid var(--btc-orange);
+  outline-offset: 2px;
+}
+
+/* ─── Icons — orange accent on interactive hover ─── */
+[data-theme="bitcoindefi"] a:hover > svg,
+[data-theme="bitcoindefi"] .btn:hover > svg {
+  filter: drop-shadow(0 0 6px rgba(247, 147, 26, 0.3));
+}
+
+/* ─── Scrollbar ─── */
+[data-theme="bitcoindefi"] ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+[data-theme="bitcoindefi"] ::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+[data-theme="bitcoindefi"] ::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+[data-theme="bitcoindefi"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   NAVBAR / TOPBAR  —  scoped to [data-theme="bitcoindefi"]
+   ════════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="bitcoindefi"] .topbar {
+  background: rgba(35, 37, 41, 0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+[data-theme="bitcoindefi"] .topbar-logo .wm-ust,
+[data-theme="bitcoindefi"] .topbar-logo .wm-ise {
+  color: var(--text-primary);
+}
+
+[data-theme="bitcoindefi"] .topbar-logo .wc {
+  background: linear-gradient(90deg, var(--text-primary), var(--btc-orange), var(--text-primary));
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="bitcoindefi"] .topbar-logo .wm-ise .wc {
+  background: linear-gradient(90deg, #94A3B8, #F7931A, #94A3B8);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="bitcoindefi"] .topbar-search input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+}
+
+[data-theme="bitcoindefi"] .topbar-search input:focus {
+  border-color: var(--btc-orange);
+  background: rgba(15, 17, 21, 0.9);
+}
+
+[data-theme="bitcoindefi"] .topbar-icon-btn:hover {
+  color: var(--btc-orange);
+}
+
+[data-theme="bitcoindefi"] .topbar-profile-btn {
+  border: 1px solid var(--border-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="bitcoindefi"] .topbar-profile-btn:hover,
+[data-theme="bitcoindefi"] .topbar-profile-btn.open {
+  border-color: var(--btc-orange);
+  background: rgba(247, 147, 26, 0.08);
+}
+
+[data-theme="bitcoindefi"] .theme-menu {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(247, 147, 26, 0.08);
+}
+
+[data-theme="bitcoindefi"] .theme-menu-item.active {
+  color: var(--btc-orange);
+}
+
+[data-theme="bitcoindefi"] .theme-menu-check {
+  color: var(--btc-orange);
+}
+
+[data-theme="bitcoindefi"] .notif-dropdown,
+[data-theme="bitcoindefi"] .profile-dropdown {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-xl), 0 0 30px rgba(247, 147, 26, 0.06);
+}
+
+[data-theme="bitcoindefi"] .notif-item.unread {
+  background: rgba(247, 147, 26, 0.06);
+}
+
+[data-theme="bitcoindefi"] .notif-unread-dot {
+  background: var(--btc-orange);
+}
+
+[data-theme="bitcoindefi"] .notif-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="bitcoindefi"] .notif-header,
+[data-theme="bitcoindefi"] .notif-footer,
+[data-theme="bitcoindefi"] .profile-dropdown-header,
+[data-theme="bitcoindefi"] .profile-role-pills {
+  border-color: var(--border-primary);
+}
+
+[data-theme="bitcoindefi"] .role-pill.badge-blue {
+  color: var(--btc-orange);
+  border-color: rgba(247, 147, 26, 0.4);
+  background: var(--accent-blue-glow);
+}
+
+[data-theme="bitcoindefi"] .profile-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}
+
+[data-theme="bitcoindefi"] .profile-dropdown-danger {
+  color: var(--accent-rose);
+}
+
+[data-theme="bitcoindefi"] .profile-dropdown-danger:hover {
+  background: var(--accent-rose-glow) !important;
+  color: var(--accent-rose) !important;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SIDEBAR  —  scoped to [data-theme="bitcoindefi"]
+   ════════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="bitcoindefi"] .sidebar {
+  background: rgba(35, 37, 41, 0.95);
+  backdrop-filter: blur(16px);
+  border-right: 1px solid var(--border-primary);
+}
+
+[data-theme="bitcoindefi"] .sidebar-edge-handle {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-left: none;
+}
+
+[data-theme="bitcoindefi"] .sidebar-edge-handle:hover {
+  background: var(--accent-blue-glow);
+  border-color: var(--btc-orange);
+}
+
+[data-theme="bitcoindefi"] .sidebar-edge-handle:hover .handle-bar {
+  color: var(--btc-orange);
+}
+
+[data-theme="bitcoindefi"] .nav-item {
+  color: #c8d0da;
+  border-radius: var(--radius-full);
+  font-weight: var(--fw-medium);
+  transition: all var(--transition-base);
+}
+
+[data-theme="bitcoindefi"] .nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+[data-theme="bitcoindefi"] .nav-item.active {
+  background: var(--accent-blue-glow);
+  color: var(--btc-orange);
+  font-weight: var(--fw-semibold);
+  box-shadow: inset 0 0 0 1px rgba(247, 147, 26, 0.15);
+}
+
+[data-theme="bitcoindefi"] .nav-tooltip {
+  background: var(--text-primary);
+  color: var(--btc-void);
+  font-family: var(--font-body);
+}
+
+[data-theme="bitcoindefi"] .logout-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+[data-theme="bitcoindefi"] .nav-badge,
+[data-theme="bitcoindefi"] .nav-badge-inline {
+  background: var(--btc-orange);
+  color: var(--btc-void);
+}
+
+[data-theme="bitcoindefi"] .logo-title {
+  font-family: var(--font-display);
+  color: var(--text-primary);
+}
+
+[data-theme="bitcoindefi"] .logo-subtitle {
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+[data-theme="bitcoindefi"] .wc {
+  background: linear-gradient(90deg, var(--text-primary), var(--btc-orange), var(--text-primary));
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="bitcoindefi"] .wm-ise .wc {
+  background: linear-gradient(90deg, #94A3B8, #F7931A, #94A3B8);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="bitcoindefi"] .logo-burst i {
+  background: var(--btc-orange);
+}
+
+[data-theme="bitcoindefi"] .user-name {
+  font-family: var(--font-display);
+}
+
+[data-theme="bitcoindefi"] .user-dept {
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   DASHBOARD PAGE  —  scoped to [data-theme="bitcoindefi"]
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Hero: command center with grid + orange glow ─── */
+[data-theme="bitcoindefi"] .dash-hero {
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-md), 0 0 40px -10px rgba(247, 147, 26, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="bitcoindefi"] .dash-hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+[data-theme="bitcoindefi"] .dash-hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(247, 147, 26, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(247, 147, 26, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(to bottom, black 30%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 100%);
+}
+
+[data-theme="bitcoindefi"] .dash-hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+}
+
+[data-theme="bitcoindefi"] .dash-hero-orb-1 {
+  width: 260px;
+  height: 260px;
+  top: -100px;
+  right: -60px;
+  background: radial-gradient(circle, rgba(247, 147, 26, 0.35) 0%, transparent 70%);
+  animation: btcFloat 8s ease-in-out infinite;
+}
+
+[data-theme="bitcoindefi"] .dash-hero-orb-2 {
+  width: 200px;
+  height: 200px;
+  bottom: -80px;
+  left: 10%;
+  background: radial-gradient(circle, rgba(234, 88, 12, 0.25) 0%, transparent 70%);
+  animation: btcFloat 10s ease-in-out infinite reverse;
+}
+
+[data-theme="bitcoindefi"] .dash-hero-content {
+  position: relative;
+  z-index: 1;
+  padding: var(--sp-6);
+}
+
+[data-theme="bitcoindefi"] .dash-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--btc-orange);
+  background: var(--accent-blue-glow);
+  border: 1px solid rgba(247, 147, 26, 0.25);
+}
+
+[data-theme="bitcoindefi"] .dash-hero-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+[data-theme="bitcoindefi"] .dash-hero-name {
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="bitcoindefi"] .dash-hero-subtitle {
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  font-size: var(--fs-sm);
+}
+
+[data-theme="bitcoindefi"] .dash-hero-icon {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-primary);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(247, 147, 26, 0.3);
+}
+
+/* ─── Quick Stats: orange-accented stat panels ─── */
+[data-theme="bitcoindefi"] .quick-stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="bitcoindefi"] .quick-stat-card:hover {
+  border-color: rgba(247, 147, 26, 0.35);
+  box-shadow: var(--btc-card-shadow);
+  transform: translateY(-3px);
+}
+
+[data-theme="bitcoindefi"] .quick-stat-icon {
+  border-radius: var(--radius-lg);
+  transition: transform var(--transition-base);
+}
+
+[data-theme="bitcoindefi"] .quick-stat-card:hover .quick-stat-icon {
+  transform: scale(1.08) rotate(-3deg);
+}
+
+[data-theme="bitcoindefi"] .quick-stat-value {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+[data-theme="bitcoindefi"] .quick-stat-label {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+[data-theme="bitcoindefi"] .quick-stat-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 0;
+  border-radius: 0 2px 0 0;
+  opacity: 0.7;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="bitcoindefi"] .quick-stat-card:hover .quick-stat-bar {
+  width: 100%;
+}
+
+[data-theme="bitcoindefi"] .quick-stat-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.04) 50%, transparent 60%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+
+[data-theme="bitcoindefi"] .quick-stat-card:hover .quick-stat-shine {
+  transform: translateX(100%);
+}
+
+/* ─── Dashboard page cards ─── */
+[data-theme="bitcoindefi"] .dashboard-page .glass-card,
+[data-theme="bitcoindefi"] .dashboard-page .glass-card-static {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+}
+
+[data-theme="bitcoindefi"] .dashboard-page .glass-card:hover,
+[data-theme="bitcoindefi"] .dashboard-page .glass-card-static:hover {
+  border-color: rgba(247, 147, 26, 0.3);
+  box-shadow: var(--btc-card-shadow);
+  transform: translateY(-1px);
+}
+
+/* ─── Weekly planner / table ─── */
+[data-theme="bitcoindefi"] .weekly-table-wrap {
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+[data-theme="bitcoindefi"] .weekly-day-head,
+[data-theme="bitcoindefi"] .weekly-time-head {
+  border-bottom: 1px solid var(--border-primary);
+  border-right: 1px solid var(--border-secondary);
+  background: var(--bg-tertiary);
+  color: var(--btc-orange);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+[data-theme="bitcoindefi"] .weekly-day-cell {
+  border-right: 1px solid var(--border-secondary);
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+[data-theme="bitcoindefi"] .weekly-class-block {
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--btc-orange);
+  background: rgba(247, 147, 26, 0.06);
+  transition: all var(--transition-fast);
+}
+
+[data-theme="bitcoindefi"] .weekly-class-cell:hover .weekly-class-block {
+  box-shadow: 0 0 12px rgba(247, 147, 26, 0.15);
+  border-left-color: var(--btc-orange);
+}
+
+[data-theme="bitcoindefi"] .weekly-empty-cell:hover {
+  background: rgba(247, 147, 26, 0.03);
+}
+
+/* ─── Focus mode emphasis ─── */
+[data-theme="bitcoindefi"] .dashboard-focus-schedule .dash-section[data-focus~="schedule"]::before,
+[data-theme="bitcoindefi"] .dashboard-focus-progress .dash-section[data-focus~="progress"]::before {
+  border: 1px solid rgba(247, 147, 26, 0.25);
+  box-shadow: 0 0 16px rgba(247, 147, 26, 0.12);
+  border-radius: calc(var(--radius-xl) + 4px);
+}
+
+[data-theme="bitcoindefi"] .dashboard-focus-progress .dash-section[data-focus~="progress"]::before {
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+/* ─── Routine card ─── */
+[data-theme="bitcoindefi"] .routine-item,
+[data-theme="bitcoindefi"] .notice-item,
+[data-theme="bitcoindefi"] .exam-course-card,
+[data-theme="bitcoindefi"] .exam-slot-display {
+  border-left: 2px solid var(--border-primary);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+[data-theme="bitcoindefi"] .routine-item:hover,
+[data-theme="bitcoindefi"] .notice-item:hover,
+[data-theme="bitcoindefi"] .exam-course-card:hover,
+[data-theme="bitcoindefi"] .exam-slot-display:hover {
+  border-left-color: var(--btc-orange);
+  background: rgba(247, 147, 26, 0.04);
+}
+
+/* ─── Deadline ticker ─── */
+[data-theme="bitcoindefi"] .deadline-ticker,
+[data-theme="bitcoindefi"] .routine-attendance-tracker,
+[data-theme="bitcoindefi"] .attendance-widget,
+[data-theme="bitcoindefi"] .pomodoro-timer {
+  border-top: 2px solid rgba(247, 147, 26, 0.1);
+  border-bottom: 2px solid rgba(247, 147, 26, 0.1);
+  background: linear-gradient(180deg, rgba(247, 147, 26, 0.03) 0%, transparent 100%);
+}
+
+/* ─── Glider tabs (focus mode selector) ─── */
+[data-theme="bitcoindefi"] .glider-tabs-track {
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="bitcoindefi"] .glider-tab {
+  border-radius: var(--radius-full);
+  transition: color var(--transition-base);
+}
+
+[data-theme="bitcoindefi"] .glider-tab.active {
+  color: var(--btc-orange);
+}
+
+[data-theme="bitcoindefi"] .glider-tab-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+[data-theme="bitcoindefi"] .glider-tabs-glider {
+  background: var(--accent-blue-glow);
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 0 1px rgba(247, 147, 26, 0.15);
+}
+
+[data-theme="bitcoindefi"] .glider-tab-desc {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-tertiary);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   KEYFRAMES  —  Bitcoin DeFi animations
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes btcFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(12px, -10px) scale(1.05); }
+}
+
+@keyframes btcPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.3); }
+}
+
+@keyframes btcGlowPulse {
+  0%, 100% { box-shadow: 0 0 20px -5px rgba(234, 88, 12, 0.5); }
+  50% { box-shadow: 0 0 35px -5px rgba(247, 147, 26, 0.7); }
+}
+
+@keyframes btcOrbSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes btcOrbSpinReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+/* ─── Reduced motion: preserve static glow, remove motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="bitcoindefi"] .dash-hero-orb { animation: none; }
+  [data-theme="bitcoindefi"] .dash-hero-orb-1,
+  [data-theme="bitcoindefi"] .dash-hero-orb-2 { animation: none; }
+  [data-theme="bitcoindefi"] .quick-stat-shine { display: none; }
+  [data-theme="bitcoindefi"] .btc-pulse-dot { animation: none; }
+}

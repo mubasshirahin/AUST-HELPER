@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Archive, Sparkles, Layers, BookMarked } from 'lucide-react';
+import { Archive, Layers, BookMarked } from 'lucide-react';
 import VaultSelection from './VaultSelection';
 import VaultContextBar from './VaultContextBar';
 import VaultResourceTabs from './VaultResourceTabs';
@@ -131,16 +131,11 @@ export default function VaultPage() {
     <div className="vault-page animate-fadeIn">
       <header className="vault-hero">
         <div className="vault-hero-bg" aria-hidden="true">
-          <div className="vault-hero-orb vault-hero-orb-1" />
-          <div className="vault-hero-orb vault-hero-orb-2" />
           <div className="vault-hero-grid" />
         </div>
 
         <div className="vault-hero-content">
-          <div className="vault-hero-badge">
-            <Sparkles size={12} />
-            <span>AUST Study Hub</span>
-          </div>
+          
 
           <div className="vault-hero-title-row">
             <div className="vault-hero-icon">

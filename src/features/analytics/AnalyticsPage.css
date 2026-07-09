@@ -109,14 +109,10 @@
   justify-content: center;
   background: linear-gradient(135deg, var(--accent-purple), var(--accent-rose));
   color: #fff;
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent-purple) 35%, transparent);
-  animation: gradeIconPulse 3.5s ease-in-out infinite;
+  
 }
 
-@keyframes gradeIconPulse {
-  0%, 100% { box-shadow: 0 8px 24px color-mix(in srgb, var(--accent-purple) 35%, transparent); }
-  50% { box-shadow: 0 8px 32px color-mix(in srgb, var(--accent-rose) 40%, transparent); }
-}
+
 
 .grade-hero-title {
   font-size: var(--fs-2xl);

@@ -32,26 +32,25 @@
 
 .sidebar-edge-handle {
   position: absolute;
-  right: -14px;
+  right: -16px;
   top: 50%;
   transform: translateY(-50%);
-  width: 28px;
-  height: 48px;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  width: 32px;
+  height: 64px;
+  border-radius: 0 10px 10px 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
   border-left: none;
   cursor: pointer;
   z-index: calc(var(--z-sticky) + 1);
   transition: background 0.2s ease,
               border-color 0.2s ease,
-              width 0.2s ease,
               right 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   padding: 0;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 3px 0 12px rgba(0, 0, 0, 0.08);
 }
 
 .sidebar-edge-handle .handle-bar {
@@ -65,27 +64,24 @@
 }
 
 .sidebar-edge-handle:hover {
-  background: var(--accent-blue-glow);
-  border-color: var(--accent-blue);
-  width: 32px;
-  right: -16px;
+  background: var(--bg-input);
+  border-color: var(--border-focus);
 }
 
 .sidebar-edge-handle:hover .handle-bar {
-  color: var(--accent-blue);
+  color: var(--text-primary);
 }
 
 .sidebar-edge-handle:active {
-  transform: translateY(-50%) scale(0.95);
+  transform: translateY(-50%) scale(0.92);
 }
 
 .sidebar-edge-handle .handle-bar svg {
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* When sidebar is collapsed, the handle moves to the right edge and icon flips */
 .sidebar.collapsed .sidebar-edge-handle {
-  right: -14px;
+  right: -16px;
 }
 
 .sidebar-edge-handle.collapsed .handle-bar svg {
@@ -154,6 +150,32 @@
   justify-content: center;
   padding: var(--sp-3);
   gap: 0;
+}
+
+.sidebar-toggle-btn {
+  justify-content: center;
+  background: var(--bg-input) !important;
+  border-radius: var(--radius-lg) !important;
+  margin: 6px 8px !important;
+  width: calc(100% - 16px) !important;
+  padding: 10px !important;
+  transition: background var(--transition-fast), color var(--transition-fast), margin 0.35s cubic-bezier(0.22, 1, 0.36, 1), width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nav-item.collapsed.sidebar-toggle-btn {
+  margin: 6px auto !important;
+  width: 36px !important;
+  padding: 8px !important;
+}
+
+.sidebar-toggle-btn:hover {
+  color: var(--accent-blue) !important;
+  transform: none !important;
+  background: var(--accent-blue-glow) !important;
+}
+
+.sidebar:not(.collapsed) .sidebar-toggle-btn {
+  animation: none !important;
 }
 
 .nav-item.collapsed:hover {
@@ -410,9 +432,10 @@
 
 .wm-ust,
 .wm-ise {
-  font-weight: var(--fw-bold);
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: 700;
   font-size: var(--fs-lg);
-  letter-spacing: 0.02em;
+  letter-spacing: -0.01em;
   text-transform: lowercase;
   color: var(--text-primary);
   position: relative;

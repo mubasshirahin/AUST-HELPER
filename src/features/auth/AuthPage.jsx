@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { GraduationCap, Briefcase, BookOpen, Moon, Sun, Newspaper, Terminal, Sparkles, Gauge, MoonStar, Pen, PenTool, Check, Eye, EyeOff } from 'lucide-react';
+import { GraduationCap, Briefcase, BookOpen, Monitor, Moon, Sun, Newspaper, Terminal, Sparkles, Gauge, MoonStar, Pen, PenTool, Building2, Check, Eye, EyeOff, Zap, Type, Grid2x2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { getYearSemOptions } from '../../utils/semester';
 import { getPasswordGrade } from '../../utils/passwordStrength';
+import { getAccountByEmail, getAllAccounts, signupWithGoogle, updateAccountProfile, createAwid } from '../../utils/authStorage';
 import ParticleField from './ParticleField';
 import logoSilver from '../../assets/logo-silver.png';
 import logoRed from '../../assets/logo-red.png';
@@ -20,17 +21,35 @@ const roleOptions = [
   { id: 'alumni', label: 'Alumni', icon: Briefcase },
 ];
 
-const themeOptions = [
-  { id: 'dark', label: 'Dark', icon: Moon },
-  { id: 'light', label: 'Light', icon: Sun },
-  { id: 'newsprint', label: 'Newsprint', icon: Newspaper },
-  { id: 'cyberpunk', label: 'Cyberpunk', icon: Terminal },
-  { id: 'maximalism', label: 'Maximalism', icon: Sparkles },
-  { id: 'industrial', label: 'Industrial', icon: Gauge },
-  { id: 'midnight', label: 'Midnight', icon: MoonStar },
-  { id: 'sketchbook', label: 'Sketchbook', icon: PenTool },
-  { id: 'minimalist-monochrome', label: 'Monochrome', icon: Pen },
+const darkThemeOptions = [
+  { id: 'dark',                  label: 'Dark',       icon: Moon       },
+  { id: 'midnight',              label: 'Midnight',   icon: MoonStar   },
+  { id: 'art-deco',              label: 'Art Deco',   icon: Building2  },
+  { id: 'poster',                label: 'Bold Type',  icon: Type       },
+  { id: 'bitcoindefi',           label: 'Bitcoin Defi', icon: Zap      },
 ];
+
+const lightThemeOptions = [
+  { id: 'light',                 label: 'Light',      icon: Sun        },
+  { id: 'swiss',                 label: 'Swiss',      icon: Grid2x2    },
+  { id: 'newsprint',             label: 'Newsprint',  icon: Newspaper  },
+  { id: 'sketchbook',            label: 'Sketchbook', icon: PenTool    },
+  { id: 'minimalist-monochrome', label: 'Monochrome', icon: Pen        },
+  { id: 'industrial',            label: 'Industrial', icon: Gauge      },
+];
+
+const themeOptions = [...darkThemeOptions, ...lightThemeOptions];
+
+const parseBatchInput = (input) => {
+  const raw = String(input || '').trim();
+  const match = raw.match(/^(.*?)\s*(\d{1,2})$/);
+  if (match) {
+    const name = match[1].trim();
+    const num = match[2];
+    return { batchName: name || num, batchNo: num };
+  }
+  return { batchName: raw, batchNo: raw };
+};
 
 const defaultSignup = {
   name: '',
@@ -47,7 +66,7 @@ const defaultSignup = {
 };
 
 export default function AuthPage() {
-  const { isAuthenticated, isLoading, login, signup } = useAuth();
+  const { isAuthenticated, isLoading, login, loginDirect, loginGuest, signup, updateUser } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -128,6 +147,12 @@ export default function AuthPage() {
   const yearSemOptions = useMemo(() => getYearSemOptions(signupForm.department), [signupForm.department]);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [socialProvider, setSocialProvider] = useState(null);
+  const [socialEmail, setSocialEmail] = useState('');
+  const [socialErr, setSocialErr] = useState('');
+  const [showSocialPicker, setShowSocialPicker] = useState(false);
+  const [socialAccounts, setSocialAccounts] = useState([]);
+  const [pendingGoogleAccount, setPendingGoogleAccount] = useState(null);
 
   if (!isLoading && isAuthenticated) {
     return <Navigate to={redirectPath} replace />;
@@ -139,11 +164,18 @@ export default function AuthPage() {
   const switchMode = (nextMode) => {
     setMode(nextMode);
     setError('');
+    setSocialErr('');
+    setPendingGoogleAccount(null);
     setSignupStep(1);
   };
 
   const handleContinue = () => {
     setError('');
+    // Google signup skips step 1 entirely (name/email/password already handled)
+    if (pendingGoogleAccount) {
+      setSignupStep(2);
+      return;
+    }
     // Let the browser surface native inline validation for the step-1 fields
     // (required / email format / minLength) before advancing.
     if (signupFormRef.current && !signupFormRef.current.reportValidity()) {
@@ -155,6 +187,174 @@ export default function AuthPage() {
       return;
     }
     setSignupStep(2);
+  };
+
+  const decodeJwtPayload = (token) => {
+    try {
+      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(base64));
+    } catch { return null; }
+  };
+
+  const googleGSIInitialized = useRef(false);
+  const googleGSILoaded = useRef(false);
+
+  const finalizeGoogleLogin = useCallback(async (payload, credential) => {
+    // Try backend verification (optional — don't block login if server is down)
+    try {
+      await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential }),
+      });
+    } catch {
+      // Server might not be running — proceed with client-side login
+    }
+
+    const accounts = getAllAccounts().filter((a) => a.id !== 'guest');
+    const existing = accounts.find((a) => a.email === payload.email);
+    if (existing) {
+      try {
+        // Merge Google data into the account before loginDirect so avatar
+        // and linked social info are captured in the session immediately,
+        // avoiding a stale-closure issue with updateUser() seeing null user.
+        const enrichedAccount = {
+          ...existing,
+          avatar: payload.picture || existing.avatar,
+          linkedSocial: { ...(existing.linkedSocial || {}), gmail: payload.email },
+        };
+        loginDirect(enrichedAccount);
+        // Persist Google data to the accounts list so it survives logout/login
+        updateAccountProfile(existing.id, {
+          avatar: payload.picture || existing.avatar,
+          linkedSocial: { ...(existing.linkedSocial || {}), gmail: payload.email },
+        });
+      } catch { setSocialErr('Failed to log in'); }
+    } else {
+      // No existing account — create one with Google data, then redirect to
+      // signup step 2 so the user can fill in department, batch, etc.
+      try {
+        const newAccount = signupWithGoogle({
+          name: payload.name,
+          email: payload.email,
+          picture: payload.picture,
+        });
+        setPendingGoogleAccount(newAccount);
+        setSignupForm((prev) => ({
+          ...prev,
+          name: payload.name || '',
+          email: payload.email || '',
+          password: '',
+          confirmPassword: '',
+        }));
+        setMode('signup');
+        setSignupStep(2);
+        setError('');
+        setSocialErr('');
+      } catch (e) {
+        setSocialErr(e.message || 'Failed to create account with Google.');
+      }
+    }
+  }, [loginDirect]);
+
+  const initGoogleGSI = useCallback(() => {
+    if (googleGSIInitialized.current || typeof google === 'undefined') return;
+    googleGSIInitialized.current = true;
+    google.accounts.id.initialize({
+      client_id: '736141389272-m680j6nh45evbe36mnmhuqpi8i06cv4q.apps.googleusercontent.com',
+      callback: async (response) => {
+        const payload = decodeJwtPayload(response.credential);
+        if (!payload || !payload.email) { setSocialErr('Invalid Google credential'); return; }
+        await finalizeGoogleLogin(payload, response.credential);
+      },
+    });
+  }, [finalizeGoogleLogin]);
+
+  const triggerGooglePrompt = useCallback(() => {
+    if (typeof google !== 'undefined') {
+      initGoogleGSI();
+      google.accounts.id.prompt();
+    }
+  }, [initGoogleGSI]);
+
+  useEffect(() => {
+    if (typeof window.google === 'undefined') {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        googleGSILoaded.current = true;
+        // If the user already clicked the button before the script loaded,
+        // trigger the prompt now
+        if (pendingGoogleClick.current) {
+          pendingGoogleClick.current = false;
+          triggerGooglePrompt();
+        }
+      };
+      document.head.appendChild(script);
+    }
+  }, [triggerGooglePrompt]);
+
+  const pendingGoogleClick = useRef(false);
+
+  const handleSocialLogin = (provider) => {
+    if (provider === 'gmail') {
+      setSocialErr('');
+      if (typeof google !== 'undefined' && googleGSILoaded.current) {
+        triggerGooglePrompt();
+      } else {
+        // Script hasn't loaded yet — wait for onload
+        pendingGoogleClick.current = true;
+      }
+      return;
+    }
+    const accounts = getAllAccounts().filter((a) => a.id !== 'guest');
+    setSocialAccounts(accounts);
+    setSocialProvider(provider);
+    setSocialEmail('');
+    setSocialErr('');
+    setShowSocialPicker(true);
+  };
+
+  const selectSocialAccount = async (account) => {
+    try {
+      loginDirect(account);
+      updateUser({
+        linkedSocial: {
+          ...(account.linkedSocial || {}),
+          [socialProvider]: account.email,
+        },
+      });
+      setShowSocialPicker(false);
+    } catch {
+      setSocialErr('Failed to log in');
+    }
+  };
+
+  const submitSocialLogin = async () => {
+    const email = socialEmail.trim();
+    if (!email) { setSocialErr('Enter your email address'); return; }
+    const account = getAccountByEmail(email);
+    if (!account) { setSocialErr('No account found with this email'); return; }
+    try {
+      loginDirect(account);
+      updateUser({
+        linkedSocial: {
+          ...(account.linkedSocial || {}),
+          [socialProvider]: email,
+        },
+      });
+      setShowSocialPicker(false);
+    } catch {
+      setSocialErr('Failed to log in');
+    }
+  };
+
+  const closeSocialPicker = () => {
+    setShowSocialPicker(false);
+    setSocialProvider(null);
+    setSocialErr('');
   };
 
   const handleLogin = async (event) => {
@@ -176,6 +376,61 @@ export default function AuthPage() {
     event.preventDefault();
     setError('');
 
+    // Google signup: no password needed, just update the account with remaining fields
+    if (pendingGoogleAccount) {
+      // Student & Faculty must use @aust.edu email; alumni can use any email
+      const selectedRole = signupForm.role || 'student';
+      const googleEmail = (pendingGoogleAccount.email || '').toLowerCase().trim();
+      if (selectedRole !== 'alumni' && !googleEmail.endsWith('@aust.edu')) {
+        setError('Student & Faculty must use an @aust.edu email address with Google login.');
+        return;
+      }
+
+      setSubmitting(true);
+      try {
+        const [yr, term] = (signupForm.yearSemester || '1.1').split('.').map(Number);
+        const semesterNum = (yr - 1) * 2 + term;
+        const { batchName, batchNo } = parseBatchInput(signupForm.batchNo);
+
+        const newAwid = createAwid(signupForm.department);
+        updateAccountProfile(pendingGoogleAccount.id, {
+          awid: newAwid,
+          role: signupForm.role,
+          department: signupForm.department,
+          batchNo,
+          batchName,
+          batch: `${batchName} ${batchNo}`.trim(),
+          yearSemester: signupForm.yearSemester,
+          semester: semesterNum,
+          designation: signupForm.designation,
+          company: signupForm.company,
+          graduationYear: signupForm.graduationYear,
+        });
+
+        const updatedAccount = {
+          ...pendingGoogleAccount,
+          awid: newAwid,
+          role: signupForm.role,
+          department: signupForm.department,
+          batchNo,
+          batchName,
+          batch: `${batchName} ${batchNo}`.trim(),
+          yearSemester: signupForm.yearSemester,
+          semester: semesterNum,
+          designation: signupForm.designation,
+          company: signupForm.company,
+          graduationYear: signupForm.graduationYear,
+        };
+        loginDirect(updatedAccount);
+        setPendingGoogleAccount(null);
+        navigate(redirectPath, { replace: true });
+      } catch (e) {
+        setError(e.message || 'Signup failed.');
+        setSubmitting(false);
+      }
+      return;
+    }
+
     if (signupForm.password !== signupForm.confirmPassword) {
       setError('Passwords do not match.');
       return;
@@ -187,6 +442,7 @@ export default function AuthPage() {
       // Map yearSemester (e.g. "3.1") to semester number (e.g. 5)
       const [yr, term] = (signupForm.yearSemester || '1.1').split('.').map(Number);
       const semesterNum = (yr - 1) * 2 + term;
+      const { batchName, batchNo } = parseBatchInput(signupForm.batchNo);
 
       await signup({
         name: signupForm.name,
@@ -194,7 +450,9 @@ export default function AuthPage() {
         password: signupForm.password,
         role: signupForm.role,
         department: signupForm.department,
-        batchNo: signupForm.batchNo,
+        batchNo,
+        batchName,
+        batch: `${batchName} ${batchNo}`.trim(),
         yearSemester: signupForm.yearSemester,
         semester: semesterNum,
         designation: signupForm.designation,
@@ -248,22 +506,22 @@ export default function AuthPage() {
   const blueprintMode = activeDept === 'ARCH';
 
   // ─── Email domain auto-complete ───
-  const emailSuggestion = (value) => {
+  const shouldSuggest = (value) => {
     const v = (value || '').trim();
-    return v.length > 0 && !v.includes('@') ? `${v}${EMAIL_DOMAIN}` : null;
+    return v.length > 0 && !v.includes('@');
   };
   const completeLoginEmail = () =>
     setLoginForm((c) => ({ ...c, email: `${c.email.trim()}${EMAIL_DOMAIN}` }));
   const completeSignupEmail = () =>
     setSignupForm((c) => ({ ...c, email: `${c.email.trim()}${EMAIL_DOMAIN}` }));
-  const onEmailKeyDown = (complete, suggestion) => (e) => {
-    if (suggestion && (e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+  const onEmailKeyDown = (complete, suggest) => (e) => {
+    if (suggest && (e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
       e.preventDefault();
       complete();
     }
   };
-  const loginEmailSug = emailSuggestion(loginForm.email);
-  const signupEmailSug = emailSuggestion(signupForm.email);
+  const suggestLogin = shouldSuggest(loginForm.email);
+  const suggestSignup = shouldSuggest(signupForm.email);
 
   return (
     <div
@@ -272,10 +530,10 @@ export default function AuthPage() {
     >
       <div className="auth-page-bg">
         <div className="auth-page-grid" />
-        <ParticleField energized={energized} intensity={energyIntensity} blueprint={blueprintMode} />
-        <div className="auth-page-orb auth-page-orb-1" />
-        <div className="auth-page-orb auth-page-orb-2" />
-        <div className="auth-page-orb auth-page-orb-3" />
+        <ParticleField theme={theme} energized={energized} intensity={energyIntensity} blueprint={blueprintMode} />
+        <div key={`${theme}-orb-1`} className="auth-page-orb auth-page-orb-1" />
+        <div key={`${theme}-orb-2`} className="auth-page-orb auth-page-orb-2" />
+        <div key={`${theme}-orb-3`} className="auth-page-orb auth-page-orb-3" />
         <div className="auth-page-noise" aria-hidden="true" />
       </div>
       <div className={`auth-shell ${sending ? 'is-sending' : ''}`}>
@@ -341,8 +599,29 @@ export default function AuthPage() {
             </button>
             {themeMenuOpen && (
               <div className="auth-theme-menu" role="menu">
-                <span className="auth-theme-menu-heading">Theme</span>
-                {themeOptions.map(({ id, label, icon: Icon }) => {
+                <span className="auth-theme-menu-heading">Dark Mode</span>
+                {darkThemeOptions.map(({ id, label, icon: Icon }) => {
+                  const isActive = theme === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={isActive}
+                      className={`auth-theme-menu-item ${isActive ? 'active' : ''}`}
+                      onClick={() => { setTheme(id); setThemeMenuOpen(false); }}
+                    >
+                      <Icon size={14} />
+                      <span>{label}</span>
+                      {isActive && <Check size={12} className="auth-theme-menu-check" />}
+                    </button>
+                  );
+                })}
+
+                <div className="auth-theme-menu-divider" />
+
+                <span className="auth-theme-menu-heading">Light Mode</span>
+                {lightThemeOptions.map(({ id, label, icon: Icon }) => {
                   const isActive = theme === id;
                   return (
                     <button
@@ -390,9 +669,11 @@ export default function AuthPage() {
         </div>
 
         {error && <div className="auth-message error">{error}</div>}
+        {socialErr && <div className="auth-message error">{socialErr}</div>}
 
+        <div className="auth-form-container">
         {mode === 'login' ? (
-          <form className="auth-form" onSubmit={handleLogin}>
+          <form className="auth-form" onSubmit={handleLogin} key="login">
             <label className="auth-field">
               Email
               <div className="auth-email-wrap">
@@ -403,20 +684,14 @@ export default function AuthPage() {
                   onChange={(e) => setLoginForm((c) => ({ ...c, email: e.target.value }))}
                   onFocus={() => setFocusKind('text')}
                   onBlur={() => setFocusKind(null)}
-                  onKeyDown={onEmailKeyDown(completeLoginEmail, loginEmailSug)}
+                  onKeyDown={onEmailKeyDown(completeLoginEmail, suggestLogin)}
                   placeholder="you@aust.edu"
                   required
                 />
-                {loginEmailSug && (
-                  <button
-                    type="button"
-                    className="auth-domain-hint"
-                    onMouseDown={(e) => { e.preventDefault(); completeLoginEmail(); }}
-                    tabIndex={-1}
-                  >
-                    <span className="auth-domain-hint-text">{loginEmailSug}</span>
-                    <kbd>Tab</kbd>
-                  </button>
+                {suggestLogin && (
+                  <span className="auth-email-suffix" aria-hidden="true">
+                    {EMAIL_DOMAIN}
+                  </span>
                 )}
               </div>
             </label>
@@ -447,9 +722,75 @@ export default function AuthPage() {
             <button type="submit" className="btn btn-primary auth-submit" disabled={submitting}>
               {submitting ? 'Signing in...' : 'Login'}
             </button>
+            <div className="auth-social-divider"><span>or</span></div>
+            <div className="auth-social-buttons">
+              <button type="button" className="btn btn-social btn-gmail" onClick={() => handleSocialLogin('gmail')}>
+                <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Login with Google
+              </button>
+              <button type="button" className="btn btn-social btn-facebook" onClick={() => handleSocialLogin('facebook')}>
+                <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
+                Login with Facebook
+              </button>
+            </div>
+            {showSocialPicker && (
+              <div className="auth-social-overlay" onClick={closeSocialPicker}>
+                <div className="auth-social-picker" onClick={(e) => e.stopPropagation()}>
+                  <button type="button" className="auth-social-close" onClick={closeSocialPicker}>×</button>
+                  <h2 className="auth-social-picker-title">Choose an account</h2>
+                  <div className="auth-social-picker-list">
+                    {socialAccounts.length === 0 ? (
+                      <p className="auth-social-picker-empty">No accounts found. Sign up first.</p>
+                    ) : (
+                      socialAccounts.map((acc) => (
+                        <button
+                          key={acc.id}
+                          type="button"
+                          className="auth-social-picker-item"
+                          onClick={() => selectSocialAccount(acc)}
+                        >
+                          <span className="auth-social-picker-avatar" style={{background: `hsl(${acc.name.length * 37}, 55%, 50%)`}}>
+                            {acc.avatar ? (
+                              <img src={acc.avatar} alt="" />
+                            ) : (
+                              (acc.name || '?').slice(0, 2).toUpperCase()
+                            )}
+                          </span>
+                          <span className="auth-social-picker-info">
+                            <strong>{acc.name}</strong>
+                            <span>{acc.email}</span>
+                            <small>Signed out</small>
+                          </span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                  <div className="auth-social-picker-alt">
+                    <button type="button" className="auth-social-picker-alt-btn" onClick={() => setShowSocialPicker(false)}>
+                      <span className="auth-social-picker-alt-icon">+</span>
+                      Use another account
+                    </button>
+                  </div>
+                  <div className="auth-social-picker-remove">
+                    <button type="button" className="auth-social-picker-alt-btn" onClick={() => setShowSocialPicker(false)}>
+                      <span className="auth-social-picker-alt-icon">−</span>
+                      Remove an account
+                    </button>
+                  </div>
+                  <div className="auth-social-picker-footer">
+                    <span>English (United Kingdom)</span>
+                    <div className="auth-social-picker-links">
+                      <button type="button" onClick={closeSocialPicker}>Help</button>
+                      <button type="button" onClick={closeSocialPicker}>Privacy</button>
+                      <button type="button" onClick={closeSocialPicker}>Terms</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </form>
         ) : (
-          <form className="auth-form" onSubmit={handleSignup} ref={signupFormRef}>
+          <form className="auth-form" onSubmit={handleSignup} ref={signupFormRef} key="signup">
             <div className="auth-steps" aria-hidden="true">
               <span className={`auth-step-dot ${signupStep === 1 ? 'active' : 'done'}`} />
               <span className="auth-step-line" />
@@ -498,20 +839,14 @@ export default function AuthPage() {
                   onChange={(e) => setSignupForm((c) => ({ ...c, email: e.target.value }))}
                   onFocus={() => setFocusKind('text')}
                   onBlur={() => setFocusKind(null)}
-                  onKeyDown={onEmailKeyDown(completeSignupEmail, signupEmailSug)}
+                  onKeyDown={onEmailKeyDown(completeSignupEmail, suggestSignup)}
                   placeholder="you@aust.edu"
                   required
                 />
-                {signupEmailSug && (
-                  <button
-                    type="button"
-                    className="auth-domain-hint"
-                    onMouseDown={(e) => { e.preventDefault(); completeSignupEmail(); }}
-                    tabIndex={-1}
-                  >
-                    <span className="auth-domain-hint-text">{signupEmailSug}</span>
-                    <kbd>Tab</kbd>
-                  </button>
+                {suggestSignup && (
+                  <span className="auth-email-suffix" aria-hidden="true">
+                    {EMAIL_DOMAIN}
+                  </span>
                 )}
               </div>
             </label>
@@ -719,21 +1054,14 @@ export default function AuthPage() {
             )}
           </form>
         )}
-
-        <div className="auth-footer">
-          {mode === 'login' ? (
-            <>New to AUSTWise? <button type="button" onClick={() => switchMode('signup')}>Create an account</button></>
-          ) : (
-            <>Already registered? <button type="button" onClick={() => switchMode('login')}>Login here</button></>
-          )}
         </div>
 
         <button
           type="button"
           className="btn btn-secondary auth-submit"
-          onClick={() => navigate('/')}
+          onClick={() => { loginGuest(); navigate('/'); }}
         >
-          Continue without account
+          Guest Mode
         </button>
         </div>
         {sending && (

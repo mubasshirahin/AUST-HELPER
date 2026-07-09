@@ -141,6 +141,32 @@ export async function initializeDatabase() {
     END
   `);
 
+  // Create Invitations table
+  await p.request().query(`
+    IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Invitations]') AND type in (N'U'))
+    BEGIN
+      CREATE TABLE Invitations (
+        Id          INT             IDENTITY(1,1) PRIMARY KEY,
+        Email       NVARCHAR(255)   NOT NULL,
+        Role        NVARCHAR(50)    NOT NULL,
+        Token       NVARCHAR(500)   NOT NULL,
+        Status      NVARCHAR(20)    NOT NULL DEFAULT 'pending',
+        InvitedBy   NVARCHAR(255)   NULL,
+        CreatedAt   DATETIME2       NOT NULL DEFAULT GETDATE(),
+        ExpiresAt   DATETIME2       NULL,
+        AcceptedAt  DATETIME2       NULL,
+        CONSTRAINT UQ_Invitations_Token UNIQUE (Token)
+      );
+
+      CREATE NONCLUSTERED INDEX IX_Invitations_Email
+        ON Invitations (Email);
+
+      CREATE NONCLUSTERED INDEX IX_Invitations_Status
+        ON Invitations (Status)
+        INCLUDE (Email, Role, CreatedAt);
+    END
+  `);
+
   console.log('✅ Database tables ready (auto-created if missing)');
   return true;
 }
@@ -167,6 +193,7 @@ export async function resetDatabase() {
   await p.request().query('DELETE FROM AttendanceRecords;');
   await p.request().query('DELETE FROM TelegramUsers;');
   await p.request().query('DELETE FROM LibraryPresence;');
+  await p.request().query('DELETE FROM Invitations;');
   return true;
 }
 

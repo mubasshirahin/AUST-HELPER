@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import {
-  Sparkles, ZoomIn, Maximize2, Minimize2,
+  ZoomIn, Maximize2, Minimize2,
   MapPin, Compass, Move, RotateCcw,
 } from 'lucide-react';
 import { campusFloors } from '../../data/mockData';
@@ -291,15 +291,9 @@ function FloorShowcase({ floorData, selectedFloor }) {
     <div className="floor-plan-showcase animate-fadeInUp">
       <header className="floor-plan-hero">
         <div className="floor-plan-hero-bg" aria-hidden="true">
-          <div className="floor-plan-orb floor-plan-orb-1" />
-          <div className="floor-plan-orb floor-plan-orb-2" />
           <div className="floor-plan-grid" />
         </div>
         <div className="floor-plan-hero-content">
-          <div className="floor-plan-badge">
-            <Sparkles size={12} />
-            <span>Official Campus Map</span>
-          </div>
           <div className="floor-plan-hero-row">
             <div className="floor-plan-hero-icon">
               <Compass size={26} />

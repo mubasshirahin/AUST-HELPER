@@ -1,0 +1,883 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   ART DECO  —  "Gatsby" luxury theme
+   ────────────────────────────────────────────────────────────────────────────
+   Dark-only opulent geometric aesthetic inspired by the Roaring Twenties.
+   Obsidian black backgrounds, metallic gold (#D4AF37) accents, champagne cream
+   text. Sharp corners, stepped (ziggurat) geometry, sunburst radials, rotated
+   diamond containers, and diagonal crosshatch texture. Typography uses the
+   classic Roman serif Marcellus for headings and geometric Josefin Sans for
+   body — both era-appropriate Google Fonts.
+
+   Architecture note: this file mirrors the per-theme convention in index.css —
+   a [data-theme="art-deco"] TOKEN block (every feature reads from these) plus
+   a scoped PERSONALITY layer that restyles the shared component classes. It
+   lives in its own file (imported from main.jsx after index.css) purely so it
+   can be authored without contending for index.css.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Fonts (loaded when this file is imported) ─── */
+@import url('https://fonts.googleapis.com/css2?family=Marcellus&family=Josefin+Sans:wght@300;400;500;600;700&display=swap');
+
+/* ════════════════════════════════════════════════════════════════════════════
+   TOKEN REMAP  —  Custom properties that reskin the entire app
+   ════════════════════════════════════════════════════════════════════════════ */
+[data-theme="art-deco"] {
+  /* ─── Fonts ─── */
+  --font-primary: 'Josefin Sans', 'Inter', system-ui, sans-serif;
+  --font-display: 'Marcellus', 'Playfair Display', 'Times New Roman', serif;
+  --font-body: 'Josefin Sans', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* ─── Surfaces — obsidian void with rich charcoal elevation ─── */
+  --bg-primary: #0A0A0A;
+  --bg-secondary: #111111;
+  --bg-tertiary: #1A1A1A;
+  --bg-card: #141414;
+  --bg-card-hover: #1C1C1C;
+  --bg-glass: rgba(20, 20, 20, 0.85);
+  --bg-glass-heavy: rgba(10, 10, 10, 0.92);
+  --bg-input: #1A1A1A;
+
+  /* ─── Type — warm champagne cream, softer pewter for muted ─── */
+  --text-primary: #F2F0E4;
+  --text-secondary: #A8A69B;
+  --text-tertiary: #7A7A72;
+  --text-inverse: #0A0A0A;
+
+  /* ─── Borders — gold is the only border colour. Celebrated, not hidden. ─── */
+  --border-primary: rgba(212, 175, 55, 0.3);
+  --border-secondary: rgba(212, 175, 55, 0.12);
+  --border-focus: #D4AF37;
+
+  /* ─── Accents — gold rules. Midnight blue for depth, brass/orange/bronze
+       for variety. All accent slots carry the Art Deco palette so category
+       rotation (badges, stat cards) remains harmonious. ─── */
+  --accent-blue: #D4AF37;
+  --accent-blue-glow: rgba(212, 175, 55, 0.13);
+  --accent-purple: #1E3D59;
+  --accent-purple-glow: rgba(30, 61, 89, 0.18);
+  --accent-amber: #D4AF37;
+  --accent-amber-glow: rgba(212, 175, 55, 0.13);
+  --accent-emerald: #5A7A6A;
+  --accent-emerald-glow: rgba(90, 122, 106, 0.15);
+  --accent-rose: #8B4513;
+  --accent-rose-glow: rgba(139, 69, 19, 0.15);
+  --accent-cyan: #4A6FA5;
+  --accent-cyan-glow: rgba(74, 111, 165, 0.13);
+  --accent-orange: #C68E3B;
+  --accent-orange-glow: rgba(198, 142, 59, 0.14);
+
+  /* ─── Gradients — metallic sheen effects ─── */
+  --gradient-primary: linear-gradient(135deg, #E8C84A 0%, #D4AF37 50%, #B8962E 100%);
+  --gradient-secondary: linear-gradient(135deg, #1A1A1A 0%, #111111 100%);
+  --gradient-accent: linear-gradient(135deg, #D4AF37 0%, #C68E3B 100%);
+  --gradient-warm: linear-gradient(135deg, #C68E3B 0%, #8B4513 100%);
+  --gradient-success: linear-gradient(135deg, #5A7A6A 0%, #4A6FA5 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+
+  /* ─── Radius — strictly 0px. Art Deco is sharp, machined geometry. ─── */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+
+  /* ─── Shadows — gold glows replace drop shadows entirely ─── */
+  --shadow-sm: 0 0 8px rgba(212, 175, 55, 0.08);
+  --shadow-md: 0 0 15px rgba(212, 175, 55, 0.14);
+  --shadow-lg: 0 0 24px rgba(212, 175, 55, 0.2);
+  --shadow-xl: 0 0 40px rgba(212, 175, 55, 0.28);
+  --shadow-glow-blue: 0 0 12px rgba(212, 175, 55, 0.25);
+  --shadow-glow-purple: 0 0 12px rgba(30, 61, 89, 0.3);
+  --shadow-glow-amber: 0 0 12px rgba(212, 175, 55, 0.25);
+
+  /* ─── Art Deco specific tokens ─── */
+  --deco-gold: #D4AF37;
+  --deco-gold-light: #F2E8C4;
+  --deco-gold-dark: #B8962E;
+  --deco-midnight: #1E3D59;
+  --deco-champagne: #F2F0E4;
+  --deco-bronze: #8B4513;
+  --deco-brass: #C68E3B;
+  --deco-glow-sm: 0 0 8px rgba(212, 175, 55, 0.2);
+  --deco-glow-md: 0 0 16px rgba(212, 175, 55, 0.3);
+  --deco-glow-lg: 0 0 24px rgba(212, 175, 55, 0.4);
+  --deco-glow-btn: 0 0 20px rgba(212, 175, 55, 0.45);
+  --deco-border-glow: 0 0 0 1px rgba(212, 175, 55, 0.25);
+
+  --scrollbar-track: #0A0A0A;
+  --scrollbar-thumb: #D4AF37;
+  --scrollbar-thumb-hover: #F2E8C4;
+
+  --status-online: #5A7A6A;
+  --status-away: #C68E3B;
+  --status-offline: #7A7A72;
+  --status-busy: #8B4513;
+
+  --danger: #8B4513;
+  --warning: #C68E3B;
+  --success: #5A7A6A;
+  --info: #4A6FA5;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PERSONALITY LAYER  —  scoped to [data-theme="art-deco"]
+   Pure CSS on the shared component classes: no component/DOM changes required.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Font helpers — scoped to art-deco so they don't override global .font-* utilities ─── */
+[data-theme="art-deco"] .font-display { font-family: 'Marcellus', 'Playfair Display', 'Times New Roman', serif; }
+[data-theme="art-deco"] .font-body    { font-family: 'Josefin Sans', 'Inter', system-ui, sans-serif; }
+
+/* ─── Base surface: obsidian void + diagonal crosshatch texture ─── */
+[data-theme="art-deco"] body {
+  font-family: var(--font-body);
+  background-color: var(--bg-primary);
+  background-image:
+    /* Diagonal crosshatch — the Art Deco signature texture */
+    repeating-linear-gradient(
+      45deg,
+      transparent, transparent 6px,
+      rgba(212, 175, 55, 0.035) 6px, rgba(212, 175, 55, 0.035) 7px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent, transparent 6px,
+      rgba(212, 175, 55, 0.025) 6px, rgba(212, 175, 55, 0.025) 7px
+    ),
+    /* Subtle radial vignette */
+    radial-gradient(ellipse at 50% 30%, rgba(212, 175, 55, 0.04), transparent 60%);
+  background-attachment: fixed;
+  letter-spacing: 0.02em;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+/* ─── Typography — the voice of the era ─── */
+[data-theme="art-deco"] .page-title,
+[data-theme="art-deco"] .section-title,
+[data-theme="art-deco"] .stat-value,
+[data-theme="art-deco"] h1,
+[data-theme="art-deco"] h2,
+[data-theme="art-deco"] h3 {
+  font-family: 'Marcellus', 'Playfair Display', 'Times New Roman', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+
+[data-theme="art-deco"] .page-title {
+  letter-spacing: 0.2em;
+  text-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+  color: var(--deco-champagne);
+}
+
+[data-theme="art-deco"] .page-description {
+  font-family: 'Josefin Sans', 'Inter', sans-serif;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+[data-theme="art-deco"] .section-title {
+  letter-spacing: 0.18em;
+  color: var(--deco-gold);
+}
+
+/* Metadata / labels — uppercase, tight tracking, all-caps */
+[data-theme="art-deco"] .stat-label,
+[data-theme="art-deco"] .countdown-label,
+[data-theme="art-deco"] .badge,
+[data-theme="art-deco"] .tab {
+  font-family: 'Josefin Sans', 'Inter', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 500;
+}
+
+/* ─── Cards — framed exhibits with gold borders and corner decorations ─── */
+[data-theme="art-deco"] .glass-card,
+[data-theme="art-deco"] .glass-card-static,
+[data-theme="art-deco"] .card-list-item {
+  border: 1px solid var(--border-primary);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+[data-theme="art-deco"] .glass-card::before,
+[data-theme="art-deco"] .glass-card-static::before {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  /* Top-right corner L-bracket */
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border-top: 2px solid rgba(212, 175, 55, 0.4);
+  border-right: 2px solid rgba(212, 175, 55, 0.4);
+}
+
+[data-theme="art-deco"] .glass-card::after,
+[data-theme="art-deco"] .glass-card-static::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  /* Bottom-left corner L-bracket */
+  bottom: 6px;
+  left: 6px;
+  width: 18px;
+  height: 18px;
+  border-bottom: 2px solid rgba(212, 175, 55, 0.4);
+  border-left: 2px solid rgba(212, 175, 55, 0.4);
+}
+
+[data-theme="art-deco"] .glass-card:hover,
+[data-theme="art-deco"] .card-list-item:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+[data-theme="art-deco"] .glass-card:hover::before,
+[data-theme="art-deco"] .glass-card:hover::after {
+  border-color: rgba(212, 175, 55, 0.7);
+}
+
+/* Remove corner decorations on the auth card — they conflict with mascot/theme UI */
+[data-theme="art-deco"] .auth-card.glass-card-static::before,
+[data-theme="art-deco"] .auth-card.glass-card-static::after {
+  display: none;
+}
+
+/* ─── Buttons — architectural precision instruments ─── */
+[data-theme="art-deco"] .btn {
+  font-family: 'Josefin Sans', 'Inter', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 500;
+  font-size: var(--fs-xs);
+  padding: var(--sp-3) var(--sp-6);
+  border-radius: 0;
+  transition: all 400ms cubic-bezier(0.2, 0, 0, 1);
+  min-height: 48px;
+}
+
+[data-theme="art-deco"] .btn:active {
+  transform: scale(0.97);
+}
+
+[data-theme="art-deco"] .btn-primary {
+  background: transparent;
+  border: 2px solid var(--deco-gold);
+  color: var(--deco-gold);
+  box-shadow: none;
+}
+
+[data-theme="art-deco"] .btn-primary:hover {
+  background: var(--deco-gold);
+  color: var(--text-inverse);
+  box-shadow: var(--deco-glow-btn);
+  filter: none;
+}
+
+[data-theme="art-deco"] .btn-secondary {
+  background: transparent;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: var(--text-secondary);
+}
+
+[data-theme="art-deco"] .btn-secondary:hover {
+  border-color: var(--deco-gold);
+  background: rgba(30, 61, 89, 0.5);
+  color: var(--deco-champagne);
+}
+
+[data-theme="art-deco"] .btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+[data-theme="art-deco"] .btn-ghost:hover {
+  background: rgba(212, 175, 55, 0.08);
+  color: var(--deco-gold);
+}
+
+[data-theme="art-deco"] .btn-danger {
+  background: transparent;
+  border: 2px solid var(--deco-bronze);
+  color: var(--deco-bronze);
+}
+
+[data-theme="art-deco"] .btn-danger:hover {
+  background: var(--deco-bronze);
+  color: var(--deco-champagne);
+  box-shadow: 0 0 20px rgba(139, 69, 19, 0.4);
+}
+
+[data-theme="art-deco"] .btn-sm {
+  padding: var(--sp-2) var(--sp-4);
+  font-size: 10px;
+  min-height: 36px;
+}
+
+[data-theme="art-deco"] .btn-lg {
+  padding: var(--sp-4) var(--sp-8);
+  font-size: var(--fs-sm);
+  min-height: 56px;
+}
+
+[data-theme="art-deco"] .btn-icon {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Inputs — underlined elegance (transparent, bottom-border only) ─── */
+[data-theme="art-deco"] .input,
+[data-theme="art-deco"] .search-box input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid rgba(212, 175, 55, 0.35);
+  border-radius: 0;
+  font-family: 'Josefin Sans', 'Inter', sans-serif;
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+  padding: var(--sp-2) var(--sp-3);
+  height: 48px;
+  transition: border-color 300ms ease, box-shadow 300ms ease;
+}
+
+[data-theme="art-deco"] .input:focus,
+[data-theme="art-deco"] .search-box input:focus {
+  border-bottom-color: var(--deco-gold-light);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
+  outline: none;
+}
+
+[data-theme="art-deco"] .input::placeholder,
+[data-theme="art-deco"] .search-box input::placeholder {
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+}
+
+/* Select arrow matches the gold palette */
+[data-theme="art-deco"] select.input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23D4AF37' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* ─── Tabs — architectural pilasters with gold bottom rules ─── */
+[data-theme="art-deco"] .tabs {
+  background: transparent;
+  border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+  border-radius: 0;
+  padding: 0;
+  gap: 0;
+  margin-bottom: var(--sp-6);
+}
+
+[data-theme="art-deco"] .tab {
+  border-radius: 0;
+  font-family: 'Josefin Sans', 'Inter', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  padding: var(--sp-3) var(--sp-5);
+  transition: color 300ms ease, border-color 300ms ease;
+}
+
+[data-theme="art-deco"] .tab:hover {
+  background: transparent;
+  color: var(--deco-champagne);
+}
+
+[data-theme="art-deco"] .tab.active {
+  background: transparent;
+  color: var(--deco-gold);
+  border-bottom-color: var(--deco-gold);
+  box-shadow: none;
+  text-shadow: 0 0 12px rgba(212, 175, 55, 0.2);
+}
+
+/* ─── Badges / tags — geometric gold-rimmed chips ─── */
+[data-theme="art-deco"] .badge {
+  border-radius: 0;
+  border: 1px solid currentColor;
+  padding: 2px 12px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+[data-theme="art-deco"] .tag {
+  border-radius: 0;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: 'Josefin Sans', 'Inter', sans-serif;
+  letter-spacing: 0.06em;
+}
+
+[data-theme="art-deco"] .tag:hover,
+[data-theme="art-deco"] .tag.active {
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--deco-gold);
+  border-color: var(--deco-gold);
+}
+
+/* ─── Progress bar — gold fill with subtle glow ─── */
+[data-theme="art-deco"] .progress-bar {
+  background: rgba(212, 175, 55, 0.08);
+  border-radius: 0;
+  height: 4px;
+  overflow: visible;
+}
+
+[data-theme="art-deco"] .progress-bar-fill {
+  background: var(--gradient-primary);
+  border-radius: 0;
+  height: 100%;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
+
+/* ─── Toggle switch — mechanical lever ─── */
+[data-theme="art-deco"] .toggle-switch {
+  border-radius: 0;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  background: transparent;
+  width: 48px;
+  height: 26px;
+}
+
+[data-theme="art-deco"] .toggle-switch.active {
+  background: var(--deco-gold);
+  border-color: var(--deco-gold);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.35);
+}
+
+[data-theme="art-deco"] .toggle-switch::after {
+  border-radius: 0;
+  background: var(--deco-champagne);
+  width: 18px;
+  height: 18px;
+  top: 2px;
+  left: 2px;
+  box-shadow: none;
+}
+
+[data-theme="art-deco"] .toggle-switch.active::after {
+  background: var(--text-inverse);
+  transform: translateX(22px);
+}
+
+/* ─── Modal — framed exhibit with gold border and glow ─── */
+[data-theme="art-deco"] .modal {
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  border-radius: 0;
+  background: var(--bg-glass-heavy);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ─── Avatar — geometric diamond inspiration (sharp corners) ─── */
+[data-theme="art-deco"] .avatar {
+  border-radius: 0;
+  background: var(--deco-gold);
+  color: var(--text-inverse);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+[data-theme="art-deco"] .avatar img {
+  border-radius: 0;
+}
+
+[data-theme="art-deco"] .avatar.sm { border-radius: 0; }
+[data-theme="art-deco"] .avatar.lg { border-radius: 0; }
+[data-theme="art-deco"] .avatar.xl { border-radius: 0; }
+
+/* ─── Info banner — gold-bordered announcement strip ─── */
+[data-theme="art-deco"] .info-banner {
+  border-radius: 0;
+  border-width: 1px;
+  border-left: 3px solid currentColor;
+  background: rgba(20, 20, 20, 0.6);
+}
+
+[data-theme="art-deco"] .info-banner.info { border-color: var(--deco-gold); background: rgba(212, 175, 55, 0.06); color: var(--deco-gold); }
+[data-theme="art-deco"] .info-banner.success { border-color: var(--accent-emerald); background: rgba(90, 122, 106, 0.08); color: var(--accent-emerald); }
+[data-theme="art-deco"] .info-banner.warning { border-color: var(--deco-brass); background: rgba(198, 142, 59, 0.08); color: var(--deco-brass); }
+[data-theme="art-deco"] .info-banner.danger { border-color: var(--deco-bronze); background: rgba(139, 69, 19, 0.08); color: var(--deco-bronze); }
+
+/* ─── Divider — measured gold line ─── */
+[data-theme="art-deco"] .divider {
+  height: 0;
+  border-top: 1px solid rgba(212, 175, 55, 0.15);
+  background: none;
+  margin: var(--sp-5) 0;
+}
+
+/* ─── Star rating — gold stars ─── */
+[data-theme="art-deco"] .star-rating .star.filled {
+  color: var(--deco-gold);
+  text-shadow: 0 0 6px rgba(212, 175, 55, 0.3);
+}
+
+/* ─── Section header icons ─── */
+[data-theme="art-deco"] .section-title .icon {
+  border-radius: 0;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: rgba(20, 20, 20, 0.6);
+}
+
+/* ─── Heatmap cells ─── */
+[data-theme="art-deco"] .heatmap-cell {
+  border-radius: 0;
+  border: 1px solid rgba(212, 175, 55, 0.08);
+}
+
+[data-theme="art-deco"] .heatmap-cell:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
+}
+
+/* ─── Countdown ─── */
+[data-theme="art-deco"] .countdown-value {
+  font-family: 'Marcellus', serif;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 0;
+  background: rgba(20, 20, 20, 0.5);
+  color: var(--deco-gold);
+}
+
+[data-theme="art-deco"] .countdown-label {
+  letter-spacing: 0.15em;
+}
+
+/* ─── Status dot ─── */
+[data-theme="art-deco"] .status-dot {
+  border-radius: 0;
+  width: 8px;
+  height: 8px;
+}
+
+/* ─── Notification dot / badge ─── */
+[data-theme="art-deco"] .notification-dot {
+  border-radius: 0;
+}
+
+[data-theme="art-deco"] .notification-badge {
+  border-radius: 0;
+  font-family: 'Josefin Sans', sans-serif;
+}
+
+/* ─── Keyboard focus — gold ring ─── */
+[data-theme="art-deco"] :focus-visible {
+  outline: 2px solid var(--deco-gold);
+  outline-offset: 2px;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+}
+
+/* ─── Icon glow on hover (Lucide) ─── */
+[data-theme="art-deco"] a:hover > svg,
+[data-theme="art-deco"] .btn:hover > svg,
+[data-theme="art-deco"] .nav-item:hover svg {
+  filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.5));
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ART DECO UTILITIES  —  theme-agnostic decorative primitives
+   These classes can be used anywhere but are designed for the Art Deco look.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── 1. Diagonal crosshatch overlay ─── */
+.deco-crosshatch {
+  position: relative;
+}
+.deco-crosshatch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(212, 175, 55, 0.04) 5px, rgba(212, 175, 55, 0.04) 6px),
+    repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(212, 175, 55, 0.03) 5px, rgba(212, 175, 55, 0.03) 6px);
+  z-index: 0;
+}
+
+/* ─── 2. Rotated diamond container ───
+   Wraps content in a 45° rotated square. Content is counter-rotated -45°.
+   Usage: <div class="deco-diamond"><span class="deco-diamond-inner">★</span></div> */
+.deco-diamond {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  transform: rotate(45deg);
+  border: 2px solid var(--deco-gold, #D4AF37);
+  background: rgba(20, 20, 20, 0.6);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.15);
+  transition: transform 400ms ease, box-shadow 400ms ease;
+}
+.deco-diamond:hover {
+  transform: rotate(0deg);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+}
+.deco-diamond-inner {
+  transform: rotate(-45deg);
+  font-size: 1.4em;
+  color: var(--deco-gold, #D4AF37);
+  transition: transform 400ms ease;
+}
+.deco-diamond:hover .deco-diamond-inner {
+  transform: rotate(0deg);
+}
+
+/* ─── 3. Stepped (ziggurat) corners ───
+   Creates stepped corner cut on a container. */
+.deco-stepped {
+  clip-path: polygon(
+    0 12px, 12px 12px, 12px 0,
+    calc(100% - 12px) 0, calc(100% - 12px) 12px, 100% 12px,
+    100% calc(100% - 12px), calc(100% - 12px) calc(100% - 12px), calc(100% - 12px) 100%,
+    12px 100%, 12px calc(100% - 12px), 0 calc(100% - 12px)
+  );
+}
+.deco-stepped-sm {
+  clip-path: polygon(
+    0 8px, 8px 8px, 8px 0,
+    calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%,
+    8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px)
+  );
+}
+
+/* ─── 4. Corner L-brackets (manual placement) ─── */
+.deco-corner-tl {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 20px;
+  height: 20px;
+  border-top: 2px solid var(--deco-gold, #D4AF37);
+  border-left: 2px solid var(--deco-gold, #D4AF37);
+  pointer-events: none;
+}
+.deco-corner-tr {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border-top: 2px solid var(--deco-gold, #D4AF37);
+  border-right: 2px solid var(--deco-gold, #D4AF37);
+  pointer-events: none;
+}
+.deco-corner-bl {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  width: 20px;
+  height: 20px;
+  border-bottom: 2px solid var(--deco-gold, #D4AF37);
+  border-left: 2px solid var(--deco-gold, #D4AF37);
+  pointer-events: none;
+}
+.deco-corner-br {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border-bottom: 2px solid var(--deco-gold, #D4AF37);
+  border-right: 2px solid var(--deco-gold, #D4AF37);
+  pointer-events: none;
+}
+
+/* ─── 5. Sunburst radial gradient (applied as background) ─── */
+.deco-sunburst {
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(212, 175, 55, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 40%, rgba(212, 175, 55, 0.05) 0%, transparent 70%);
+}
+
+/* ─── 6. Decorative section divider ───
+   Gold lines above and below text. */
+.deco-section-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4, 16px);
+  width: 100%;
+}
+.deco-section-divider::before,
+.deco-section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--deco-gold, #D4AF37), transparent);
+  opacity: 0.4;
+}
+
+/* ─── 7. Gold glow effect (replaces box-shadow) ─── */
+.deco-glow {
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
+}
+.deco-glow-lg {
+  box-shadow: 0 0 24px rgba(212, 175, 55, 0.35);
+}
+.deco-gold-text {
+  color: var(--deco-gold, #D4AF37);
+  text-shadow: 0 0 12px rgba(212, 175, 55, 0.2);
+}
+
+/* ─── 8. Vertical divider line ─── */
+.deco-vertical {
+  width: 1px;
+  min-height: 40px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(212, 175, 55, 0.3) 20%,
+    rgba(212, 175, 55, 0.3) 80%,
+    transparent
+  );
+  flex-shrink: 0;
+}
+
+/* ─── 9. Double-frame image container ───
+   Usage: <div class="deco-frame"><img src="..." alt="..." /></div> */
+.deco-frame {
+  position: relative;
+  display: inline-block;
+  padding: 4px;
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  background: #0A0A0A;
+}
+.deco-frame::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  pointer-events: none;
+  z-index: 1;
+}
+.deco-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(30%);
+  transition: filter 400ms ease;
+}
+.deco-frame:hover img {
+  filter: grayscale(0%);
+}
+
+/* ─── 10. Roman numeral styling ─── */
+.roman-numeral {
+  font-family: 'Marcellus', 'Playfair Display', 'Times New Roman', serif;
+  color: var(--deco-gold, #D4AF37);
+  letter-spacing: 0.08em;
+}
+
+/* ─── Gold gradient text ─── */
+.deco-gradient-text {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* ─── Sunburst animation keyframe (for hero sections) ─── */
+@keyframes deco-sunburst-expand {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes deco-glow-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.15); }
+  50%      { box-shadow: 0 0 25px rgba(212, 175, 55, 0.3); }
+}
+
+/* ─── Animations for section reveals ─── */
+@keyframes deco-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+.deco-float {
+  animation: deco-float 5s ease-in-out infinite;
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="art-deco"] .glass-card:hover,
+  [data-theme="art-deco"] .card-list-item:hover {
+    transform: none;
+  }
+
+  [data-theme="art-deco"] .btn {
+    transition: none;
+  }
+
+  .deco-diamond {
+    transition: none;
+  }
+
+  .deco-diamond-inner {
+    transition: none;
+  }
+
+  .deco-frame img {
+    transition: none;
+  }
+
+  @keyframes deco-sunburst-expand {
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes deco-glow-pulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.15); }
+  }
+
+  .deco-float {
+    animation: none;
+  }
+}
+
+/* ─── Responsive adjustments ─── */
+@media (max-width: 768px) {
+  [data-theme="art-deco"] .page-title {
+    letter-spacing: 0.12em;
+  }
+
+  [data-theme="art-deco"] .btn {
+    letter-spacing: 0.12em;
+    min-height: 44px;
+  }
+
+  [data-theme="art-deco"] .glass-card::before,
+  [data-theme="art-deco"] .glass-card::after,
+  [data-theme="art-deco"] .glass-card-static::before,
+  [data-theme="art-deco"] .glass-card-static::after {
+    width: 12px;
+    height: 12px;
+  }
+}

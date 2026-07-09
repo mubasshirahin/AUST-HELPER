@@ -34,7 +34,7 @@ import {
   recordCheckOut,
   getOccupancy
 } from './libraryDB.mjs';
-import { initializeDatabase, resetDatabase } from './db.mjs';
+import { initializeDatabase, resetDatabase, query, sql } from './db.mjs';
 
 // Helper function to answer callback query
 async function answerCallbackQueryFn(botToken, callbackQueryId, text) {
@@ -815,6 +815,221 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // ========== Invitation Endpoints ==========
+
+  // Create a new invitation
+  if (req.url === '/api/invites' && req.method === 'POST') {
+    try {
+      const { email, role, invitedBy } = await readJsonBody(req);
+
+      if (!email || !role) {
+        sendJson(res, 400, { success: false, error: 'Email and role are required.' });
+        return;
+      }
+
+      if (!['faculty', 'alumni'].includes(role)) {
+        sendJson(res, 400, { success: false, error: 'Role must be "faculty" or "alumni".' });
+        return;
+      }
+
+      const emailPattern = /@.*\./;
+      if (!emailPattern.test(email)) {
+        sendJson(res, 400, { success: false, error: 'Please enter a valid email address.' });
+        return;
+      }
+
+      // Check if already invited with this email
+      const existing = await query(
+        'SELECT Id, Status FROM Invitations WHERE Email = @email',
+        { email: { value: email } }
+      );
+
+      const pendingInvite = existing.recordset.find(i => i.Status === 'pending');
+      if (pendingInvite) {
+        sendJson(res, 409, { success: false, error: 'An active invitation already exists for this email.' });
+        return;
+      }
+
+      // Generate unique token
+      const crypto = await import('node:crypto');
+      const token = crypto.randomBytes(32).toString('hex');
+
+      // Set expiry to 7 days from now
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      await query(
+        `INSERT INTO Invitations (Email, Role, Token, Status, InvitedBy, ExpiresAt)
+         VALUES (@email, @role, @token, 'pending', @invitedBy, @expiresAt)`,
+        {
+          email: { value: email },
+          role: { value: role },
+          token: { value: token },
+          invitedBy: { value: invitedBy || 'Admin' },
+          expiresAt: { value: expiresAt },
+        }
+      );
+
+      console.log(`📨 Invitation sent to ${email} (${role}), token=${token.substring(0, 12)}...`);
+
+      // In production, send email here via SMTP/API
+      // For now, return the invite link so admin can share it
+      const inviteLink = `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host || 'localhost:5174'}/accept-invite?token=${token}`;
+
+      sendJson(res, 201, {
+        success: true,
+        message: `Invitation sent to ${email}`,
+        inviteLink,
+        token: token.substring(0, 8) + '...',
+      });
+    } catch (error) {
+      sendJson(res, 500, {
+        success: false,
+        error: error.message || 'Failed to create invitation.',
+      });
+    }
+    return;
+  }
+
+  // List invitations with pagination
+  if (req.url.startsWith('/api/invites') && req.method === 'GET') {
+    try {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
+      const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get('limit') || '10')));
+      const offset = (page - 1) * limit;
+
+      const countResult = await query('SELECT COUNT(*) AS total FROM Invitations');
+      const total = countResult.recordset[0].total;
+
+      const result = await query(
+        `SELECT Id, Email, Role, Token, Status, InvitedBy, CreatedAt, ExpiresAt, AcceptedAt
+         FROM Invitations
+         ORDER BY CreatedAt DESC
+         OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY`,
+        { offset: { type: sql.Int, value: offset }, limit: { type: sql.Int, value: limit } }
+      );
+
+      sendJson(res, 200, {
+        success: true,
+        invitations: result.recordset,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
+    } catch (error) {
+      sendJson(res, 500, {
+        success: false,
+        error: error.message || 'Failed to list invitations.',
+      });
+    }
+    return;
+  }
+
+  // Validate invitation token
+  if (req.url.startsWith('/api/invite/validate') && req.method === 'GET') {
+    try {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const token = url.searchParams.get('token');
+
+      if (!token) {
+        sendJson(res, 400, { success: false, error: 'Token is required.' });
+        return;
+      }
+
+      const result = await query(
+        `SELECT Id, Email, Role, Status, ExpiresAt FROM Invitations WHERE Token = @token`,
+        { token: { value: token } }
+      );
+
+      if (result.recordset.length === 0) {
+        sendJson(res, 404, { success: false, error: 'Invalid or expired invitation link.' });
+        return;
+      }
+
+      const invite = result.recordset[0];
+
+      if (invite.Status === 'accepted') {
+        sendJson(res, 410, { success: false, error: 'This invitation has already been used.' });
+        return;
+      }
+
+      if (invite.ExpiresAt && new Date(invite.ExpiresAt) < new Date()) {
+        sendJson(res, 410, { success: false, error: 'This invitation has expired.' });
+        return;
+      }
+
+      sendJson(res, 200, {
+        success: true,
+        email: invite.Email,
+        role: invite.Role,
+      });
+    } catch (error) {
+      sendJson(res, 500, {
+        success: false,
+        error: error.message || 'Failed to validate invitation.',
+      });
+    }
+    return;
+  }
+
+  // Accept invitation & create account
+  if (req.url === '/api/invite/accept' && req.method === 'POST') {
+    try {
+      const { token, name, password } = await readJsonBody(req);
+
+      if (!token || !name || !password) {
+        sendJson(res, 400, { success: false, error: 'Token, name, and password are required.' });
+        return;
+      }
+
+      const result = await query(
+        `SELECT Id, Email, Role, Status, ExpiresAt FROM Invitations WHERE Token = @token`,
+        { token: { value: token } }
+      );
+
+      if (result.recordset.length === 0) {
+        sendJson(res, 404, { success: false, error: 'Invalid invitation link.' });
+        return;
+      }
+
+      const invite = result.recordset[0];
+
+      if (invite.Status === 'accepted') {
+        sendJson(res, 410, { success: false, error: 'This invitation has already been used.' });
+        return;
+      }
+
+      if (invite.ExpiresAt && new Date(invite.ExpiresAt) < new Date()) {
+        sendJson(res, 410, { success: false, error: 'This invitation has expired.' });
+        return;
+      }
+
+      // Mark invitation as accepted
+      await query(
+        `UPDATE Invitations SET Status = 'accepted', AcceptedAt = GETDATE() WHERE Id = @id`,
+        { id: { type: sql.Int, value: invite.Id } }
+      );
+
+      console.log(`✅ Invitation accepted: ${invite.Email} registered as ${invite.Role}`);
+
+      sendJson(res, 200, {
+        success: true,
+        message: 'Account created successfully!',
+        email: invite.Email,
+        role: invite.Role,
+      });
+    } catch (error) {
+      sendJson(res, 500, {
+        success: false,
+        error: error.message || 'Failed to accept invitation.',
+      });
+    }
+    return;
+  }
+
   // Admin: full database reset
   if (req.url === '/api/admin/reset' && req.method === 'POST') {
     try {
@@ -827,6 +1042,40 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 200, { success: true, message: 'Database tables truncated.' });
     } catch (error) {
       sendJson(res, 500, { success: false, error: error.message || 'Database reset failed.' });
+    }
+    return;
+  }
+
+  // ========== Google Auth Endpoint ==========
+
+  if (req.url === '/api/auth/google' && req.method === 'POST') {
+    try {
+      const { credential } = await readJsonBody(req);
+      if (!credential) {
+        sendJson(res, 400, { success: false, error: 'Credential is required.' });
+        return;
+      }
+      // Verify the Google JWT via Google's token info endpoint
+      const https = await import('node:https');
+      const verifyUrl = new URL('https://oauth2.googleapis.com/tokeninfo');
+      verifyUrl.searchParams.set('id_token', credential);
+      const response = await new Promise((resolve, reject) => {
+        https.default.get(verifyUrl.toString(), (resp) => {
+          let data = '';
+          resp.on('data', (chunk) => data += chunk);
+          resp.on('end', () => {
+            if (resp.statusCode === 200) {
+              try { resolve(JSON.parse(data)); }
+              catch { reject(new Error('Invalid response')); }
+            } else {
+              reject(new Error(data));
+            }
+          });
+        }).on('error', reject);
+      });
+      sendJson(res, 200, { success: true, user: response });
+    } catch (error) {
+      sendJson(res, 401, { success: false, error: error.message || 'Google verification failed.' });
     }
     return;
   }
@@ -865,6 +1114,15 @@ server.listen(port, '0.0.0.0', () => {
   console.log('  POST /api/library/checkin              - GPS check-in / heartbeat');
   console.log('  POST /api/library/checkout             - Leave the library');
   console.log('  GET  /api/library/occupancy            - Live occupancy count');
+  console.log('');
+  console.log('Invitation Endpoints:');
+  console.log('  POST /api/invites                      - Create invitation');
+  console.log('  GET  /api/invites                      - List invitations (paginated)');
+  console.log('  GET  /api/invite/validate              - Validate invitation token');
+  console.log('  POST /api/invite/accept                - Accept invitation');
+  console.log('');
+  console.log('Auth Endpoints:');
+  console.log('  POST /api/auth/google                  - Verify Google OAuth JWT');
   console.log('');
   console.log('📞 Telegram Webhook Setup:');
   console.log('  To enable button clicks in Telegram, set your webhook URL using:');

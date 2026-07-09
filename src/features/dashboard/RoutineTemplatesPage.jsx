@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { CalendarDays, Download, Check, X } from 'lucide-react';
-import { loadTemplates, addTemplate, updateTemplate, deleteTemplate } from '../../utils/routineTemplates';
-import { getAutoColorForCourse } from '../../utils/autoColorPalette';
-import CourseAutocomplete from '../../components/CourseAutocomplete';
+import { useState, useEffect } from 'react';
+import { CalendarDays, Download } from 'lucide-react';
+import { loadTemplates } from '../../utils/routineTemplates';
 import './DashboardPage.css';
 
 export default function RoutineTemplatesPage() {
@@ -199,82 +197,82 @@ export default function RoutineTemplatesPage() {
     window.dispatchEvent(new CustomEvent('load-routine-template', { detail: template }));
   };
 
-  // Main view - list of templates
   return (
-    <div className="dashboard-page animate-fadeIn">
-      <div className="dashboard-header-section">
+    <div className="dashboard-page animate-fadeIn" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div className="dashboard-header-section" style={{ flexShrink: 0 }}>
         <h1 className="page-title">Routine Templates</h1>
         <p className="page-description">Browse and load pre-defined semester routines into your schedule.</p>
       </div>
 
-      {templates.length === 0 ? (
-        <div className="glass-card-static" style={{ padding: '60px', textAlign: 'center' }}>
-          <CalendarDays size={64} style={{ color: 'var(--text-tertiary)', opacity: 0.5, marginBottom: '20px' }} />
-          <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', margin: '0 0 8px' }}>No Templates Available</h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '20px' }}>No routine templates have been created yet.</p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {templates.map(template => (
-            <div key={template.id} className="glass-card-static">
-              <div className="flex justify-between items-center mb-4" style={{ borderBottom: '1px solid var(--border-primary)', paddingBottom: '12px' }}>
-                <div>
-                  <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', margin: 0 }}>{template.name}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="badge badge-blue" style={{ fontSize: '9px', padding: '1px 4px' }}>{template.department}</span>
-                    <span className="badge badge-purple" style={{ fontSize: '9px', padding: '1px 4px' }}>Sem {template.semester}</span>
-                    <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>{template.year}</span>
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+        {templates.length === 0 ? (
+          <div className="glass-card-static" style={{ padding: '60px', textAlign: 'center' }}>
+            <CalendarDays size={64} style={{ color: 'var(--text-tertiary)', opacity: 0.5, marginBottom: '20px' }} />
+            <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', margin: '0 0 8px' }}>No Templates Available</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '20px' }}>No routine templates have been created yet.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '40px' }}>
+            {templates.map(template => (
+              <div key={template.id} className="glass-card-static">
+                <div className="flex justify-between items-center mb-4" style={{ borderBottom: '1px solid var(--border-primary)', paddingBottom: '12px' }}>
+                  <div>
+                    <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', margin: 0 }}>{template.name}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="badge badge-blue" style={{ fontSize: '9px', padding: '1px 4px' }}>{template.department}</span>
+                      <span className="badge badge-purple" style={{ fontSize: '9px', padding: '1px 4px' }}>Sem {template.semester}</span>
+                      <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>{template.year}</span>
+                    </div>
                   </div>
+                  <button className="btn btn-primary btn-sm" onClick={() => handleLoadTemplate(template)} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Download size={14} /> Load This Routine
+                  </button>
                 </div>
-                <button className="btn btn-primary btn-sm" onClick={() => handleLoadTemplate(template)} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Download size={14} /> Load This Routine
-                </button>
-              </div>
 
-              {/* Routine Table Preview */}
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-xs)' }}>
-                  <thead>
-                    <tr style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-primary)' }}>
-                      <th style={{ padding: '8px', color: 'var(--text-secondary)', fontWeight: 'bold', textAlign: 'left', minWidth: '80px' }}>Day</th>
-                      <th style={{ padding: '8px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Course</th>
-                      <th style={{ padding: '8px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Time</th>
-                      <th style={{ padding: '8px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Room</th>
-                      <th style={{ padding: '8px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Teacher</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {weekDays.map(day => {
-                      const dayClasses = template.routine[day] || [];
-                      return dayClasses.length > 0 ? dayClasses.map((cls, idx) => (
-                        <tr key={`${template.id}-${day}-${idx}`} style={{ borderBottom: '1px solid var(--border-secondary)' }}>
-                          {idx === 0 && (
-                            <td rowSpan={dayClasses.length} style={{ padding: '8px', fontWeight: 'bold', color: 'var(--accent-blue)', textAlign: 'left', verticalAlign: 'top', borderRight: '1px solid var(--border-secondary)' }}>
-                              {day}
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-xs)' }}>
+                    <thead>
+                      <tr style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-primary)' }}>
+                        <th style={{ padding: '8px', color: 'var(--text-secondary)', fontWeight: 'bold', textAlign: 'left', minWidth: '80px' }}>Day</th>
+                        <th style={{ padding: '8px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Course</th>
+                        <th style={{ padding: '8px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Time</th>
+                        <th style={{ padding: '8px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Room</th>
+                        <th style={{ padding: '8px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Teacher</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {weekDays.map(day => {
+                        const dayClasses = template.routine[day] || [];
+                        return dayClasses.length > 0 ? dayClasses.map((cls, idx) => (
+                          <tr key={`${template.id}-${day}-${idx}`} style={{ borderBottom: '1px solid var(--border-secondary)' }}>
+                            {idx === 0 && (
+                              <td rowSpan={dayClasses.length} style={{ padding: '8px', fontWeight: 'bold', color: 'var(--accent-blue)', textAlign: 'left', verticalAlign: 'top', borderRight: '1px solid var(--border-secondary)' }}>
+                                {day}
+                              </td>
+                            )}
+                            <td style={{ padding: '8px' }}>
+                              <div style={{ fontWeight: 'bold', color: 'var(--accent-blue)' }}>{cls.course}</div>
+                              <div style={{ color: 'var(--text-secondary)', fontSize: '10px' }}>{cls.name}</div>
                             </td>
-                          )}
-                          <td style={{ padding: '8px' }}>
-                            <div style={{ fontWeight: 'bold', color: 'var(--accent-blue)' }}>{cls.course}</div>
-                            <div style={{ color: 'var(--text-secondary)', fontSize: '10px' }}>{cls.name}</div>
-                          </td>
-                          <td style={{ padding: '8px', color: 'var(--text-secondary)' }}>{cls.time}</td>
-                          <td style={{ padding: '8px', color: 'var(--text-secondary)' }}>{cls.room}</td>
-                          <td style={{ padding: '8px', color: 'var(--text-secondary)' }}>{cls.teacher}</td>
-                        </tr>
-                      )) : (
-                        <tr key={`${template.id}-${day}-empty`} style={{ borderBottom: '1px solid var(--border-secondary)' }}>
-                          <td style={{ padding: '8px', fontWeight: 'bold', color: 'var(--text-tertiary)', textAlign: 'left' }}>{day}</td>
-                          <td colSpan="4" style={{ padding: '8px', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>No classes</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                            <td style={{ padding: '8px', color: 'var(--text-secondary)' }}>{cls.time}</td>
+                            <td style={{ padding: '8px', color: 'var(--text-secondary)' }}>{cls.room}</td>
+                            <td style={{ padding: '8px', color: 'var(--text-secondary)' }}>{cls.teacher}</td>
+                          </tr>
+                        )) : (
+                          <tr key={`${template.id}-${day}-empty`} style={{ borderBottom: '1px solid var(--border-secondary)' }}>
+                            <td style={{ padding: '8px', fontWeight: 'bold', color: 'var(--text-tertiary)', textAlign: 'left' }}>{day}</td>
+                            <td colSpan="4" style={{ padding: '8px', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>No classes</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

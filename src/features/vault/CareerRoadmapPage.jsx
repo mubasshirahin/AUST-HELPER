@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import {
-  Map, Sparkles, TrendingUp, Clock, Zap,
+  Map, TrendingUp, Clock, Zap,
   ChevronDown, ChevronUp, ExternalLink, CheckCircle2,
   Circle, BookOpen, Wrench, Trophy, Target,
 } from 'lucide-react';
@@ -89,15 +89,9 @@ export default function CareerRoadmapPage() {
       {/* ── Hero ── */}
       <header className="crp-hero">
         <div className="crp-hero-bg" aria-hidden="true">
-          <div className="crp-hero-orb crp-hero-orb-1" />
-          <div className="crp-hero-orb crp-hero-orb-2" />
           <div className="crp-hero-grid" />
         </div>
         <div className="crp-hero-content">
-          <div className="crp-hero-badge">
-            <Sparkles size={12} />
-            <span>Career Intelligence</span>
-          </div>
           <div className="crp-hero-title-row">
             <div className="crp-hero-icon">
               <Map size={24} />

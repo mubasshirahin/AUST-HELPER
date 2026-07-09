@@ -4,7 +4,8 @@ import { getRoleLabel, getRoleBadgeClass, AUTH_ROLES } from '../utils/authStorag
 import {
   Search, Bell, BellRing, Sun, Moon, Menu, Newspaper, Terminal, Check, User,
   Clock, Hourglass, AlertTriangle, CalendarCheck, Info, CheckCheck, Trash2,
-  Settings, LogOut, Sparkles, Gauge, MoonStar, Pen, PenTool,
+  Settings, LogOut, Sparkles, Gauge, MoonStar, Pen, PenTool, Zap,
+  Building2, Type, Grid2x2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
@@ -42,15 +43,21 @@ function formatNotifTime(ts) {
 
 
 
-const themeOptions = [
+const darkThemeOptions = [
   { id: 'dark', label: 'Dark', icon: Moon },
-  { id: 'light', label: 'Light', icon: Sun },
-  { id: 'newsprint', label: 'Newsprint', icon: Newspaper },
-  { id: 'cyberpunk', label: 'Cyberpunk', icon: Terminal },
-  { id: 'maximalism', label: 'Maximalism', icon: Sparkles },
-  { id: 'industrial', label: 'Industrial', icon: Gauge },
   { id: 'midnight', label: 'Midnight', icon: MoonStar },
+  { id: 'cyberpunk', label: 'Cyberpunk', icon: Terminal },
+  { id: 'bitcoindefi', label: 'Bitcoin DeFi', icon: Zap },
+  { id: 'art-deco', label: 'Art Deco', icon: Building2 },
+  { id: 'poster', label: 'Bold Type', icon: Type },
+];
+
+const lightThemeOptions = [
+  { id: 'light', label: 'Light', icon: Sun },
+  { id: 'swiss', label: 'Swiss', icon: Grid2x2 },
+  { id: 'newsprint', label: 'Newsprint', icon: Newspaper },
   { id: 'sketchbook', label: 'Sketchbook', icon: PenTool },
+  { id: 'industrial', label: 'Industrial', icon: Gauge },
   { id: 'minimalist-monochrome', label: 'Monochrome', icon: Pen },
 ];
 
@@ -82,7 +89,8 @@ export default function TopNavbar({ onMenuClick }) {
 
   const { notifications, unread, markAsRead, markAllAsRead, clearAll } = useInAppNotifications();
 
-  const activeTheme = themeOptions.find((t) => t.id === theme) || themeOptions[0];
+  const allThemeOptions = [...darkThemeOptions, ...lightThemeOptions];
+  const activeTheme = allThemeOptions.find((t) => t.id === theme) || allThemeOptions[0];
   const ThemeIcon = activeTheme.icon;
 
 
@@ -191,8 +199,8 @@ export default function TopNavbar({ onMenuClick }) {
           </button>
 
           <div className="theme-menu" role="menu" aria-label="Select theme">
-            <span className="theme-menu-heading">Theme</span>
-            {themeOptions.map(({ id, label, icon: Icon }) => {
+            <span className="theme-menu-heading">Dark Mode</span>
+            {darkThemeOptions.map(({ id, label, icon: Icon }) => {
               const isActive = theme === id;
               return (
                 <button
@@ -201,10 +209,28 @@ export default function TopNavbar({ onMenuClick }) {
                   role="menuitemradio"
                   aria-checked={isActive}
                   className={`theme-menu-item ${isActive ? 'active' : ''}`}
-                  onClick={() => {
-                    setTheme(id);
-                    setThemeMenuOpen(false);
-                  }}
+                  onClick={() => { setTheme(id); setThemeMenuOpen(false); }}
+                >
+                  <Icon size={16} />
+                  <span>{label}</span>
+                  {isActive && <Check size={14} className="theme-menu-check" />}
+                </button>
+              );
+            })}
+
+            <div className="theme-menu-divider" />
+
+            <span className="theme-menu-heading">Light Mode</span>
+            {lightThemeOptions.map(({ id, label, icon: Icon }) => {
+              const isActive = theme === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={isActive}
+                  className={`theme-menu-item ${isActive ? 'active' : ''}`}
+                  onClick={() => { setTheme(id); setThemeMenuOpen(false); }}
                 >
                   <Icon size={16} />
                   <span>{label}</span>
@@ -310,7 +336,7 @@ export default function TopNavbar({ onMenuClick }) {
               aria-expanded={profileMenuOpen}
             >
               <div className="avatar" style={{ width: 32, height: 32, fontSize: '0.65rem' }}>
-                {user?.initials}
+                {user?.avatar ? <img src={user.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : user?.initials}
               </div>
               <div className="profile-info">
                 <span className="profile-info-name">{user.name}</span>
@@ -326,7 +352,7 @@ export default function TopNavbar({ onMenuClick }) {
               <div className="profile-dropdown" role="menu" aria-label="User menu">
                 <div className="profile-dropdown-header">
                   <div className="avatar" style={{ width: 40, height: 40 }}>
-                    {user?.initials}
+                    {user?.avatar ? <img src={user.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : user?.initials}
                   </div>
                   <div className="profile-dropdown-info">
                     <span className="profile-dropdown-name">{user.name}</span>

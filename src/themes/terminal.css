@@ -1,0 +1,566 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   TERMINAL CLI THEME  —  "system-level" shell aesthetic
+   ────────────────────────────────────────────────────────────────────────────
+   Dark-only theme that strips the interface down to a bare ZSH/BASH terminal.
+   Monospace everywhere, zero radius, bracket-style controls, phosphor glow,
+   CRT scanlines, and shell-prompt metaphors. Inspired by authentic terminal
+   emulators — not "Matrix rain", but a clean, usable CLI environment.
+
+   Architecture: this file mirrors the per-theme convention in index.css —
+   a [data-theme="terminal"] TOKEN block plus a scoped PERSONALITY layer.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* ─── Token remap ─────────────────────────────────────────────────────────────
+   Redefines the shared custom-property contract. Every feature reads from these,
+   so the entire app re-skins automatically.
+   ─────────────────────────────────────────────────────────────────────────── */
+[data-theme="terminal"] {
+  /* Font — EVERYTHING is JetBrains Mono */
+  --font-display: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-code: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-label: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* Surfaces — deep black chassis */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #0d0d0d;
+  --bg-tertiary: #111111;
+  --bg-card: #0a0a0a;
+  --bg-card-hover: #0f0f0f;
+  --bg-glass: rgba(10, 10, 10, 0.92);
+  --bg-glass-heavy: rgba(10, 10, 10, 0.97);
+  --bg-input: #0a0a0a;
+
+  /* Type — phosphor green on black */
+  --text-primary: #33ff00;
+  --text-secondary: #1f8f00;
+  --text-tertiary: #1f521f;
+  --text-inverse: #0a0a0a;
+
+  /* Borders — dim green, solid */
+  --border-primary: #1f521f;
+  --border-secondary: rgba(31, 82, 31, 0.45);
+  --border-focus: #33ff00;
+
+  /* Accents — mapped to terminal palette. Blue slot = primary green.
+     Other slots collapse to dim green so the UI stays monochrome-green. */
+  --accent-blue: #33ff00;
+  --accent-blue-glow: rgba(51, 255, 0, 0.12);
+  --accent-purple: #1f8f00;
+  --accent-purple-glow: rgba(31, 143, 0, 0.10);
+  --accent-amber: #ffb000;
+  --accent-amber-glow: rgba(255, 176, 0, 0.10);
+  --accent-emerald: #1f8f00;
+  --accent-emerald-glow: rgba(31, 143, 0, 0.10);
+  --accent-rose: #ff3333;
+  --accent-rose-glow: rgba(255, 51, 51, 0.10);
+  --accent-cyan: #1f8f00;
+  --accent-cyan-glow: rgba(31, 143, 0, 0.10);
+  --accent-orange: #ffb000;
+  --accent-orange-glow: rgba(255, 176, 0, 0.10);
+
+  /* Gradients — flat, no soft blends in terminal */
+  --gradient-primary: linear-gradient(0deg, #33ff00, #33ff00);
+  --gradient-secondary: linear-gradient(0deg, #0d0d0d, #0d0d0d);
+  --gradient-accent: linear-gradient(0deg, #33ff00, #33ff00);
+  --gradient-warm: linear-gradient(0deg, #ffb000, #ffb000);
+  --gradient-success: linear-gradient(0deg, #33ff00, #33ff00);
+  --gradient-glass: linear-gradient(0deg, transparent, transparent);
+
+  /* Radius — zero. Absolutely no rounded corners. */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+
+  /* Shadows — no drop shadows. Only neon glow. */
+  --shadow-sm: 0 0 0 1px rgba(51, 255, 0, 0.04);
+  --shadow-md: 0 0 0 1px rgba(51, 255, 0, 0.08);
+  --shadow-lg: 0 0 0 1px rgba(51, 255, 0, 0.12);
+  --shadow-xl: 0 0 0 1px rgba(51, 255, 0, 0.16);
+  --shadow-glow-blue: 0 0 4px rgba(51, 255, 0, 0.35);
+  --shadow-glow-purple: 0 0 4px rgba(31, 143, 0, 0.35);
+  --shadow-glow-amber: 0 0 4px rgba(255, 176, 0, 0.35);
+
+  /* Terminal-specific tokens */
+  --term-green: #33ff00;
+  --term-green-dim: #1f8f00;
+  --term-green-dark: #1f521f;
+  --term-amber: #ffb000;
+  --term-red: #ff3333;
+  --term-bg: #0a0a0a;
+  --term-glow: 0 0 5px rgba(51, 255, 0, 0.4);
+  --term-glow-strong: 0 0 8px rgba(51, 255, 0, 0.6);
+
+  --scrollbar-track: #0a0a0a;
+  --scrollbar-thumb: #1f521f;
+  --scrollbar-thumb-hover: #33ff00;
+
+  --status-online: #33ff00;
+  --status-away: #ffb000;
+  --status-offline: #1f521f;
+  --status-busy: #ff3333;
+
+  --danger: #ff3333;
+  --warning: #ffb000;
+  --success: #33ff00;
+  --info: #1f8f00;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PERSONALITY LAYER  —  scoped to [data-theme="terminal"]
+   Restyles shared component classes into authentic terminal UI.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Reusable helpers ─── */
+
+/* Text glow */
+.term-glow {
+  text-shadow: 0 0 5px rgba(51, 255, 0, 0.4);
+}
+
+/* Blinking block cursor — append after text */
+.blink-cursor::after {
+  content: '█';
+  color: var(--term-green);
+  animation: termBlink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+/* Underscore cursor variant */
+.blink-underscore::after {
+  content: '_';
+  color: var(--term-green);
+  animation: termBlink 1s step-end infinite;
+}
+
+/* Shell prompt prefix */
+.shell-prompt::before {
+  content: '$ ';
+  color: var(--term-green-dim);
+  user-select: none;
+}
+
+/* Status tag */
+.term-status-ok {
+  color: var(--term-green);
+}
+.term-status-err {
+  color: var(--term-red);
+}
+.term-status-warn {
+  color: var(--term-amber);
+}
+
+@keyframes termBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* ─── Base / Body ─── */
+[data-theme="terminal"] body {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  background-color: var(--term-bg);
+  color: var(--term-green);
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent, transparent 2px,
+      rgba(0, 0, 0, 0.25) 2px, rgba(0, 0, 0, 0.25) 4px
+    );
+  background-attachment: fixed;
+}
+
+/* CRT scanline overlay — fixed, covers viewport */
+[data-theme="terminal"] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent, transparent 2px,
+    rgba(0, 0, 0, 0.18) 2px, rgba(0, 0, 0, 0.18) 4px
+  );
+}
+
+/* ─── Typography ─── */
+[data-theme="terminal"] .page-title,
+[data-theme="terminal"] .section-title,
+[data-theme="terminal"] h1,
+[data-theme="terminal"] h2,
+[data-theme="terminal"] h3,
+[data-theme="terminal"] h4,
+[data-theme="terminal"] h5,
+[data-theme="terminal"] h6,
+[data-theme="terminal"] p,
+[data-theme="terminal"] span,
+[data-theme="terminal"] label,
+[data-theme="terminal"] a,
+[data-theme="terminal"] li {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+[data-theme="terminal"] .page-title {
+  font-weight: var(--fw-black);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 5px rgba(51, 255, 0, 0.45);
+  color: var(--term-green);
+}
+
+[data-theme="terminal"] .section-title {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--term-green);
+}
+
+[data-theme="terminal"] .stat-value {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 4px rgba(51, 255, 0, 0.3);
+}
+
+[data-theme="terminal"] .stat-label,
+[data-theme="terminal"] .countdown-label,
+[data-theme="terminal"] .badge,
+[data-theme="terminal"] .stat-change {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: var(--fs-xs);
+}
+
+/* ─── Cards → terminal "windows" with ASCII borders ─── */
+
+/* .glass-card common surface — we treat these as panes */
+[data-theme="terminal"] .glass-card,
+[data-theme="terminal"] .glass-card-static,
+[data-theme="terminal"] .card-list-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-theme="terminal"] .glass-card:hover,
+[data-theme="terminal"] .card-list-item:hover {
+  border-color: var(--term-green);
+  box-shadow: 0 0 4px rgba(51, 255, 0, 0.2);
+  transform: none;
+}
+
+/* Title bar pattern for card headers */
+[data-theme="terminal"] .card-header {
+  border-bottom: 1px solid var(--border-primary);
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--term-green);
+  font-weight: var(--fw-bold);
+}
+
+/* ─── Modal → terminal dialog ─── */
+[data-theme="terminal"] .modal {
+  border: 1px solid var(--border-primary);
+  border-radius: 0;
+  box-shadow: 0 0 8px rgba(51, 255, 0, 0.2);
+  background: var(--term-bg);
+}
+
+/* ─── Buttons → bracket-style or inverted video ─── */
+[data-theme="terminal"] .btn {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: var(--fw-bold);
+  border-radius: 0;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+[data-theme="terminal"] .btn-primary {
+  background: var(--term-green);
+  color: var(--term-bg);
+  border: 1px solid var(--term-green);
+  text-shadow: none;
+}
+[data-theme="terminal"] .btn-primary:hover {
+  background: transparent;
+  color: var(--term-green);
+  box-shadow: 0 0 4px rgba(51, 255, 0, 0.3);
+  filter: none;
+}
+[data-theme="terminal"] .btn-primary:active {
+  color: var(--term-bg);
+  background: var(--term-green);
+}
+
+[data-theme="terminal"] .btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border-primary);
+  color: var(--term-green-dim);
+}
+[data-theme="terminal"] .btn-secondary:hover {
+  border-color: var(--term-green);
+  color: var(--term-green);
+  background: transparent;
+}
+[data-theme="terminal"] .btn-secondary:active {
+  background: var(--term-green);
+  color: var(--term-bg);
+}
+
+[data-theme="terminal"] .btn-ghost {
+  background: transparent;
+  border: none;
+  color: var(--term-green-dim);
+}
+[data-theme="terminal"] .btn-ghost:hover {
+  color: var(--term-green);
+  background: transparent;
+}
+
+[data-theme="terminal"] .btn-danger {
+  background: var(--term-red);
+  color: var(--term-bg);
+  border: 1px solid var(--term-red);
+}
+[data-theme="terminal"] .btn-danger:hover {
+  background: transparent;
+  color: var(--term-red);
+  box-shadow: 0 0 4px rgba(255, 51, 51, 0.3);
+}
+[data-theme="terminal"] .btn-danger:active {
+  background: var(--term-red);
+  color: var(--term-bg);
+}
+
+/* ─── Inputs → prompt-style with no box, just cursor ─── */
+[data-theme="terminal"] .input,
+[data-theme="terminal"] .search-box input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-primary);
+  border-radius: 0;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  color: var(--term-green);
+  padding: var(--space-1) 0;
+  caret-color: var(--term-green);
+}
+[data-theme="terminal"] .input:focus,
+[data-theme="terminal"] .search-box input:focus {
+  border-color: var(--term-green);
+  box-shadow: none;
+  outline: none;
+  color: var(--term-green);
+}
+[data-theme="terminal"] .input::placeholder,
+[data-theme="terminal"] .search-box input::placeholder {
+  color: var(--term-green-dark);
+  opacity: 0.6;
+}
+
+/* ─── Tabs → segment indicators ─── */
+[data-theme="terminal"] .tabs {
+  background: transparent;
+  border-bottom: 1px solid var(--border-primary);
+  border-radius: 0;
+  padding: 0;
+  gap: 0;
+}
+[data-theme="terminal"] .tab {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  border-radius: 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--term-green-dark);
+  font-weight: var(--fw-bold);
+}
+[data-theme="terminal"] .tab:hover {
+  color: var(--term-green);
+  background: transparent;
+}
+[data-theme="terminal"] .tab.active {
+  color: var(--term-green);
+  border-bottom-color: var(--term-green);
+  background: transparent;
+  box-shadow: none;
+}
+
+/* ─── Badges / tags → terminal status markers ─── */
+[data-theme="terminal"] .badge {
+  border-radius: 0;
+  border: 1px solid currentColor;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+}
+[data-theme="terminal"] .tag {
+  border: 1px solid var(--border-primary);
+  border-radius: 0;
+  color: var(--term-green-dim);
+}
+[data-theme="terminal"] .tag:hover,
+[data-theme="terminal"] .tag.active {
+  border-color: var(--term-green);
+  color: var(--term-green);
+  background: transparent;
+  box-shadow: none;
+}
+
+/* ─── Progress / toggle → pure ASCII progress bars ─── */
+[data-theme="terminal"] .progress-bar {
+  border-radius: 0;
+  height: 8px;
+  background: var(--term-bg);
+  border: 1px solid var(--border-primary);
+}
+[data-theme="terminal"] .progress-bar-fill {
+  background: var(--term-green);
+  border-radius: 0;
+  box-shadow: none;
+}
+[data-theme="terminal"] .toggle-switch {
+  border-radius: 0;
+  background: var(--term-bg);
+  border: 1px solid var(--border-primary);
+}
+[data-theme="terminal"] .toggle-switch::after {
+  border-radius: 0;
+  background: var(--term-green-dark);
+}
+[data-theme="terminal"] .toggle-switch.active {
+  background: var(--term-green);
+  border-color: var(--term-green);
+}
+[data-theme="terminal"] .toggle-switch.active::after {
+  background: var(--term-bg);
+}
+
+/* ─── Info banner → status output ─── */
+[data-theme="terminal"] .info-banner {
+  border-radius: 0;
+  border-width: 1px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+[data-theme="terminal"] .info-banner.info {
+  border-color: var(--term-green);
+  color: var(--term-green);
+  background: transparent;
+}
+[data-theme="terminal"] .info-banner.danger {
+  border-color: var(--term-red);
+  color: var(--term-red);
+  background: transparent;
+}
+[data-theme="terminal"] .info-banner.warning {
+  border-color: var(--term-amber);
+  color: var(--term-amber);
+  background: transparent;
+}
+
+/* ─── Keyboard focus → inverted video ─── */
+[data-theme="terminal"] :focus-visible {
+  outline: 1px solid var(--term-green);
+  outline-offset: 1px;
+}
+
+/* ─── Icons → monochrome green ─── */
+[data-theme="terminal"] svg {
+  color: var(--term-green);
+  stroke-width: 2;
+}
+[data-theme="terminal"] a:hover > svg,
+[data-theme="terminal"] .btn:hover > svg {
+  filter: drop-shadow(0 0 3px rgba(51, 255, 0, 0.4));
+}
+
+/* ─── Horizontal rules → ASCII separators ─── */
+[data-theme="terminal"] hr {
+  border: none;
+  border-top: 1px solid var(--border-primary);
+  margin: var(--space-4) 0;
+}
+[data-theme="terminal"] .divider {
+  color: var(--term-green-dark);
+  letter-spacing: -0.2em;
+}
+
+/* ─── Navbar / top bar ─── */
+[data-theme="terminal"] .topbar {
+  border-bottom: 1px solid var(--border-primary);
+  background: var(--term-bg);
+}
+[data-theme="terminal"] .topbar-logo {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+[data-theme="terminal"] .topbar-logo .wm-ust,
+[data-theme="terminal"] .topbar-logo .wm-ise {
+  color: var(--term-green);
+}
+
+/* ─── Table / data grids ─── */
+[data-theme="terminal"] table,
+[data-theme="terminal"] .data-table {
+  border-collapse: collapse;
+}
+[data-theme="terminal"] th,
+[data-theme="terminal"] .data-table th {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--term-green);
+  border-bottom: 1px solid var(--border-primary);
+  font-weight: var(--fw-bold);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+}
+[data-theme="terminal"] td,
+[data-theme="terminal"] .data-table td {
+  border-bottom: 1px solid var(--border-secondary);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-primary);
+}
+
+/* ─── Dropdown / select ─── */
+[data-theme="terminal"] select,
+[data-theme="terminal"] .dropdown {
+  background: var(--term-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: 0;
+  color: var(--term-green);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  text-transform: uppercase;
+}
+
+/* ─── Scrollbar ─── */
+[data-theme="terminal"] ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+[data-theme="terminal"] ::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+[data-theme="terminal"] ::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+}
+[data-theme="terminal"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* ─── Accessibility: reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="terminal"] .blink-cursor::after,
+  [data-theme="terminal"] .blink-underscore::after {
+    animation: none;
+    opacity: 1;
+  }
+}

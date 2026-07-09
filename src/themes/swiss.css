@@ -1,0 +1,689 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   SWISS INTERNATIONAL STYLE  —  "International Typographic Style"
+   ────────────────────────────────────────────────────────────────────────────
+   Born in 1950s Switzerland. Objectivity over subjectivity. The grid is law.
+   Typography is the interface. Active negative space. Flat, structured, precise.
+
+   Palette: Pure white (#FFFFFF) · Pure black (#000000) · Swiss Red (#FF3000)
+   Type:    Inter (already loaded) — grotesque sans-serif, the neutral vessel
+   Borders: Thick, visible, structural (2–4px solid #000000)
+   Radius:  0px everywhere — strictly rectangular
+   Shadows: None. Depth through pattern and border, never blur.
+   Accent:  #FF3000 — used only as a functional signal, never decoration.
+
+   Architecture: Same per-theme convention as industrial.css / minimalist-dark.css.
+   A [data-theme="swiss"] TOKEN block the whole app reads from, plus a scoped
+   PERSONALITY layer that re-styles every shared component class.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Swiss Texture Patterns (CSS-generated, no images needed) ────────────── */
+/* Applied via ::before / ::after and background utilities in personality layer */
+
+/* ─── Token Remap ─────────────────────────────────────────────────────────── */
+[data-theme="swiss"] {
+  /* Font — Inter at its most purposeful; no display font swap needed */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Surfaces — the canvas is neutral, absolute */
+  --bg-primary:       #ffffff;   /* the page is a sheet of paper */
+  --bg-secondary:     #f2f2f2;   /* muted gray — rhythm, not decoration */
+  --bg-tertiary:      #e8e8e8;   /* deeper recessed surface */
+  --bg-card:          #ffffff;   /* cards are paper */
+  --bg-card-hover:    #f2f2f2;   /* inversion cue */
+  --bg-glass:         rgba(255, 255, 255, 0.96);
+  --bg-glass-heavy:   #ffffff;
+  --bg-input:         #f2f2f2;   /* input wells: muted gray */
+
+  /* Type — absolute black and its functional grays */
+  --text-primary:     #000000;   /* ink is absolute */
+  --text-secondary:   #333333;   /* slightly lifted */
+  --text-tertiary:    #666666;   /* muted label tone */
+  --text-inverse:     #ffffff;   /* white on black / red surfaces */
+
+  /* Borders — structure is visible; borders define the grid */
+  --border-primary:   #000000;   /* thick, ink-black — the primary grid line */
+  --border-secondary: #cccccc;   /* lighter dividers for sub-structure */
+  --border-focus:     #FF3000;   /* Swiss Red focus ring — the only signal */
+
+  /* Accents — Swiss Red is the ONLY signal color.
+     Every other accent slot collapses toward black/gray
+     so the Red is never diluted by competing hues. */
+  --accent-blue:        #FF3000;               /* Swiss Red — PRIMARY interactive */
+  --accent-blue-glow:   rgba(255, 48, 0, 0.08);
+  --accent-purple:      #000000;               /* collapses to ink */
+  --accent-purple-glow: rgba(0, 0, 0, 0.06);
+  --accent-amber:       #000000;               /* collapses to ink */
+  --accent-amber-glow:  rgba(0, 0, 0, 0.06);
+  --accent-emerald:     #333333;               /* success = dark gray */
+  --accent-emerald-glow:rgba(0, 0, 0, 0.05);
+  --accent-rose:        #FF3000;               /* errors share Swiss Red */
+  --accent-rose-glow:   rgba(255, 48, 0, 0.08);
+  --accent-cyan:        #555555;               /* info = mid gray */
+  --accent-cyan-glow:   rgba(0, 0, 0, 0.05);
+  --accent-orange:      #FF3000;               /* warnings = Swiss Red */
+  --accent-orange-glow: rgba(255, 48, 0, 0.08);
+
+  /* Gradients — flat. No soft blends. Swiss design has no gradients. */
+  --gradient-primary:   linear-gradient(0deg, #000000, #000000);
+  --gradient-secondary: linear-gradient(0deg, #f2f2f2, #f2f2f2);
+  --gradient-accent:    linear-gradient(0deg, #FF3000, #FF3000);
+  --gradient-warm:      linear-gradient(0deg, #FF3000, #FF3000);
+  --gradient-success:   linear-gradient(0deg, #000000, #000000);
+  --gradient-glass:     linear-gradient(0deg, transparent, transparent);
+
+  /* Radius — ZERO. Strictly rectangular. The grid has no curves. */
+  --radius-sm:   0px;
+  --radius-md:   0px;
+  --radius-lg:   0px;
+  --radius-xl:   0px;
+  --radius-2xl:  0px;
+  /* --radius-full stays 9999px for status dots and toggle pills only */
+
+  /* Shadows — NONE. Depth comes from borders and patterns, not blur. */
+  --shadow-sm:          none;
+  --shadow-md:          none;
+  --shadow-lg:          none;
+  --shadow-xl:          none;
+  --shadow-glow-blue:   none;
+  --shadow-glow-purple: none;
+  --shadow-glow-amber:  none;
+
+  /* Transitions — snappy and mechanical, not elastic */
+  --transition-fast:   120ms ease-out;
+  --transition-base:   180ms ease-out;
+  --transition-slow:   280ms ease-out;
+  --transition-spring: 180ms ease-out;
+
+  /* Scrollbar — ink on paper */
+  --scrollbar-track:       #f2f2f2;
+  --scrollbar-thumb:       #000000;
+  --scrollbar-thumb-hover: #FF3000;
+
+  /* Status — simplified: active/idle, never colorful */
+  --status-online:  #000000;
+  --status-away:    #666666;
+  --status-offline: #cccccc;
+  --status-busy:    #FF3000;
+
+  /* Semantic states — Red for danger/warning, black for success/info */
+  --danger:  #FF3000;
+  --warning: #FF3000;
+  --success: #000000;
+  --info:    #333333;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PERSONALITY LAYER
+   Re-styles every shared component class to express Swiss character.
+   Selector specificity: [data-theme="swiss"] .class-name
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Body & Root ─────────────────────────────────────────────────────────── */
+[data-theme="swiss"] body {
+  background: #ffffff;
+  color: #000000;
+  /* Noise texture overlay — simulates fine paper grain, adds warmth */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.018'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────────── */
+[data-theme="swiss"] ::-webkit-scrollbar-thumb {
+  border-radius: 0;
+}
+
+/* ─── Glass Card ──────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .glass-card {
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 0;
+  box-shadow: none;
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
+[data-theme="swiss"] .glass-card:hover {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+  box-shadow: none;
+}
+
+[data-theme="swiss"] .glass-card:hover .text-secondary,
+[data-theme="swiss"] .glass-card:hover .section-subtitle,
+[data-theme="swiss"] .glass-card:hover .stat-label,
+[data-theme="swiss"] .glass-card:hover .stat-change,
+[data-theme="swiss"] .glass-card:hover p,
+[data-theme="swiss"] .glass-card:hover span:not(.badge),
+[data-theme="swiss"] .glass-card:hover small {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+[data-theme="swiss"] .glass-card-static {
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ─── Buttons ─────────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .btn {
+  border-radius: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+[data-theme="swiss"] .btn:active {
+  transform: none;
+}
+
+[data-theme="swiss"] .btn-primary {
+  background: #000000;
+  color: #ffffff;
+  border: 2px solid #000000;
+  box-shadow: none;
+}
+
+[data-theme="swiss"] .btn-primary:hover {
+  background: #FF3000;
+  border-color: #FF3000;
+  color: #ffffff;
+  filter: none;
+  box-shadow: none;
+}
+
+[data-theme="swiss"] .btn-secondary {
+  background: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+  box-shadow: none;
+}
+
+[data-theme="swiss"] .btn-secondary:hover {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+[data-theme="swiss"] .btn-ghost {
+  background: transparent;
+  color: #000000;
+  border: 2px solid transparent;
+}
+
+[data-theme="swiss"] .btn-ghost:hover {
+  background: #f2f2f2;
+  border-color: #000000;
+}
+
+[data-theme="swiss"] .btn-danger {
+  background: #FF3000;
+  color: #ffffff;
+  border: 2px solid #FF3000;
+}
+
+[data-theme="swiss"] .btn-danger:hover {
+  background: #000000;
+  border-color: #000000;
+}
+
+/* ─── Inputs ──────────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .input {
+  background: #f2f2f2;
+  border: 0 solid transparent;
+  border-bottom: 2px solid #000000;   /* underline style — Swiss form field */
+  border-radius: 0;
+  color: #000000;
+  font-weight: 500;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+[data-theme="swiss"] .input:focus {
+  border-bottom-color: #FF3000;
+  background: #f2f2f2;
+  box-shadow: none;
+  outline: none;
+}
+
+[data-theme="swiss"] .input::placeholder {
+  color: #999999;
+  font-weight: 400;
+}
+
+/* ─── Tabs ────────────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .tabs {
+  background: transparent;
+  border-bottom: 2px solid #000000;
+  border-radius: 0;
+  gap: 0;
+  padding: 0;
+}
+
+[data-theme="swiss"] .tab {
+  border-radius: 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: var(--fs-xs);
+  color: #666666;
+  padding: var(--sp-2) var(--sp-4);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+[data-theme="swiss"] .tab:hover {
+  color: #000000;
+  background: transparent;
+}
+
+[data-theme="swiss"] .tab.active {
+  background: transparent;
+  color: #000000;
+  border-bottom: 2px solid #FF3000;
+  box-shadow: none;
+  font-weight: 700;
+}
+
+/* ─── Badges ──────────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .badge {
+  border-radius: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+[data-theme="swiss"] .badge-blue    { background: #000000; color: #ffffff; }
+[data-theme="swiss"] .badge-purple  { background: #333333; color: #ffffff; }
+[data-theme="swiss"] .badge-amber   { background: #555555; color: #ffffff; }
+[data-theme="swiss"] .badge-emerald { background: #333333; color: #ffffff; }
+[data-theme="swiss"] .badge-rose    { background: #FF3000; color: #ffffff; }
+[data-theme="swiss"] .badge-cyan    { background: #555555; color: #ffffff; }
+[data-theme="swiss"] .badge-orange  { background: #FF3000; color: #ffffff; }
+
+/* ─── Tags ────────────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .tag {
+  border-radius: 0;
+  border: 1px solid #000000;
+  background: #ffffff;
+  color: #000000;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.65rem;
+}
+
+[data-theme="swiss"] .tag:hover,
+[data-theme="swiss"] .tag.active {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+/* ─── Progress Bar ────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .progress-bar {
+  background: #e8e8e8;
+  border-radius: 0;
+  border: 1px solid #000000;
+  height: 8px;
+}
+
+[data-theme="swiss"] .progress-bar-fill {
+  background: #000000;
+  border-radius: 0;
+}
+
+/* ─── Section Headers ─────────────────────────────────────────────────────── */
+[data-theme="swiss"] .section-title {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  font-size: var(--fs-2xl);
+}
+
+[data-theme="swiss"] .section-title .icon {
+  background: #000000;
+  color: #ffffff;
+  border-radius: 0;
+}
+
+[data-theme="swiss"] .section-subtitle {
+  font-size: var(--fs-xs);
+  color: #666666;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+
+/* ─── Page Typography ─────────────────────────────────────────────────────── */
+[data-theme="swiss"] .page-title {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  font-size: var(--fs-3xl);
+  color: #000000;
+}
+
+[data-theme="swiss"] .page-description {
+  font-size: var(--fs-sm);
+  color: #666666;
+  font-weight: 400;
+}
+
+/* ─── Stat Cards ──────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .stat-value {
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #000000;
+}
+
+[data-theme="swiss"] .stat-label {
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #666666;
+}
+
+[data-theme="swiss"] .stat-change.positive { color: #000000; font-weight: 700; }
+[data-theme="swiss"] .stat-change.negative { color: #FF3000; font-weight: 700; }
+
+/* ─── Quick Stat Cards (Dashboard Overview) ──────────────────────────────── */
+[data-theme="swiss"] .quick-stat-card {
+  border: 2px solid #000000;
+  border-radius: 0;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+[data-theme="swiss"] .quick-stat-card:hover {
+  background: #000000;
+  border-color: #000000;
+}
+
+[data-theme="swiss"] .quick-stat-card:hover .quick-stat-value,
+[data-theme="swiss"] .quick-stat-card:hover .quick-stat-label {
+  color: #ffffff !important;
+}
+
+[data-theme="swiss"] .quick-stat-value {
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+[data-theme="swiss"] .quick-stat-label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.65rem;
+  color: #666666;
+}
+
+[data-theme="swiss"] .quick-stat-bar {
+  display: none;
+}
+
+[data-theme="swiss"] .quick-stat-shine {
+  display: none;
+}
+
+/* ─── Modals ──────────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: none;
+}
+
+[data-theme="swiss"] .modal {
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ─── Divider ─────────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .divider {
+  background: #000000;
+  height: 2px;
+}
+
+/* ─── Avatar ──────────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .avatar {
+  background: #000000;
+  color: #ffffff;
+  border-radius: 0;
+}
+
+/* ─── Notification Dot / Badge ────────────────────────────────────────────── */
+[data-theme="swiss"] .notification-dot,
+[data-theme="swiss"] .notification-badge {
+  background: #FF3000;
+  border-color: #ffffff;
+  border-radius: 0;
+}
+
+/* ─── Status Dots ─────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .status-dot {
+  border-radius: 0;
+}
+
+/* ─── Empty State ─────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .empty-state h3 { color: #000000; font-weight: 700; text-transform: uppercase; }
+[data-theme="swiss"] .empty-state p  { color: #666666; }
+
+/* ─── Tooltip ─────────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .tooltip-wrapper .tooltip {
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.62rem;
+}
+
+/* ─── App Layout ──────────────────────────────────────────────────────────── */
+[data-theme="swiss"] .main-content {
+  border-left: 2px solid #000000;
+}
+
+/* ─── Page Wrapper — subtle 24px grid pattern ────────────────────────────── */
+[data-theme="swiss"] .page-wrapper {
+  position: relative;
+}
+
+[data-theme="swiss"] .page-wrapper::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.025) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+[data-theme="swiss"] .page-wrapper > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SIDEBAR PERSONALITY
+   ════════════════════════════════════════════════════════════════════════════ */
+[data-theme="swiss"] .sidebar {
+  background: #ffffff;
+  border-right: 2px solid #000000;
+}
+
+[data-theme="swiss"] .sidebar-nav-item {
+  border-radius: 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: var(--fs-xs);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+[data-theme="swiss"] .sidebar-nav-item:hover {
+  background: #f2f2f2;
+  color: #000000;
+}
+
+[data-theme="swiss"] .sidebar-nav-item.active {
+  background: #000000;
+  color: #ffffff;
+  border-radius: 0;
+}
+
+[data-theme="swiss"] .sidebar-nav-item.active .sidebar-icon,
+[data-theme="swiss"] .sidebar-nav-item.active .sidebar-label {
+  color: #ffffff;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   TOPBAR PERSONALITY
+   ════════════════════════════════════════════════════════════════════════════ */
+[data-theme="swiss"] .topbar {
+  background: #ffffff;
+  border-bottom: 2px solid #000000;
+  box-shadow: none;
+}
+
+[data-theme="swiss"] .topbar-search .input {
+  border-bottom: 2px solid #000000;
+  background: #f2f2f2;
+}
+
+[data-theme="swiss"] .topbar-btn {
+  border-radius: 0;
+  border: 1px solid transparent;
+}
+
+[data-theme="swiss"] .topbar-btn:hover {
+  background: #f2f2f2;
+  border-color: #000000;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   GLIDER TABS PERSONALITY
+   ════════════════════════════════════════════════════════════════════════════ */
+[data-theme="swiss"] .glider-tabs-container {
+  background: transparent;
+  border-bottom: 2px solid #000000;
+  border-radius: 0;
+}
+
+[data-theme="swiss"] .glider-tabs-track {
+  background: #f2f2f2;
+  border: 2px solid #000000;
+  border-radius: 0;
+  padding: 4px;
+  gap: 4px;
+}
+
+[data-theme="swiss"] .glider-tabs-glider,
+[data-theme="swiss"] .glider-tabs-dashboard .glider-tabs-glider,
+[data-theme="swiss"] .glider-tabs-gradelab .glider-tabs-glider {
+  background: #000000;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-theme="swiss"] .glider-tab {
+  border-radius: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.65rem;
+  color: #666666;
+  padding: 8px 14px;
+  transition: color var(--transition-fast);
+}
+
+[data-theme="swiss"] .glider-tab:hover {
+  color: #000000;
+}
+
+[data-theme="swiss"] .glider-tab.active {
+  background: transparent;
+  color: #ffffff;
+  border-radius: 0;
+}
+
+[data-theme="swiss"] .glider-tab.active .glider-tab-icon {
+  background: transparent !important;
+  color: #ffffff !important;
+}
+
+[data-theme="swiss"] .glider-tab-desc {
+  color: #666666;
+}
+
+[data-theme="swiss"] .glider-tab.active .glider-tab-desc {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SECTION-LEVEL DIVIDERS — numbered section labels in Swiss Red
+   Each major section gets a visible top-border + section number prefix.
+   Component-level classes can opt in with .swiss-section.
+   ════════════════════════════════════════════════════════════════════════════ */
+[data-theme="swiss"] .section-header {
+  border-top: 4px solid #000000;
+  padding-top: var(--sp-4);
+  margin-top: var(--sp-2);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SWISS TEXTURE UTILITY CLASSES
+   Apply these to any element for the characteristic pattern overlays.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* 24px grid lines — 3% opacity */
+[data-theme="swiss"] .swiss-grid-pattern,
+[data-theme="swiss"] .bg-secondary {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* 16px dot matrix — 4% opacity */
+[data-theme="swiss"] .swiss-dots {
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* 45° diagonal lines — 2% opacity */
+[data-theme="swiss"] .swiss-diagonal {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.02),
+    rgba(0, 0, 0, 0.02) 1px,
+    transparent 1px,
+    transparent 10px
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   FOCUS STYLES — sharp Swiss Red ring, no glow
+   ════════════════════════════════════════════════════════════════════════════ */
+[data-theme="swiss"] *:focus-visible {
+  outline: 2px solid #FF3000;
+  outline-offset: 2px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   REDUCED MOTION
+   ════════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="swiss"] * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}

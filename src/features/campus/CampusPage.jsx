@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Map, Sparkles, MapPin, Users, Library, UtensilsCrossed, GitBranch } from 'lucide-react';
+import { Map, MapPin, Users, Library, UtensilsCrossed, GitBranch } from 'lucide-react';
 import InteractiveMap from './InteractiveMap';
 import FacultyStatus from './FacultyStatus';
 import LibraryPulse from './LibraryPulse';
@@ -34,15 +34,9 @@ export default function CampusPage() {
     <div className="campus-page animate-fadeIn">
       <header className="campus-hero">
         <div className="campus-hero-bg" aria-hidden="true">
-          <div className="campus-hero-orb campus-hero-orb-1" />
-          <div className="campus-hero-orb campus-hero-orb-2" />
           <div className="campus-hero-grid" />
         </div>
         <div className="campus-hero-content">
-          <div className="campus-hero-badge">
-            <Sparkles size={12} />
-            <span>AUST Campus</span>
-          </div>
           <div className="campus-hero-title-row">
             <div className="campus-hero-icon">
               <Map size={26} />

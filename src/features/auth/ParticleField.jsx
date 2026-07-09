@@ -13,7 +13,7 @@ import { useEffect, useRef } from 'react';
  *  - intensity: number    — 0..1, brightens/tightens the gather (password strength)
  *  - blueprint: boolean   — ARCH easter-egg: draw as blueprint ruler grid
  */
-export default function ParticleField({ energized = false, intensity = 0, blueprint = false }) {
+export default function ParticleField({ theme, energized = false, intensity = 0, blueprint = false }) {
   const canvasRef = useRef(null);
   // Live values the animation loop reads without re-subscribing.
   const stateRef = useRef({ energized, intensity, blueprint });
@@ -85,6 +85,8 @@ export default function ParticleField({ energized = false, intensity = 0, bluepr
 
     const draw = () => {
       const { energized: en, intensity: inten, blueprint: bp } = stateRef.current;
+      // Re-read accent every frame so theme changes apply instantly (no refresh needed).
+      accent = readAccent();
       t += 1;
       ctx.clearRect(0, 0, w, h);
 
@@ -173,6 +175,18 @@ export default function ParticleField({ energized = false, intensity = 0, bluepr
       const rect = canvas.getBoundingClientRect();
       mouse.x = e.clientX - rect.left;
       mouse.y = e.clientY - rect.top;
+      // Don't attract particles when hovering over the logo/brand area
+      const brand = document.querySelector('.auth-brand-outside');
+      if (brand) {
+        const br = brand.getBoundingClientRect();
+        if (
+          e.clientX >= br.left && e.clientX <= br.right &&
+          e.clientY >= br.top && e.clientY <= br.bottom
+        ) {
+          mouse.x = -9999;
+          mouse.y = -9999;
+        }
+      }
     };
     const onLeave = () => {
       mouse.x = -9999;
@@ -191,7 +205,7 @@ export default function ParticleField({ energized = false, intensity = 0, bluepr
       window.removeEventListener('mouseout', onLeave);
       window.removeEventListener('resize', build);
     };
-  }, []);
+  }, [theme]);
 
   return <canvas ref={canvasRef} className="auth-particle-canvas" aria-hidden="true" />;
 }

@@ -10,8 +10,8 @@ import RoutineAttendanceTracker from './RoutineAttendanceTracker';
 import GliderTabs from '../../components/GliderTabs';
 import { deadlines } from '../../data/mockData';
 import {
-  TrendingUp, Percent, Clock, BookOpen, Sparkles, LayoutDashboard,
-  CalendarDays, Target, Zap,
+  TrendingUp, Percent, Clock, BookOpen, LayoutDashboard,
+  CalendarDays, Target, Zap, AlertTriangle,
 } from 'lucide-react';
 import { getUserStorageItem, getCurrentUserId } from '../../utils/authStorage';
 import { useAuth } from '../../context/AuthContext';
@@ -175,21 +175,17 @@ export default function DashboardPage() {
   const [focusMode, setFocusMode] = useState('overview');
   const firstName = user?.name?.split(' ')[0] || 'Student';
 
+  const profileIncomplete = user && (!user.department || !user.batch || !user.section || !user.yearSemester);
+
   const isVisible = (key) => FOCUS_SECTIONS[focusMode].includes(key);
 
   return (
     <div className={`dashboard-page dashboard-focus-${focusMode} animate-fadeIn`}>
       <header className="dash-hero">
         <div className="dash-hero-bg" aria-hidden="true">
-          <div className="dash-hero-orb dash-hero-orb-1" />
-          <div className="dash-hero-orb dash-hero-orb-2" />
           <div className="dash-hero-grid" />
         </div>
         <div className="dash-hero-content">
-          <div className="dash-hero-badge">
-            <Sparkles size={12} />
-            <span>Command Center</span>
-          </div>
           <div className="dash-hero-title-row">
             <div className="dash-hero-icon">
               <Zap size={24} />
@@ -205,6 +201,13 @@ export default function DashboardPage() {
           </div>
         </div>
       </header>
+
+      {profileIncomplete && (
+        <div className="dash-profile-warning animate-fadeIn">
+          <AlertTriangle size={16} />
+          <span>Your profile is incomplete. <a href="/settings">Complete it here</a> to unlock all features.</span>
+        </div>
+      )}
 
       <GliderTabs
         tabs={focusModes}

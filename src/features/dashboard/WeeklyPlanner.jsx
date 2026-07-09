@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CalendarDays, Trash2, X, Download, Eye, Check, RotateCcw, FileDown } from 'lucide-react';
 import { useRoutine } from '../../context/RoutineContext';
 import { ocrImportedRoutine, ocrImportedWeekDays } from '../../context/RoutineContext';
@@ -16,6 +16,15 @@ export default function WeeklyPlanner() {
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [availableTemplates, setAvailableTemplates] = useState([]);
+
+  useEffect(() => {
+    if (showLoadModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [showLoadModal]);
 
   // Time slot columns matching the AUST schedule exactly
   const timeSlots = [
@@ -581,8 +590,8 @@ export default function WeeklyPlanner() {
       {/* Load Routine Modal */}
       {showLoadModal && (
         <div className="modal-overlay" onClick={() => setShowLoadModal(false)}>
-          <div className="modal glass-card-static" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }}>
-            <div className="flex justify-between items-center mb-4">
+          <div className="modal glass-card-static" onClick={(e) => e.stopPropagation()} style={{ width: 'min(460px, 92vw)', height: 'min(400px, 70vh)', display: 'flex', flexDirection: 'column', overflow: 'hidden', maxWidth: 'none', maxHeight: 'none', margin: 0, animation: 'none' }}>
+            <div className="flex justify-between items-center" style={{ padding: '0 0 12px', borderBottom: '1px solid var(--border-primary)', flexShrink: 0 }}>
               <div>
                 <h3 style={{ fontSize: 'var(--fs-lg)', fontWeight: 'bold', margin: 0 }}>Load Routine Template</h3>
                 <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginTop: '4px' }}>Select a pre-defined routine template to load</p>
@@ -592,47 +601,48 @@ export default function WeeklyPlanner() {
               </button>
             </div>
 
-            {availableTemplates.length === 0 ? (
-              <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
-                <p>No routine templates available.</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {availableTemplates.map(template => (
-                  <div
-                    key={template.id}
-                    onClick={() => setSelectedTemplate(template)}
-                    style={{
-                      padding: '12px',
-                      background: selectedTemplate?.id === template.id ? 'var(--accent-blue-glow)' : 'var(--bg-input)',
-                      border: `1px solid ${selectedTemplate?.id === template.id ? 'var(--accent-blue)' : 'var(--border-primary)'}`,
-                      borderRadius: 'var(--radius-md)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', margin: 0 }}>{template.name}</h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="badge badge-blue" style={{ fontSize: '9px', padding: '1px 4px' }}>{template.department}</span>
-                          <span className="badge badge-purple" style={{ fontSize: '9px', padding: '1px 4px' }}>Sem {template.semester}</span>
-                          <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>{template.year}</span>
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, margin: '12px 0' }}>
+              {availableTemplates.length === 0 ? (
+                <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                  <p>No routine templates available.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {availableTemplates.map(template => (
+                    <div
+                      key={template.id}
+                      onClick={() => setSelectedTemplate(template)}
+                      style={{
+                        padding: '12px',
+                        background: selectedTemplate?.id === template.id ? 'var(--accent-blue-glow)' : 'var(--bg-input)',
+                        border: `1px solid ${selectedTemplate?.id === template.id ? 'var(--accent-blue)' : 'var(--border-primary)'}`,
+                        borderRadius: 'var(--radius-md)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', margin: 0 }}>{template.name}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="badge badge-blue" style={{ fontSize: '9px', padding: '1px 4px' }}>{template.department}</span>
+                            <span className="badge badge-purple" style={{ fontSize: '9px', padding: '1px 4px' }}>Sem {template.semester}</span>
+                            <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>{template.year}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {selectedTemplate?.id === template.id && (
+                            <Check size={18} style={{ color: 'var(--accent-emerald)' }} />
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {selectedTemplate?.id === template.id && (
-                          <Check size={18} style={{ color: 'var(--accent-emerald)' }} />
-                        )}
-                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
 
-
-            <div className="flex gap-2 mt-4">
+            <div className="flex gap-2" style={{ paddingTop: '12px', borderTop: '1px solid var(--border-primary)', flexShrink: 0 }}>
               <button className="btn btn-secondary flex-1" onClick={() => setShowLoadModal(false)}>Cancel</button>
               <button
                 className="btn btn-primary flex-1"

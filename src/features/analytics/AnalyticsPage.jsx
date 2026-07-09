@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  TrendingUp, Layers, Grid3x3, Star, Sparkles, FlaskConical, Trophy,
+  TrendingUp, Layers, Grid3x3, Star, FlaskConical, Trophy,
 } from 'lucide-react';
 import CGPAGraph from './CGPAGraph';
 import SemesterTracker from './SemesterTracker';
@@ -45,15 +45,9 @@ export default function AnalyticsPage() {
     <div className="analytics-page animate-fadeIn">
       <header className="grade-hero">
         <div className="grade-hero-bg" aria-hidden="true">
-          <div className="grade-hero-orb grade-hero-orb-1" />
-          <div className="grade-hero-orb grade-hero-orb-2" />
           <div className="grade-hero-grid" />
         </div>
         <div className="grade-hero-content">
-          <div className="grade-hero-badge">
-            <Sparkles size={12} />
-            <span>Academic Intelligence</span>
-          </div>
           <div className="grade-hero-title-row">
             <div className="grade-hero-icon">
               <FlaskConical size={24} />

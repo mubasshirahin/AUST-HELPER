@@ -7,6 +7,29 @@
   margin: 0 auto;
 }
 
+.dash-profile-warning {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-lg);
+  background: var(--accent-amber-glow);
+  border: 1px solid var(--accent-amber);
+  color: var(--accent-amber);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+}
+
+.dash-profile-warning a {
+  color: var(--accent-amber);
+  text-decoration: underline;
+  font-weight: var(--fw-semibold);
+}
+
+.dash-profile-warning a:hover {
+  opacity: 0.8;
+}
+
 /* ─── Hero Header ─── */
 .dash-hero {
   position: relative;
@@ -109,14 +132,10 @@
   justify-content: center;
   background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
   color: #fff;
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent-blue) 35%, transparent);
-  animation: dashIconPulse 3s ease-in-out infinite;
+  
 }
 
-@keyframes dashIconPulse {
-  0%, 100% { box-shadow: 0 8px 24px color-mix(in srgb, var(--accent-blue) 35%, transparent); }
-  50% { box-shadow: 0 8px 32px color-mix(in srgb, var(--accent-purple) 45%, transparent); }
-}
+
 
 .dash-hero-title {
   font-size: var(--fs-2xl);
@@ -206,6 +225,8 @@
   grid-template-columns: repeat(4, 1fr);
   gap: var(--sp-4);
 }
+
+
 
 .quick-stat-card {
   position: relative;
@@ -893,15 +914,7 @@
   letter-spacing: 0.03em;
 }
 
-[data-theme="cyberpunk"] .dash-hero-icon {
-  border-radius: 2px;
-  animation: dashIconPulseCyber 3s ease-in-out infinite;
-}
 
-@keyframes dashIconPulseCyber {
-  0%, 100% { box-shadow: 0 0 12px rgba(0, 255, 136, 0.35); }
-  50% { box-shadow: 0 0 24px rgba(0, 255, 136, 0.55), 0 0 48px rgba(255, 0, 255, 0.28); }
-}
 
 /* ─── Quick Stats → chamfered neon panels ─── */
 [data-theme="cyberpunk"] .dashboard-quick-stats {
@@ -1211,7 +1224,7 @@
 /* ─── Reduced motion: preserve static neon, remove continuous motion ─── */
 @media (prefers-reduced-motion: reduce) {
   [data-theme="cyberpunk"] .dash-hero-orb { animation: none; }
-  [data-theme="cyberpunk"] .dash-hero-icon { animation: none; }
+  
   [data-theme="cyberpunk"] .quick-stat-shine { display: none; }
 }
 

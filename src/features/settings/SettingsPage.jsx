@@ -3,10 +3,10 @@ import { useSearchParams } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useRoutine } from '../../context/RoutineContext';
-import { Camera, CheckCircle, Pencil, Settings, User, Bell, Info, Save, BellOff, BellRing, Clock, AlertTriangle, ShieldCheck, GraduationCap, Users, Send, CheckCircle2, Clock3, Moon, Sun, Newspaper, Terminal, Sparkles, Gauge, MoonStar, Pen, PenTool } from 'lucide-react';
+import { Camera, CheckCircle, Pencil, Settings, User, Bell, Info, Save, BellOff, BellRing, Clock, AlertTriangle, ShieldCheck, GraduationCap, Users, Send, CheckCircle2, Clock3, Moon, Sun, Newspaper, Terminal, Sparkles, Gauge, MoonStar, Pen, PenTool, Building2, Type, Zap, Grid2x2 } from 'lucide-react';
 import AboutUs from './AboutUs';
 import { useNotifications } from '../../hooks/useNotifications';
-import { submitRoleApplication, getApplicationsByUserId, getUserApplicationStatus, checkSlotVacancy, getSlotVacancyMap, resignFromRole } from '../../utils/authStorage';
+import { submitRoleApplication, getApplicationsByUserId, getUserApplicationStatus, checkSlotVacancy, getSlotVacancyMap, resignFromRole, deleteAccountById } from '../../utils/authStorage';
 import './SettingsPage.css';
 
 const departments = ['CSE', 'EEE', 'CE', 'ME', 'IPE', 'TE', 'ARCH', 'BBA'];
@@ -20,18 +20,17 @@ const juniorBatchByDepartment = {
   IPE: 35,
   ME: 29,
 };
-const yearSemesters = [
-  'Year 1 - Semester 1',
-  'Year 1 - Semester 2',
-  'Year 2 - Semester 1',
-  'Year 2 - Semester 2',
-  'Year 3 - Semester 1',
-  'Year 3 - Semester 2',
-  'Year 4 - Semester 1',
-  'Year 4 - Semester 2',
-];
+const getYearSemesters = (department) => {
+  const maxYear = department === 'ARCH' ? 5 : 4;
+  const options = [];
+  for (let y = 1; y <= maxYear; y++) {
+    options.push(`Year ${y} - Semester 1`);
+    options.push(`Year ${y} - Semester 2`);
+  }
+  return options;
+};
 const sections = ['A', 'B', 'C'];
-const quickProfileFields = ['department', 'batch', 'yearSemester', 'section', 'labSection'];
+const quickProfileFields = ['department', 'yearSemester', 'section', 'labSection'];
 
 const getLabSectionOptions = (section) => {
   if (!section) return [];
@@ -84,31 +83,44 @@ const getBatchNoFromUser = (user) => {
 };
 
 const getBatchDisplayName = (batchName, batchNo) => {
-  if (!batchNo) return batchName || 'Not selected';
-  const cleanBatchName = String(batchName || '').trim();
-
-  if (cleanBatchName && cleanBatchName !== String(batchNo)) {
-    return `${cleanBatchName.toUpperCase()}-${batchNo}`;
-  }
-
-  return `BATCH ${batchNo}`;
+  const cleanName = String(batchName || '').trim();
+  return cleanName || batchNo || 'Not selected';
 };
 
-const themeOptions = [
+const parseBatchInput = (input) => {
+  const raw = String(input || '').trim();
+  const match = raw.match(/^(.*?)\s*(\d{1,2})$/);
+  if (match) {
+    const name = match[1].trim();
+    const num = match[2];
+    return { batchName: name || num, batchNo: num };
+  }
+  return { batchName: raw, batchNo: raw };
+};
+
+const darkThemes = [
   { id: 'dark', label: 'Dark', desc: 'Dark Mode standard', icon: Moon },
-  { id: 'light', label: 'Light', desc: 'Light Mode standard', icon: Sun },
-  { id: 'newsprint', label: 'Newsprint', desc: 'Editorial ink-on-paper', icon: Newspaper },
-  { id: 'cyberpunk', label: 'Cyberpunk', desc: 'Neon-noir / glitch terminal', icon: Terminal },
-  { id: 'maximalism', label: 'Maximalism', desc: 'Dopamine / Y2K hyperpop', icon: Sparkles },
-  { id: 'industrial', label: 'Industrial', desc: 'Neumorphic machine realism', icon: Gauge },
   { id: 'midnight', label: 'Midnight', desc: 'Atmospheric dark + amber glow', icon: MoonStar },
+  { id: 'cyberpunk', label: 'Cyberpunk', desc: 'Neon-noir / glitch terminal', icon: Terminal },
+  { id: 'art-deco', label: 'Art Deco', desc: 'Gatsby luxury / geometric gold', icon: Building2 },
+  { id: 'poster', label: 'Bold Type', desc: 'Typography-first poster design', icon: Type },
+  { id: 'bitcoindefi', label: 'Bitcoin Defi', desc: 'Bitcoin orange / crypto dark', icon: Zap },
+];
+
+const lightThemes = [
+  { id: 'light', label: 'Light', desc: 'Light Mode standard', icon: Sun },
+  { id: 'swiss', label: 'Swiss', desc: 'International / Swiss Style', icon: Grid2x2 },
+  { id: 'newsprint', label: 'Newsprint', desc: 'Editorial ink-on-paper', icon: Newspaper },
   { id: 'sketchbook', label: 'Sketchbook', desc: 'Rough sketch aesthetic', icon: PenTool },
   { id: 'minimalist-monochrome', label: 'Monochrome', desc: 'Editorial stark minimalism', icon: Pen },
+  { id: 'industrial', label: 'Industrial', desc: 'Neumorphic machine realism', icon: Gauge },
 ];
+
+const themeOptions = [...darkThemes, ...lightThemes];
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
-  const { user, isAuthenticated, updateUser } = useAuth();
+  const { user, isAuthenticated, updateUser, logout } = useAuth();
   const { routine, weekDays } = useRoutine();
   const { supported, permission, settings: notifSettings, enable: enableNotifs, disable: disableNotifs, updateSetting } = useNotifications(routine, weekDays);
 
@@ -128,12 +140,22 @@ export default function SettingsPage() {
   const [applicationMessage, setApplicationMessage] = useState('');
   const [submittingApplication, setSubmittingApplication] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [inviteRole, setInviteRole] = useState('alumni');
+  const [inviteSending, setInviteSending] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState('');
+  const [inviteMsgType, setInviteMsgType] = useState('');
+  const [invitations, setInvitations] = useState([]);
+  const [invitePage, setInvitePage] = useState(1);
+  const [inviteTotalPages, setInviteTotalPages] = useState(1);
   const [notifEnabling, setNotifEnabling] = useState(false);
   const [notifMsg, setNotifMsg] = useState('');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [vacancyMap, setVacancyMap] = useState(null);
   const [resignConfirm, setResignConfirm] = useState(false);
   const [resigning, setResigning] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [yearSemTouched, setYearSemTouched] = useState(false);
   
   // Telegram notification settings
   const [telegramEnabled, setTelegramEnabled] = useState(() => {
@@ -206,16 +228,80 @@ export default function SettingsPage() {
       setVacancyMap(map);
     }
   }, [user?.department, user?.semester, isAuthenticated]);
+
+  // Fetch invitations list
+  const fetchInvites = useCallback(async (page = 1) => {
+    try {
+      const res = await fetch(`/api/invites?page=${page}&limit=10`);
+      const data = await res.json();
+      if (data.success) {
+        setInvitations(data.invitations);
+        setInviteTotalPages(data.pagination.totalPages);
+      }
+    } catch (err) {
+      console.error('Failed to fetch invites:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeSubTab === 'invite') fetchInvites(invitePage);
+  }, [activeSubTab, invitePage, fetchInvites]);
+
+  // Send invitation
+  const sendInvite = async () => {
+    if (!emailInput.trim()) {
+      setInviteMsg('Please enter an email address.');
+      setInviteMsgType('error');
+      return;
+    }
+    setInviteSending(true);
+    setInviteMsg('');
+    try {
+      const res = await fetch('/api/invites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput.trim(), role: inviteRole, invitedBy: user?.name || 'Admin' }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setInviteMsg(`Invitation sent to ${emailInput.trim()}`);
+        setInviteMsgType('success');
+        setEmailInput('');
+        fetchInvites(1);
+        setInvitePage(1);
+      } else {
+        setInviteMsg(data.error || 'Failed to send invitation.');
+        setInviteMsgType('error');
+      }
+    } catch (err) {
+      setInviteMsg('Network error. Please try again.');
+      setInviteMsgType('error');
+    } finally {
+      setInviteSending(false);
+    }
+  };
   const initialBatchNo = getBatchNoFromUser(user);
+  
+  // Extract student ID from @aust.edu email: "cse12345@aust.edu" -> "12345"
+  const detectedStudentId = (() => {
+    const email = user.email || '';
+    if (email.includes('@aust.edu')) {
+      const prefix = email.split('@')[0] || '';
+      const id = prefix.replace(/^[a-z.]+/i, '');
+      if (id) return id;
+    }
+    return user.id || '';
+  })();
   const [profileDetails, setProfileDetails] = useState({
-    id: user.id || '',
+    id: detectedStudentId,
     name: user.name || '',
     email: user.email || '',
     avatar: user.avatar || '',
+    bloodGroup: user.bloodGroup || '',
   });
   const [quickProfile, setQuickProfile] = useState({
     department: user.department || '',
-    batchName: user.batchName || initialBatchNo || user.batch || '',
+    batchName: user.batchName || initialBatchNo || '',
     batchNo: initialBatchNo,
     batchCustomName: '',
     yearSemester: user.yearSemester || getYearSemesterFromSemester(user.semester),
@@ -225,15 +311,20 @@ export default function SettingsPage() {
 
   const resetProfileDrafts = () => {
     const nextBatchNo = getBatchNoFromUser(user);
+    const email = user.email || '';
+    const resetId = email.includes('@aust.edu')
+      ? (email.split('@')[0] || '').replace(/^[a-z.]+/i, '') || user.id
+      : user.id || '';
     setProfileDetails({
-      id: user.id || '',
+      id: resetId,
       name: user.name || '',
       email: user.email || '',
       avatar: user.avatar || '',
+      bloodGroup: user.bloodGroup || '',
     });
     setQuickProfile({
       department: user.department || '',
-      batchName: user.batchName || nextBatchNo || user.batch || '',
+      batchName: user.batchName || nextBatchNo || '',
       batchNo: nextBatchNo,
       batchCustomName: '',
       yearSemester: user.yearSemester || getYearSemesterFromSemester(user.semester),
@@ -251,6 +342,8 @@ export default function SettingsPage() {
   };
 
   const updateQuickProfileField = (field, value) => {
+    if (field === 'yearSemester') setYearSemTouched(true);
+    if (field === 'department') setYearSemTouched(false);
     setQuickProfile((currentProfile) => {
       const fieldIndex = quickProfileFields.indexOf(field);
       const nextProfile = {
@@ -266,12 +359,7 @@ export default function SettingsPage() {
       }
 
       quickProfileFields.slice(fieldIndex + 1).forEach((nextField) => {
-        if (nextField === 'batch') {
-          nextProfile.batchName = '';
-          nextProfile.batchNo = '';
-        } else {
-          nextProfile[nextField] = '';
-        }
+        if (nextField !== 'batch') nextProfile[nextField] = '';
       });
 
       return nextProfile;
@@ -280,8 +368,6 @@ export default function SettingsPage() {
 
   const quickProfileReady = Boolean(
     quickProfile.department &&
-    quickProfile.batchName &&
-    quickProfile.batchNo &&
     quickProfile.yearSemester &&
     quickProfile.section
   );
@@ -290,10 +376,16 @@ export default function SettingsPage() {
   const allChangesReady = profileDetailsReady && quickProfileReady;
 
   const updateProfileDetailsField = (field, value) => {
-    setProfileDetails((currentDetails) => ({
-      ...currentDetails,
-      [field]: value,
-    }));
+    setProfileDetails((currentDetails) => {
+      const next = { ...currentDetails, [field]: value };
+      // Auto-detect student ID from @aust.edu email
+      if (field === 'email' && value.includes('@aust.edu')) {
+        const prefix = value.split('@')[0] || '';
+        const detectedId = prefix.replace(/^[a-z]+/i, '');
+        if (detectedId) next.id = detectedId;
+      }
+      return next;
+    });
   };
 
   const handleRoleApplication = async (e) => {
@@ -379,6 +471,7 @@ export default function SettingsPage() {
       name: nextName,
       email: profileDetails.email.trim(),
       avatar: profileDetails.avatar,
+      bloodGroup: profileDetails.bloodGroup,
       initials: getInitials(nextName),
       department: quickProfile.department,
       batch: finalBatchName,
@@ -394,26 +487,50 @@ export default function SettingsPage() {
     window.setTimeout(() => setSaveMessage(''), 1800);
   };
 
-  const visibleBatchName = getBatchDisplayName(
-    quickProfile.batchCustomName.trim() || quickProfile.batchName || user.batch,
-    quickProfile.batchNo
-  );
+  const visibleBatchName = quickProfile.batchName && quickProfile.batchNo
+    ? (quickProfile.batchName === quickProfile.batchNo ? quickProfile.batchName : `${quickProfile.batchName} ${quickProfile.batchNo}`)
+    : quickProfile.batchName || quickProfile.batchNo || 'Not selected';
 
   const quickChangeSteps = [
     { label: 'Department', field: 'department', options: departments, visible: true },
-    { label: 'Batch', field: 'batch', options: getBatchOptions(quickProfile.department), visible: Boolean(quickProfile.department) },
-    { label: 'Year-Sem', field: 'yearSemester', options: yearSemesters, visible: Boolean(quickProfile.batchNo) },
-    { label: 'Section', field: 'section', options: sections, visible: Boolean(quickProfile.yearSemester) },
+    { label: 'Batch', field: 'batch', options: getBatchOptions(quickProfile.department), visible: false },
+    { label: 'Year-Sem', field: 'yearSemester', options: getYearSemesters(quickProfile.department), visible: Boolean(quickProfile.department) },
+    { label: 'Section', field: 'section', options: sections, visible: Boolean(quickProfile.yearSemester && yearSemTouched) },
     { label: 'Lab Section', field: 'labSection', options: getLabSectionOptions(quickProfile.section), visible: Boolean(quickProfile.section) },
   ];
 
   const renderOptionGroup = (label, field, options) => {
     const isBatchField = field === 'batch';
 
+    if (isBatchField) {
+      return (
+        <div className="quick-option-group">
+          <span>Batch</span>
+          <input
+            type="text"
+            className="input"
+            value={quickProfile.batchName && quickProfile.batchNo
+              ? (quickProfile.batchName === quickProfile.batchNo ? quickProfile.batchName : `${quickProfile.batchName} ${quickProfile.batchNo}`)
+              : quickProfile.batchName || quickProfile.batchNo || ''}
+            placeholder="e.g. Quanta 52"
+            onChange={(event) => {
+              const parsed = parseBatchInput(event.target.value);
+              setQuickProfile((currentProfile) => ({
+                ...currentProfile,
+                batchName: parsed.batchName,
+                batchNo: parsed.batchNo,
+                batchCustomName: '',
+              }));
+            }}
+          />
+        </div>
+      );
+    }
+
     return (
-    <div className={`quick-option-group ${isBatchField ? 'batch-option-group' : ''}`}>
+    <div className="quick-option-group">
       <span>{label}</span>
-      <div className={`quick-option-grid ${field === 'yearSemester' ? 'wide-options' : ''} ${isBatchField ? 'batch-option-slider' : ''}`}>
+      <div className={`quick-option-grid ${field === 'yearSemester' ? 'wide-options' : ''}`}>
         {options.map((option) => {
           const optionLabel = field === 'yearSemester'
             ? getYearSemesterShortName(option)
@@ -421,16 +538,13 @@ export default function SettingsPage() {
               ? option
               : option.label;
           const value = option;
-          const selected = field === 'batch'
-            ? quickProfile.batchNo === option.batchNo
-            : quickProfile[field] === value;
 
           return (
             <button
               key={optionLabel}
               type="button"
-              className={`quick-option ${selected ? 'selected' : ''}`}
-              aria-pressed={selected}
+              className={`quick-option ${quickProfile[field] === value ? 'selected' : ''}`}
+              aria-pressed={quickProfile[field] === value}
               onClick={() => updateQuickProfileField(field, value)}
             >
               {optionLabel}
@@ -438,36 +552,55 @@ export default function SettingsPage() {
           );
         })}
       </div>
-      {isBatchField && quickProfile.batchNo && (
-        <label className="batch-name-field">
-          <span>Batch Name <em>Optional</em></span>
-          <input
-            type="text"
-            className="input"
-            value={quickProfile.batchCustomName}
-            placeholder={`Default: ${quickProfile.batchName}`}
-            onChange={(event) => setQuickProfile((currentProfile) => ({
-              ...currentProfile,
-              batchCustomName: event.target.value,
-            }))}
-          />
-        </label>
-      )}
     </div>
     );
   };
 
+  const profileFields = [
+    { key: 'id', label: 'Student ID' },
+    { key: 'name', label: 'Name' },
+    { key: 'email', label: 'Email' },
+    { key: 'department', label: 'Department' },
+    { key: 'batch', label: 'Batch' },
+    { key: 'yearSemester', label: 'Year-Semester' },
+    { key: 'section', label: 'Section' },
+    { key: 'bloodGroup', label: 'Blood Group' },
+  ];
+  const filledFields = profileFields.filter((f) => {
+    const val = f.key === 'department' ? quickProfile.department
+      : f.key === 'batch' ? quickProfile.batchName
+      : f.key === 'yearSemester' ? quickProfile.yearSemester
+      : f.key === 'section' ? quickProfile.section
+      : profileDetails[f.key];
+    return Boolean(val && val.trim());
+  });
+  const profilePercent = Math.round((filledFields.length / profileFields.length) * 100);
+
   return (
     <div className="settings-page animate-fadeIn">
-      <div className="settings-header">
-        <h1 className="page-title">Portal Settings</h1>
-        <p className="page-description">Manage user preferences, toggle modes, configure WhatsApp bots, and view about notes.</p>
-      </div>
+      <header className="settings-hero">
+        <div className="settings-hero-bg" aria-hidden="true">
+          <div className="settings-hero-grid" />
+        </div>
+        <div className="settings-hero-content">
+          <div className="settings-hero-title-row">
+            <div className="settings-hero-icon">
+              <Settings size={26} />
+            </div>
+            <div>
+              <h1 className="settings-hero-title">Settings</h1>
+              <p className="settings-hero-subtitle">
+                Manage your profile, choose a theme, configure notifications, and more.
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
 
-      <div className="grid-2" style={{ gridTemplateColumns: '0.8fr 2.2fr' }}>
+      <div className="settings-grid">
         
         {/* Left Side: Sidebar options */}
-        <div className="glass-card-static" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px', height: 'fit-content' }}>
+        <div className="settings-nav-card">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <button 
               onClick={() => handleSetActiveSubTab('profile')}
@@ -498,11 +631,19 @@ export default function SettingsPage() {
                 <GraduationCap size={16} /> Apply for CR/SR
               </button>
             )}
+            {isAuthenticated && user?.role === 'admin' && (
+              <button 
+                onClick={() => { handleSetActiveSubTab('invite'); fetchInvites(1); }}
+                className={`settings-nav-item ${activeSubTab === 'invite' ? 'active' : ''}`}
+              >
+                <Send size={16} /> Invite Member
+              </button>
+            )}
           </div>
         </div>
 
         {/* Right Side: Tab Panel Content */}
-        <div className="glass-card-static settings-panel">
+        <div className="settings-panel">
           {activeSubTab === 'profile' && (
             <div className="animate-fadeIn">
               <div className="profile-panel-header">
@@ -511,6 +652,13 @@ export default function SettingsPage() {
                   <p>Update your identity and academic info together.</p>
                 </div>
                 <div className="profile-save-actions">
+                  <div className="profile-completion-circle" title={`${profilePercent}% complete`}>
+                    <svg viewBox="0 0 36 36">
+                      <path className="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <path className="circle-fill" strokeDasharray={`${profilePercent}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <span className="profile-completion-text">{profilePercent}%</span>
+                  </div>
                   {saveMessage && (
                     <span className="save-status">
                       <CheckCircle size={14} /> {saveMessage}
@@ -553,8 +701,9 @@ export default function SettingsPage() {
                         <input
                           type="text"
                           value={profileDetails.id}
-                          onChange={(event) => updateProfileDetailsField('id', event.target.value)}
                           className="input mt-1"
+                          disabled
+                          style={{ opacity: 0.6, cursor: 'not-allowed' }}
                         />
                       </label>
                       <label>
@@ -562,8 +711,9 @@ export default function SettingsPage() {
                         <input
                           type="email"
                           value={profileDetails.email}
-                          onChange={(event) => updateProfileDetailsField('email', event.target.value)}
                           className="input mt-1"
+                          disabled
+                          style={{ opacity: 0.6, cursor: 'not-allowed' }}
                         />
                       </label>
                     </div>
@@ -576,14 +726,36 @@ export default function SettingsPage() {
                         className="input mt-1"
                       />
                     </label>
+                    <label>
+                      <span>Blood Group</span>
+                      <select
+                        value={profileDetails.bloodGroup}
+                        onChange={(event) => updateProfileDetailsField('bloodGroup', event.target.value)}
+                        className="input mt-1"
+                      >
+                        <option value="">Not set</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                      </select>
+                    </label>
                   </div>
                 ) : (
                   <div className="profile-read-grid">
                     <div>
-                      <span>Student ID</span>
+                      <span>AWID</span>
+                      <strong style={{ fontSize: '10px', opacity: 0.7 }}>{user.awid || user.id || 'N/A'}</strong>
+                      <span className="profile-read-sub-label">Student ID</span>
                       <strong>{profileDetails.id || 'Not set'}</strong>
                       <span className="profile-read-sub-label">Email</span>
                       <strong>{profileDetails.email || 'Not set'}</strong>
+                      <span className="profile-read-sub-label">Blood Group</span>
+                      <strong>{profileDetails.bloodGroup || 'Not set'}</strong>
                     </div>
                     <div>
                       <span>Name</span>
@@ -614,6 +786,26 @@ export default function SettingsPage() {
                     <strong>{quickProfile.yearSemester ? getYearSemesterShortName(quickProfile.yearSemester) : 'Not selected'}</strong>
                   </div>
                 </div>
+
+                {(user.linkedSocial?.gmail || user.linkedSocial?.facebook) && (
+                  <div className="profile-linked-social">
+                    <h4>Linked Accounts</h4>
+                    <div className="profile-linked-social-list">
+                      {user.linkedSocial.gmail && (
+                        <span className="profile-linked-social-item">
+                          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                          {user.linkedSocial.gmail}
+                        </span>
+                      )}
+                      {user.linkedSocial.facebook && (
+                        <span className="profile-linked-social-item">
+                          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
+                          {user.linkedSocial.facebook}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {isEditingProfile && (
                   <div className="settings-quick-change">
@@ -670,6 +862,70 @@ export default function SettingsPage() {
                   </button>
                 </div>
               )}
+
+              {!isEditingProfile && (
+                <div style={{
+                  marginTop: '24px',
+                  paddingTop: '20px',
+                  borderTop: '1px solid var(--border-primary)',
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '16px',
+                    flexWrap: 'wrap',
+                  }}>
+                    <div>
+                      <h4 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', color: 'var(--accent-rose)', margin: 0 }}>
+                        Delete Account
+                      </h4>
+                      <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+                        Permanently remove your account and all associated data.
+                      </p>
+                    </div>
+                    {!deleteConfirm ? (
+                      <button
+                        className="btn btn-sm"
+                        style={{
+                          background: 'var(--accent-rose-glow)',
+                          color: 'var(--accent-rose)',
+                          border: '1px solid var(--accent-rose)',
+                          whiteSpace: 'nowrap',
+                        }}
+                        onClick={() => setDeleteConfirm(true)}
+                      >
+                        Delete Account
+                      </button>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--accent-rose)' }}>Are you sure?</span>
+                        <button
+                          className="btn btn-sm"
+                          style={{
+                            background: 'var(--accent-rose)',
+                            color: '#fff',
+                            border: 'none',
+                            whiteSpace: 'nowrap',
+                          }}
+                          onClick={() => {
+                            if (user?.id) deleteAccountById(user.id);
+                            logout();
+                          }}
+                        >
+                          Yes, Delete
+                        </button>
+                        <button
+                          className="btn btn-sm btn-secondary"
+                          onClick={() => setDeleteConfirm(false)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -685,37 +941,90 @@ export default function SettingsPage() {
                   </p>
                 </div>
 
-                <div
-                  role="radiogroup"
-                  aria-label="Interface theme"
-                  className="grid-3"
-                  style={{ gap: 'var(--sp-3)' }}
-                >
-                  {themeOptions.map(({ id, label, desc, icon: Icon }) => {
-                    const isActive = theme === id;
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        role="radio"
-                        aria-checked={isActive}
-                        onClick={() => setTheme(id)}
-                        className="flex flex-col items-start gap-2 p-4"
-                        style={{
-                          textAlign: 'left',
-                          borderRadius: 'var(--radius-md)',
-                          border: `1px solid ${isActive ? 'var(--accent-blue)' : 'var(--border-primary)'}`,
-                          background: isActive ? 'var(--accent-blue-glow)' : 'var(--bg-secondary)',
-                          color: isActive ? 'var(--accent-blue)' : 'var(--text-primary)',
-                          transition: 'all var(--transition-base)',
-                        }}
-                      >
-                        <Icon size={18} />
-                        <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-semibold)' }}>{label}</span>
-                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.35 }}>{desc}</span>
-                      </button>
-                    );
-                  })}
+                {/* ─── Dark Themes ─── */}
+                <div style={{ marginBottom: '20px' }}>
+                  <h5 style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px', fontWeight: 600 }}>
+                    Dark Mode
+                  </h5>
+                  <div
+                    role="radiogroup"
+                    aria-label="Dark themes"
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                      gap: 'var(--sp-2)',
+                    }}
+                  >
+                    {darkThemes.map(({ id, label, desc, icon: Icon }) => {
+                      const isActive = theme === id;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          role="radio"
+                          aria-checked={isActive}
+                          onClick={() => setTheme(id)}
+                          className="flex flex-col items-start gap-1 p-3"
+                          style={{
+                            textAlign: 'left',
+                            borderRadius: 'var(--radius-md)',
+                            border: `1px solid ${isActive ? 'var(--accent-blue)' : 'var(--border-primary)'}`,
+                            background: isActive ? 'var(--accent-blue-glow)' : 'var(--bg-secondary)',
+                            color: isActive ? 'var(--accent-blue)' : 'var(--text-primary)',
+                            transition: 'all var(--transition-base)',
+                            fontSize: 'var(--fs-xs)',
+                          }}
+                        >
+                          <Icon size={16} />
+                          <span style={{ fontWeight: 'var(--fw-semibold)' }}>{label}</span>
+                          <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', lineHeight: 1.3 }}>{desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* ─── Light Themes ─── */}
+                <div>
+                  <h5 style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px', fontWeight: 600 }}>
+                    Light Mode
+                  </h5>
+                  <div
+                    role="radiogroup"
+                    aria-label="Light themes"
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                      gap: 'var(--sp-2)',
+                    }}
+                  >
+                    {lightThemes.map(({ id, label, desc, icon: Icon }) => {
+                      const isActive = theme === id;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          role="radio"
+                          aria-checked={isActive}
+                          onClick={() => setTheme(id)}
+                          className="flex flex-col items-start gap-1 p-3"
+                          style={{
+                            textAlign: 'left',
+                            borderRadius: 'var(--radius-md)',
+                            border: `1px solid ${isActive ? 'var(--accent-blue)' : 'var(--border-primary)'}`,
+                            background: isActive ? 'var(--accent-blue-glow)' : 'var(--bg-secondary)',
+                            color: isActive ? 'var(--accent-blue)' : 'var(--text-primary)',
+                            transition: 'all var(--transition-base)',
+                            fontSize: 'var(--fs-xs)',
+                          }}
+                        >
+                          <Icon size={16} />
+                          <span style={{ fontWeight: 'var(--fw-semibold)' }}>{label}</span>
+                          <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', lineHeight: 1.3 }}>{desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1555,6 +1864,137 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {activeSubTab === 'invite' && isAuthenticated && user?.role === 'admin' && (
+            <div className="animate-fadeIn">
+              <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', marginBottom: '4px' }}>Invite Member</h3>
+              <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+                Send an invitation to Faculty or Alumni members. They will receive a secure link to create their account.
+              </p>
+
+              {/* Invite Form */}
+              <div style={{ background: 'var(--bg-input)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                  <div style={{ flex: '0 0 140px' }}>
+                    <label style={{ fontSize: 'var(--fs-xs)', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Role</label>
+                    <select
+                      value={inviteRole}
+                      onChange={(e) => setInviteRole(e.target.value)}
+                      style={{ width: '100%', padding: '8px 10px', background: 'var(--bg-card)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontSize: 'var(--fs-sm)' }}
+                    >
+                      <option value="alumni">Alumni</option>
+                      <option value="faculty">Faculty</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, minWidth: '200px' }}>
+                    <label style={{ fontSize: 'var(--fs-xs)', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Email</label>
+                    <input
+                      className="input"
+                      type="email"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      placeholder="alumni@example.com"
+                      onKeyDown={(e) => { if (e.key === 'Enter') sendInvite(); }}
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                  <button
+                    className="btn btn-primary"
+                    onClick={sendInvite}
+                    disabled={inviteSending}
+                    style={{ height: '38px', whiteSpace: 'nowrap' }}
+                  >
+                    {inviteSending ? 'Sending...' : 'Send Invite'}
+                  </button>
+                </div>
+
+                {inviteMsg && (
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '8px 12px',
+                    fontSize: 'var(--fs-xs)',
+                    borderRadius: 'var(--radius-sm)',
+                    background: inviteMsgType === 'success' ? 'var(--accent-emerald-glow)' : 'var(--accent-rose-glow)',
+                    border: `1px solid ${inviteMsgType === 'success' ? 'var(--accent-emerald)' : 'var(--accent-rose)'}`,
+                    color: inviteMsgType === 'success' ? 'var(--accent-emerald)' : 'var(--accent-rose)',
+                  }}>
+                    {inviteMsg}
+                  </div>
+                )}
+              </div>
+
+              {/* Invitation History */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <h4 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', margin: 0 }}>Invitation History</h4>
+                </div>
+
+                {invitations.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-tertiary)', fontSize: 'var(--fs-sm)' }}>
+                    No invitations sent yet.
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-xs)' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid var(--border-primary)' }}>
+                            <th style={{ textAlign: 'left', padding: '8px 10px', fontWeight: 'bold' }}>Email</th>
+                            <th style={{ textAlign: 'left', padding: '8px 10px', fontWeight: 'bold' }}>Role</th>
+                            <th style={{ textAlign: 'left', padding: '8px 10px', fontWeight: 'bold' }}>Status</th>
+                            <th style={{ textAlign: 'left', padding: '8px 10px', fontWeight: 'bold' }}>Sent</th>
+                            <th style={{ textAlign: 'left', padding: '8px 10px', fontWeight: 'bold' }}>Accepted</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {invitations.map((inv) => (
+                            <tr key={inv.Id} style={{ borderBottom: '1px solid var(--border-secondary)' }}>
+                              <td style={{ padding: '8px 10px', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>{inv.Email}</td>
+                              <td style={{ padding: '8px 10px', textTransform: 'capitalize' }}>{inv.Role}</td>
+                              <td style={{ padding: '8px 10px' }}>
+                                <span className={`badge ${inv.Status === 'accepted' ? 'badge-emerald' : inv.Status === 'expired' ? 'badge-rose' : 'badge-blue'}`} style={{ fontSize: '9px' }}>
+                                  {inv.Status === 'accepted' ? 'Accepted' : inv.Status === 'expired' ? 'Expired' : 'Pending'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '8px 10px', color: 'var(--text-tertiary)', fontSize: '11px' }}>
+                                {new Date(inv.CreatedAt).toLocaleDateString()}
+                              </td>
+                              <td style={{ padding: '8px 10px', color: 'var(--text-tertiary)', fontSize: '11px' }}>
+                                {inv.AcceptedAt ? new Date(inv.AcceptedAt).toLocaleDateString() : '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {inviteTotalPages > 1 && (
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginTop: '16px' }}>
+                        {Array.from({ length: inviteTotalPages }, (_, i) => i + 1).map((p) => (
+                          <button
+                            key={p}
+                            onClick={() => setInvitePage(p)}
+                            style={{
+                              width: '30px', height: '30px',
+                              border: `1px solid ${p === invitePage ? 'var(--border-focus)' : 'var(--border-primary)'}`,
+                              borderRadius: 'var(--radius-sm)',
+                              background: p === invitePage ? 'var(--accent-blue-glow)' : 'transparent',
+                              color: p === invitePage ? 'var(--accent-blue)' : 'var(--text-secondary)',
+                              fontWeight: p === invitePage ? 'bold' : 'normal',
+                              cursor: 'pointer', fontSize: 'var(--fs-xs)',
+                            }}
+                          >
+                            {p}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>

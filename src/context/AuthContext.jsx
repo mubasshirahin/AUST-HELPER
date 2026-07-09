@@ -4,6 +4,7 @@ import {
   getInitials,
   guestUser,
   loginAccount,
+  loginByAccount,
   restoreSessionUser,
   signupAccount,
   startSession,
@@ -42,6 +43,21 @@ export function AuthProvider({ children }) {
     return nextUser;
   };
 
+  const loginDirect = (account) => {
+    // Skips password verification — for social/OAuth flows where
+    // identity has already been verified by the provider.
+    loginByAccount(account);
+    const nextUser = startSession(account);
+    setSessionUser(nextUser);
+    return nextUser;
+  };
+
+  const loginGuest = () => {
+    const guestAccount = { id: 'guest', role: 'guest', name: 'Guest', email: '', initials: 'GU' };
+    const nextUser = startSession(guestAccount);
+    setSessionUser(nextUser);
+  };
+
   const logout = () => {
     clearSession();
     setSessionUser(null);
@@ -57,7 +73,8 @@ export function AuthProvider({ children }) {
     };
     setSessionUser(updatedUser);
     localStorage.setItem(userStorageKey, JSON.stringify(updatedUser));
-    updateAccountProfile(sessionUser.id, nextUserData);
+    const accountId = nextUserData.id || sessionUser.id;
+    updateAccountProfile(accountId, nextUserData);
     return true;
   };
 
@@ -70,6 +87,8 @@ export function AuthProvider({ children }) {
       isGuest: !isAuthenticated,
       isLoading,
       login,
+      loginDirect,
+      loginGuest,
       signup,
       logout,
       updateUser,

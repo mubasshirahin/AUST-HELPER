@@ -104,7 +104,6 @@
   border-radius: 16px;
   background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan));
   color: #fff;
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent-emerald) 35%, transparent);
   flex-shrink: 0;
 }
 
@@ -328,8 +327,7 @@
   justify-content: center;
   background: linear-gradient(135deg, var(--accent-cyan), var(--accent-emerald));
   color: #fff;
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent-cyan) 35%, transparent);
-}
+  }
 
 .floor-plan-title {
   font-size: var(--fs-2xl);

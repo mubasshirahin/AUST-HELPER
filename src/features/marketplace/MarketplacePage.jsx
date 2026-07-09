@@ -5,13 +5,11 @@ import ToLetListings from './ToLetListings';
 import LostAndFound from './LostAndFound';
 import MentorRequests from './MentorRequests';
 import MarketplaceMasthead from './MarketplaceMasthead';
-import MarketplaceMaxHero from './MarketplaceMaxHero';
 import './MarketplacePage.css';
 
 export default function MarketplacePage() {
   const { theme } = useTheme();
   const isNewsprint = theme === 'newsprint';
-  const isMax = theme === 'maximalism';
   const [activeTab, setActiveTab] = useState('exchange');
 
   const renderActiveTab = () => {
@@ -30,11 +28,9 @@ export default function MarketplacePage() {
   };
 
   return (
-    <div className={`marketplace-page animate-fadeIn${isNewsprint ? ' marketplace-newsprint' : ''}${isMax ? ' marketplace-maximalism' : ''}`}>
+    <div className={`marketplace-page animate-fadeIn${isNewsprint ? ' marketplace-newsprint' : ''}`}>
       {isNewsprint ? (
         <MarketplaceMasthead />
-      ) : isMax ? (
-        <MarketplaceMaxHero />
       ) : (
         <div className="marketplace-header">
           <h1 className="page-title">Campus Market</h1>

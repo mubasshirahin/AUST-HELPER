@@ -134,9 +134,10 @@
 
 .topbar-logo .wm-ust,
 .topbar-logo .wm-ise {
-  font-weight: var(--fw-bold);
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: 700;
   font-size: var(--fs-lg);
-  letter-spacing: 0.02em;
+  letter-spacing: -0.01em;
   text-transform: lowercase;
   color: var(--text-primary);
   position: relative;
@@ -175,18 +176,22 @@
 }
 
 .topbar-menu-btn {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-md);
-  color: var(--text-tertiary);
-  transition: color var(--transition-base);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .topbar-menu-btn:hover {
+  background: var(--bg-secondary);
   color: var(--text-primary);
+  border-color: var(--border-focus);
 }
 
 .topbar-page-info {
@@ -555,6 +560,11 @@
   filter: drop-shadow(0 0 4px var(--accent-blue));
 }
 
+.theme-toggle-icon.bitcoindefi {
+  color: #F7931A;
+  filter: drop-shadow(0 0 6px rgba(247, 147, 26, 0.6));
+}
+
 .topbar-icon-btn:hover .theme-toggle-icon {
   transform: rotate(20deg);
 }
@@ -641,6 +651,12 @@
 .theme-menu-check {
   margin-left: auto;
   color: var(--accent-blue);
+}
+
+.theme-menu-divider {
+  height: 1px;
+  margin: var(--sp-2) var(--sp-3);
+  background: var(--border-primary);
 }
 
 /* ════════════════════════════════════════════════════════════════
