@@ -298,6 +298,10 @@ export default function SettingsPage() {
     email: user.email || '',
     avatar: user.avatar || '',
     bloodGroup: user.bloodGroup || '',
+    facebook: user.facebook || '',
+    whatsapp: user.whatsapp || '',
+    linkedin: user.linkedin || '',
+    discord: user.discord || '',
   });
   const [quickProfile, setQuickProfile] = useState({
     department: user.department || '',
@@ -321,6 +325,10 @@ export default function SettingsPage() {
       email: user.email || '',
       avatar: user.avatar || '',
       bloodGroup: user.bloodGroup || '',
+      facebook: user.facebook || '',
+      whatsapp: user.whatsapp || '',
+      linkedin: user.linkedin || '',
+      discord: user.discord || '',
     });
     setQuickProfile({
       department: user.department || '',
@@ -472,6 +480,10 @@ export default function SettingsPage() {
       email: profileDetails.email.trim(),
       avatar: profileDetails.avatar,
       bloodGroup: profileDetails.bloodGroup,
+      facebook: profileDetails.facebook,
+      whatsapp: profileDetails.whatsapp,
+      linkedin: profileDetails.linkedin,
+      discord: profileDetails.discord,
       initials: getInitials(nextName),
       department: quickProfile.department,
       batch: finalBatchName,
@@ -744,6 +756,45 @@ export default function SettingsPage() {
                         <option value="O-">O-</option>
                       </select>
                     </label>
+                    <div className="profile-section-divider profile-section-full"><span>Social Links</span></div>
+                    <div className="profile-social-grid">
+                      <label>
+                        <span>Facebook</span>
+                        <input
+                          type="url" placeholder="https://facebook.com/..."
+                          value={profileDetails.facebook}
+                          onChange={(e) => updateProfileDetailsField('facebook', e.target.value)}
+                          className="input mt-1"
+                        />
+                      </label>
+                      <label>
+                        <span>WhatsApp</span>
+                        <input
+                          type="text" placeholder="+8801XXXXXXXXX"
+                          value={profileDetails.whatsapp}
+                          onChange={(e) => updateProfileDetailsField('whatsapp', e.target.value)}
+                          className="input mt-1"
+                        />
+                      </label>
+                      <label>
+                        <span>LinkedIn</span>
+                        <input
+                          type="url" placeholder="https://linkedin.com/in/..."
+                          value={profileDetails.linkedin}
+                          onChange={(e) => updateProfileDetailsField('linkedin', e.target.value)}
+                          className="input mt-1"
+                        />
+                      </label>
+                      <label>
+                        <span>Discord</span>
+                        <input
+                          type="text" placeholder="username#0000"
+                          value={profileDetails.discord}
+                          onChange={(e) => updateProfileDetailsField('discord', e.target.value)}
+                          className="input mt-1"
+                        />
+                      </label>
+                    </div>
                   </div>
                 ) : (
                   <div className="profile-read-grid">
@@ -756,6 +807,14 @@ export default function SettingsPage() {
                       <strong>{profileDetails.email || 'Not set'}</strong>
                       <span className="profile-read-sub-label">Blood Group</span>
                       <strong>{profileDetails.bloodGroup || 'Not set'}</strong>
+                      <span className="profile-read-sub-label">Facebook</span>
+                      <strong>{profileDetails.facebook || 'Not set'}</strong>
+                      <span className="profile-read-sub-label">WhatsApp</span>
+                      <strong>{profileDetails.whatsapp || 'Not set'}</strong>
+                      <span className="profile-read-sub-label">LinkedIn</span>
+                      <strong>{profileDetails.linkedin || 'Not set'}</strong>
+                      <span className="profile-read-sub-label">Discord</span>
+                      <strong>{profileDetails.discord || 'Not set'}</strong>
                     </div>
                     <div>
                       <span>Name</span>

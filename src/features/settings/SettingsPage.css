@@ -312,6 +312,44 @@
   min-width: 0;
 }
 
+.profile-section-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: var(--sp-4) 0 var(--sp-2);
+}
+.profile-section-divider::before,
+.profile-section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-primary);
+}
+.profile-section-divider > span {
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.profile-section-full {
+  grid-column: 1 / -1;
+}
+
+.profile-social-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  grid-column: 1 / -1;
+}
+.profile-social-grid label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .profile-details-form label > span {
   display: block;
   font-size: 10px;
