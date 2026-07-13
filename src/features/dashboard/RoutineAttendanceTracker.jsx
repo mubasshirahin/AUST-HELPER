@@ -3,7 +3,7 @@ import { useRoutine } from '../../context/RoutineContext';
 import { normalizeAccentColor } from '../../utils/colorPalette';
 import {
   TrendingUp, AlertTriangle, ShieldAlert, ShieldCheck,
-  Info, BookOpen
+  Info, BookOpen, Trash2
 } from 'lucide-react';
 import { setUserStorageItem, getUserStorageKey } from '../../utils/authStorage';
 
@@ -204,6 +204,19 @@ export default function RoutineAttendanceTracker() {
             <Info size={15} />
           </button>
           <button
+            className="att-guide-btn"
+            onClick={() => {
+              if (dataKey) localStorage.removeItem(dataKey);
+              if (enabledKey) localStorage.removeItem(enabledKey);
+              setAttendanceData({});
+              setIsEnabled(false);
+            }}
+            title="Reset all attendance data"
+            style={{ color: 'var(--accent-rose)' }}
+          >
+            <Trash2 size={15} />
+          </button>
+          <button
             className="att-toggle-btn"
             onClick={() => setIsEnabled(!isEnabled)}
             aria-label={isEnabled ? 'Disable tracking' : 'Enable tracking'}
@@ -248,11 +261,6 @@ export default function RoutineAttendanceTracker() {
       {isEnabled ? (
         <>
           <div className="att-hero-box">
-            <div className="att-hero-left">
-              <AttendanceRing percentage={overallStats.average} size={72} strokeWidth={5}
-                color={overallStats.average >= MIN_ATTENDANCE ? 'var(--accent-emerald)' : 'var(--accent-amber)'}
-              />
-            </div>
             <div className="att-hero-body">
               <div className="att-hero-label">Overall Attendance</div>
               <div className="att-hero-value"
@@ -300,7 +308,6 @@ export default function RoutineAttendanceTracker() {
               return (
                 <div key={stat.fullKey} className={`att-course-card${isDanger ? ' att-course-danger' : ''}`}>
                   <div className="att-course-row">
-                    <AttendanceRing percentage={percentage} size={42} strokeWidth={3.5} color={accentColor} />
                     <div className="att-course-info">
                       <div className="att-course-code" style={{ color: accentColor }}>
                         {stat.course}
@@ -346,6 +353,16 @@ export default function RoutineAttendanceTracker() {
             Toggle the switch above to start tracking {Object.keys(courseStats).length} courses
             across {SEMESTER_WEEKS} weeks and see how many classes you can miss.
           </div>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => {
+              if (dataKey) localStorage.removeItem(dataKey);
+              setAttendanceData({});
+            }}
+            style={{ marginTop: '12px', fontSize: '11px' }}
+          >
+            Clear All Data
+          </button>
         </div>
       )}
     </div>
