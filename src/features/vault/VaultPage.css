@@ -1319,3 +1319,17 @@
     padding: var(--sp-4) var(--sp-3);
   }
 }
+
+/* ─── Materials / Drive Integration ─── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.materials-container {
+  width: 100%;
+}
