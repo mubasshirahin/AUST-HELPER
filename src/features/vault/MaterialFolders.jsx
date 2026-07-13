@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Folder, Plus, Loader2, AlertCircle, RefreshCw, Link, X, Download, Eye } from 'lucide-react';
+import { Folder, Plus, Loader2, AlertCircle, RefreshCw, Link, X, Download, Eye, ChevronRight, Home } from 'lucide-react';
 import {
   extractFolderId,
   fetchDriveFolderFiles,
@@ -89,10 +89,7 @@ function FilePreviewModal({ file, token, onClose }) {
     }
     if (category === 'video') {
       return (
-        <video
-          controls
-          style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 'var(--radius-md)' }}
-        >
+        <video controls style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 'var(--radius-md)' }}>
           <source src={`https://drive.google.com/uc?id=${file.id}`} type={file.mimeType} />
         </video>
       );
@@ -101,20 +98,14 @@ function FilePreviewModal({ file, token, onClose }) {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
         <FileIcon mimeType={file.mimeType} size={48} />
         <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Preview not available</p>
-        <button className="btn btn-primary" onClick={handleDownload}>
-          <Download size={16} /> Download to View
-        </button>
+        <button className="btn btn-primary" onClick={handleDownload}><Download size={16} /> Download to View</button>
       </div>
     );
   };
 
   return (
     <div className="modal-overlay" onClick={onClose} style={{ zIndex: 500 }}>
-      <div
-        className="modal glass-card-static"
-        onClick={(e) => e.stopPropagation()}
-        style={{ width: 'min(90vw, 900px)', height: 'min(85vh, 700px)', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}
-      >
+      <div className="modal glass-card-static" onClick={(e) => e.stopPropagation()} style={{ width: 'min(90vw, 900px)', height: 'min(85vh, 700px)', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--border-primary)', background: 'var(--bg-secondary)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
             <FileIcon mimeType={file.mimeType} />
@@ -152,12 +143,13 @@ export default function MaterialFolders({ vaultContext }) {
   const [previewFile, setPreviewFile] = useState(null);
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Check if token is valid
-  const isTokenValid = () => {
-    return token && Date.now() < tokenExpiry;
-  };
+  // Folder navigation state
+  const [currentFolderId, setCurrentFolderId] = useState(null);
+  const [currentFolderName, setCurrentFolderName] = useState('');
+  const [breadcrumbs, setBreadcrumbs] = useState([]);
 
-  // Load saved folder URL when course changes
+  const isTokenValid = () => token && Date.now() < tokenExpiry;
+
   useEffect(() => {
     const savedUrl = getCourseFolderUrl(course, department, yearSem) || '';
     setFolderUrl(savedUrl);
@@ -165,15 +157,14 @@ export default function MaterialFolders({ vaultContext }) {
     setFiles([]);
     setError(null);
     setPreviewFile(null);
+    setCurrentFolderId(null);
+    setCurrentFolderName('');
+    setBreadcrumbs([]);
   }, [course, department, yearSem]);
 
-  // Load Google Identity Services script
   const loadGIS = () => {
     return new Promise((resolve, reject) => {
-      if (window.google?.accounts?.oauth2) {
-        resolve();
-        return;
-      }
+      if (window.google?.accounts?.oauth2) { resolve(); return; }
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.onload = () => resolve();
@@ -182,32 +173,23 @@ export default function MaterialFolders({ vaultContext }) {
     });
   };
 
-  // Sign in with Google
   const signInWithGoogle = async () => {
     setAuthLoading(true);
     setError(null);
     try {
       await loadGIS();
-
       const accessToken = await new Promise((resolve, reject) => {
         const client = window.google.accounts.oauth2.initTokenClient({
           client_id: GOOGLE_CLIENT_ID,
           scope: DRIVE_SCOPES,
           callback: (response) => {
-            if (response.error) {
-              reject(new Error(response.error));
-            } else {
-              resolve(response.access_token);
-            }
+            if (response.error) reject(new Error(response.error));
+            else resolve(response.access_token);
           },
-          error_callback: (err) => {
-            reject(new Error(err.type || 'Auth failed'));
-          },
+          error_callback: (err) => reject(new Error(err.type || 'Auth failed')),
         });
         client.requestAccessToken();
       });
-
-      // Save token (expires in ~1 hour)
       setToken(accessToken);
       setTokenExpiry(Date.now() + 3600 * 1000);
       localStorage.setItem('google_drive_token', accessToken);
@@ -223,37 +205,29 @@ export default function MaterialFolders({ vaultContext }) {
     }
   };
 
-  // Sign out
   const signOut = () => {
     setToken(null);
     setTokenExpiry(0);
     setFiles([]);
+    setCurrentFolderId(null);
+    setCurrentFolderName('');
+    setBreadcrumbs([]);
     localStorage.removeItem('google_drive_token');
     localStorage.removeItem('google_drive_token_expiry');
   };
 
-  // Fetch files from Drive folder
-  const fetchFiles = async () => {
-    const folderId = extractFolderId(folderUrl);
-    if (!folderId) {
-      setError('Invalid folder URL. Please paste a valid Google Drive folder link.');
-      return;
-    }
-
-    if (!isTokenValid()) {
-      setError('Please sign in with Google first.');
-      return;
-    }
+  // Fetch files from a folder
+  const fetchFiles = async (folderId) => {
+    if (!isTokenValid()) { setError('Please sign in with Google first.'); return; }
 
     setLoading(true);
     setError(null);
-
     try {
-      const folderFiles = await fetchDriveFolderFiles(folderId, token);
-      setFiles(folderFiles);
+      const items = await fetchDriveFolderFiles(folderId, token);
+      setFiles(items);
       setIsEditing(false);
     } catch (err) {
-      console.error('Failed to fetch Drive files:', err);
+      console.error('Failed to fetch:', err);
       if (err.message?.includes('401') || err.message?.includes('token')) {
         setError('Session expired. Please sign in again.');
         signOut();
@@ -265,10 +239,59 @@ export default function MaterialFolders({ vaultContext }) {
     }
   };
 
+  // Navigate into a folder
+  const navigateToFolder = async (folder) => {
+    const newBreadcrumb = {
+      id: currentFolderId || extractFolderId(folderUrl),
+      name: currentFolderName || 'Root',
+    };
+    setBreadcrumbs([...breadcrumbs, newBreadcrumb]);
+    setCurrentFolderId(folder.id);
+    setCurrentFolderName(folder.name);
+    await fetchFiles(folder.id);
+  };
+
+  // Navigate back to parent folder
+  const navigateBack = async () => {
+    if (breadcrumbs.length === 0) {
+      // Go back to root
+      const rootId = extractFolderId(folderUrl);
+      setCurrentFolderId(null);
+      setCurrentFolderName('');
+      setBreadcrumbs([]);
+      await fetchFiles(rootId);
+    } else {
+      const prev = breadcrumbs[breadcrumbs.length - 1];
+      setBreadcrumbs(breadcrumbs.slice(0, -1));
+      setCurrentFolderId(prev.id);
+      setCurrentFolderName(prev.name);
+      await fetchFiles(prev.id);
+    }
+  };
+
+  // Navigate to specific breadcrumb
+  const navigateToBreadcrumb = async (index) => {
+    if (index === -1) {
+      // Go to root
+      const rootId = extractFolderId(folderUrl);
+      setCurrentFolderId(null);
+      setCurrentFolderName('');
+      setBreadcrumbs([]);
+      await fetchFiles(rootId);
+    } else {
+      const target = breadcrumbs[index];
+      setBreadcrumbs(breadcrumbs.slice(0, index));
+      setCurrentFolderId(target.id);
+      setCurrentFolderName(target.name);
+      await fetchFiles(target.id);
+    }
+  };
+
   // Auto-fetch when ready
   useEffect(() => {
-    if (folderUrl && !isEditing && isTokenValid() && course) {
-      fetchFiles();
+    if (folderUrl && !isEditing && isTokenValid() && course && !currentFolderId) {
+      const rootId = extractFolderId(folderUrl);
+      if (rootId) fetchFiles(rootId);
     }
   }, [folderUrl, isEditing, course, token]);
 
@@ -276,8 +299,12 @@ export default function MaterialFolders({ vaultContext }) {
     if (folderUrl.trim()) {
       saveCourseFolderUrl(course, department, yearSem, folderUrl.trim());
       setIsEditing(false);
+      setCurrentFolderId(null);
+      setCurrentFolderName('');
+      setBreadcrumbs([]);
       if (isTokenValid()) {
-        fetchFiles();
+        const rootId = extractFolderId(folderUrl.trim());
+        if (rootId) fetchFiles(rootId);
       }
     }
   };
@@ -286,6 +313,9 @@ export default function MaterialFolders({ vaultContext }) {
     setFolderUrl('');
     setFiles([]);
     setIsEditing(true);
+    setCurrentFolderId(null);
+    setCurrentFolderName('');
+    setBreadcrumbs([]);
     saveCourseFolderUrl(course, department, yearSem, '');
   };
 
@@ -310,15 +340,19 @@ export default function MaterialFolders({ vaultContext }) {
   };
 
   const handleFileClick = (file) => {
-    const category = getFileCategory(file.mimeType);
-    if (['pdf', 'image', 'video'].includes(category)) {
-      setPreviewFile(file);
+    if (file.mimeType === 'application/vnd.google-apps.folder') {
+      navigateToFolder(file);
     } else {
-      handleDownload(file);
+      const category = getFileCategory(file.mimeType);
+      if (['pdf', 'image', 'video'].includes(category)) {
+        setPreviewFile(file);
+      } else {
+        handleDownload(file);
+      }
     }
   };
 
-  // Not signed in state
+  // Not signed in
   if (!isTokenValid()) {
     return (
       <div className="glass-card-static materials-container animate-fadeInUp">
@@ -328,28 +362,14 @@ export default function MaterialFolders({ vaultContext }) {
             <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>{courseName} — Google Drive materials</p>
           </div>
         </div>
-
         <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-          <div style={{
-            width: '64px', height: '64px', borderRadius: '50%',
-            background: 'var(--accent-blue-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 16px', fontSize: '28px',
-          }}>
-            🔗
-          </div>
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--accent-blue-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '28px' }}>🔗</div>
           <h3 style={{ fontSize: '16px', fontWeight: 'var(--fw-bold)', margin: '0 0 8px' }}>Connect Google Drive</h3>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 20px', maxWidth: '400px', marginInline: 'auto' }}>
             Sign in with Google to access your batch's study materials, lecture notes, and resources.
           </p>
-          <button
-            className="btn btn-primary"
-            onClick={signInWithGoogle}
-            disabled={authLoading}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 24px' }}
-          >
-            {authLoading ? (
-              <><Loader2 size={16} className="animate-spin" /> Connecting...</>
-            ) : (
+          <button className="btn btn-primary" onClick={signInWithGoogle} disabled={authLoading} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 24px' }}>
+            {authLoading ? (<><Loader2 size={16} className="animate-spin" /> Connecting...</>) : (
               <>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -361,12 +381,7 @@ export default function MaterialFolders({ vaultContext }) {
               </>
             )}
           </button>
-
-          {error && (
-            <div style={{ marginTop: '16px', padding: '10px 16px', background: 'var(--accent-rose-glow)', borderRadius: 'var(--radius-md)', border: '1px solid color-mix(in srgb, var(--accent-rose) 30%, transparent)', fontSize: '12px', color: 'var(--accent-rose)' }}>
-              {error}
-            </div>
-          )}
+          {error && (<div style={{ marginTop: '16px', padding: '10px 16px', background: 'var(--accent-rose-glow)', borderRadius: 'var(--radius-md)', border: '1px solid color-mix(in srgb, var(--accent-rose) 30%, transparent)', fontSize: '12px', color: 'var(--accent-rose)' }}>{error}</div>)}
         </div>
       </div>
     );
@@ -382,74 +397,92 @@ export default function MaterialFolders({ vaultContext }) {
         <div className="flex items-center gap-2">
           {folderUrl && !isEditing && (
             <>
-              <button className="btn btn-ghost btn-sm" onClick={fetchFiles} disabled={loading} title="Refresh">
+              <button className="btn btn-ghost btn-sm" onClick={() => { const rootId = extractFolderId(folderUrl); setCurrentFolderId(null); setCurrentFolderName(''); setBreadcrumbs([]); if (rootId) fetchFiles(rootId); }} disabled={loading} title="Refresh">
                 <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
               </button>
-              <button className="btn btn-ghost btn-sm" onClick={() => setIsEditing(true)} title="Change folder">
-                <Link size={14} />
-              </button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setIsEditing(true)} title="Change folder"><Link size={14} /></button>
             </>
           )}
-          <button className="btn btn-ghost btn-sm" onClick={signOut} title="Sign out">
-            Sign Out
-          </button>
+          <button className="btn btn-ghost btn-sm" onClick={signOut}>Sign Out</button>
         </div>
       </div>
 
       {/* Folder URL Input */}
       {isEditing && (
         <div style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-primary)', marginBottom: '16px' }}>
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-            Paste your Google Drive folder link:
-          </p>
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Paste your Google Drive folder link:</p>
           <div className="flex gap-2">
-            <input
-              type="text"
-              value={folderUrl}
-              onChange={(e) => setFolderUrl(e.target.value)}
-              placeholder="https://drive.google.com/drive/folders/..."
-              className="input"
-              style={{ flex: 1, fontSize: '12px' }}
-              onKeyDown={(e) => e.key === 'Enter' && handleSaveUrl()}
-            />
-            <button className="btn btn-primary btn-sm" onClick={handleSaveUrl} disabled={!folderUrl.trim()}>
-              Connect
-            </button>
-            {folderUrl && (
-              <button className="btn btn-ghost btn-sm" onClick={() => { setFolderUrl(''); setIsEditing(false); }}>
-                <X size={14} />
-              </button>
-            )}
+            <input type="text" value={folderUrl} onChange={(e) => setFolderUrl(e.target.value)} placeholder="https://drive.google.com/drive/folders/..." className="input" style={{ flex: 1, fontSize: '12px' }} onKeyDown={(e) => e.key === 'Enter' && handleSaveUrl()} />
+            <button className="btn btn-primary btn-sm" onClick={handleSaveUrl} disabled={!folderUrl.trim()}>Connect</button>
+            {folderUrl && <button className="btn btn-ghost btn-sm" onClick={() => { setFolderUrl(''); setIsEditing(false); }}><X size={14} /></button>}
           </div>
-          <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '6px' }}>
-            Right-click folder in Drive → "Get link" → Paste here
-          </p>
+          <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '6px' }}>Right-click folder in Drive → "Get link" → Paste here</p>
         </div>
       )}
 
-      {/* Error State */}
+      {/* Breadcrumbs */}
+      {folderUrl && !isEditing && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '12px', fontSize: '12px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => navigateToBreadcrumb(-1)}
+            style={{ background: 'none', border: 'none', color: currentFolderId ? 'var(--accent-blue)' : 'var(--text-primary)', cursor: 'pointer', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 'var(--fw-medium)' }}
+          >
+            <Home size={14} /> Root
+          </button>
+          {breadcrumbs.map((bc, i) => (
+            <React.Fragment key={bc.id + i}>
+              <ChevronRight size={12} style={{ color: 'var(--text-tertiary)' }} />
+              <button
+                onClick={() => navigateToBreadcrumb(i)}
+                style={{ background: 'none', border: 'none', color: i === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--accent-blue)', cursor: 'pointer', padding: '4px 6px', borderRadius: '4px', fontSize: '12px', fontWeight: 'var(--fw-medium)' }}
+              >
+                {bc.name}
+              </button>
+            </React.Fragment>
+          ))}
+          {currentFolderName && breadcrumbs.length > 0 && (
+            <>
+              <ChevronRight size={12} style={{ color: 'var(--text-tertiary)' }} />
+              <span style={{ color: 'var(--text-primary)', padding: '4px 6px', fontWeight: 'var(--fw-bold)' }}>{currentFolderName}</span>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Back button when inside folder */}
+      {currentFolderId && !isEditing && (
+        <button
+          className="btn btn-ghost btn-sm"
+          onClick={navigateBack}
+          style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+        >
+          ← Back
+        </button>
+      )}
+
+      {/* Error */}
       {error && (
         <div style={{ padding: '12px 16px', background: 'var(--accent-rose-glow)', borderRadius: 'var(--radius-md)', border: '1px solid color-mix(in srgb, var(--accent-rose) 30%, transparent)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--accent-rose)' }}>
-          <AlertCircle size={16} />
-          <span style={{ flex: 1 }}>{error}</span>
+          <AlertCircle size={16} /><span style={{ flex: 1 }}>{error}</span>
           <button className="btn btn-ghost btn-sm" onClick={() => setError(null)}><X size={14} /></button>
         </div>
       )}
 
-      {/* Loading State */}
+      {/* Loading */}
       {loading && (
         <div style={{ padding: '48px 16px', textAlign: 'center' }}>
           <Loader2 size={24} style={{ color: 'var(--accent-blue)', animation: 'spin 1s linear infinite', marginBottom: '12px' }} />
-          <p style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Loading files...</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Loading...</p>
         </div>
       )}
 
-      {/* Files List */}
+      {/* Files & Folders List */}
       {!loading && !error && files.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {files.map((file) => {
+            const isFolder = file.mimeType === 'application/vnd.google-apps.folder';
             const category = getFileCategory(file.mimeType);
-            const canPreview = ['pdf', 'image', 'video'].includes(category);
+            const canPreview = !isFolder && ['pdf', 'image', 'video'].includes(category);
 
             return (
               <div
@@ -461,20 +494,26 @@ export default function MaterialFolders({ vaultContext }) {
               >
                 <FileIcon mimeType={file.mimeType} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '13px', fontWeight: 'var(--fw-medium)', color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</p>
-                  <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', margin: '2px 0 0' }}>
-                    {formatFileSize(file.size)}{file.modifiedTime && ` · ${new Date(file.modifiedTime).toLocaleDateString()}`}
+                  <p style={{ fontSize: '13px', fontWeight: isFolder ? 'var(--fw-bold)' : 'var(--fw-medium)', color: isFolder ? 'var(--accent-blue)' : 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {isFolder ? '📁 ' : ''}{file.name}
                   </p>
+                  {!isFolder && (
+                    <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', margin: '2px 0 0' }}>
+                      {formatFileSize(file.size)}{file.modifiedTime && ` · ${new Date(file.modifiedTime).toLocaleDateString()}`}
+                    </p>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                  {canPreview && (
-                    <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setPreviewFile(file); }} title="Preview" style={{ padding: '4px 8px' }}>
-                      <Eye size={14} />
-                    </button>
+                  {isFolder ? (
+                    <ChevronRight size={16} style={{ color: 'var(--accent-blue)' }} />
+                  ) : (
+                    <>
+                      {canPreview && (
+                        <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setPreviewFile(file); }} style={{ padding: '4px 8px' }}><Eye size={14} /></button>
+                      )}
+                      <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); handleDownload(file); }} style={{ padding: '4px 8px' }}><Download size={14} /></button>
+                    </>
                   )}
-                  <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); handleDownload(file); }} title="Download" style={{ padding: '4px 8px' }}>
-                    <Download size={14} />
-                  </button>
                 </div>
               </div>
             );
@@ -482,11 +521,11 @@ export default function MaterialFolders({ vaultContext }) {
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty */}
       {!loading && !error && folderUrl && files.length === 0 && !isEditing && (
         <div style={{ padding: '32px 16px', textAlign: 'center' }}>
           <Folder size={32} style={{ color: 'var(--text-tertiary)', marginBottom: '12px' }} />
-          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>No files found</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>This folder is empty</p>
           <button className="btn btn-secondary btn-sm" onClick={handleRemoveUrl} style={{ marginTop: '12px' }}>Change Folder</button>
         </div>
       )}
