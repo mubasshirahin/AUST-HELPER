@@ -2235,13 +2235,7 @@
 [data-theme="bitcoindefi"] .auth-theme-menu-check {
   color: #F7931A;
 }
-[data-theme="bitcoindefi"] .auth-form .input {
-  border-radius: var(--radius-full);
-}
-[data-theme="bitcoindefi"] .auth-form .btn-primary {
-  border-radius: var(--radius-full);
-}
-[data-theme="bitcoindefi"] .auth-form .auth-card {
+[data-theme="bitcoindefi"] .auth-tab {
   border-radius: var(--radius-full);
 }
 
