@@ -118,3 +118,9 @@ export function getWorstLeaderboard() {
 export function getTotalVoters() {
   return loadBallots().length;
 }
+
+/** Clear all poll ballots and contributor ID (start fresh). */
+export function clearAllPollData() {
+  try { localStorage.removeItem(ballotsKey); } catch {}
+  try { localStorage.removeItem(contributorKey); } catch {}
+}

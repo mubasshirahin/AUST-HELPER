@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { ThumbsUp, ThumbsDown, Trophy, Users, Send, Trash2, Award } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { ThumbsUp, ThumbsDown, Trophy, Users, Send, Award, CheckCircle } from 'lucide-react';
 import CourseAutocomplete from '../../components/CourseAutocomplete';
 import {
   MAX_PICKS,
@@ -8,22 +8,15 @@ import {
   getBestLeaderboard,
   getWorstLeaderboard,
   getTotalVoters,
+  clearAllPollData,
 } from '../../utils/coursePollStorage';
 
-// An editable list of up to MAX_PICKS course slots.
 function PickList({ title, icon, accent, picks, setPicks }) {
-  const addSlot = () => {
-    if (picks.length >= MAX_PICKS) return;
-    setPicks([...picks, { code: '', name: '' }]);
-  };
-
   const updateSlot = (index, course) => {
     const next = [...picks];
     if (!course) {
-      // Cleared the input.
       next[index] = { code: '', name: '' };
     } else if (course.partialUpdate) {
-      // User typed a code without selecting a suggestion — keep any existing name.
       next[index] = { code: course.code ?? next[index].code, name: next[index].name };
     } else {
       next[index] = { code: course.code || '', name: course.name || '' };
@@ -31,52 +24,26 @@ function PickList({ title, icon, accent, picks, setPicks }) {
     setPicks(next);
   };
 
-  const removeSlot = (index) => {
-    setPicks(picks.filter((_, i) => i !== index));
-  };
-
   return (
     <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
       <div className="flex items-center gap-2" style={{ color: accent }}>
         {icon}
         <h4 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', margin: 0 }}>{title}</h4>
-        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginLeft: 'auto' }}>
-          {picks.length}/{MAX_PICKS}
-        </span>
       </div>
 
       {picks.map((pick, index) => (
-        <div key={index} className="flex items-center gap-2">
-          <div style={{ flex: 1 }}>
-            <CourseAutocomplete
-              value={pick.code}
-              onCourseSelect={(course) => updateSlot(index, course)}
-              placeholder="e.g. CSE 3101"
-              type="code"
-            />
-          </div>
-          <button
-            type="button"
-            className="btn btn-secondary btn-icon"
-            onClick={() => removeSlot(index)}
-            style={{ border: 'none', background: 'transparent', color: 'var(--accent-rose)', padding: '4px', width: '28px', height: '28px' }}
-            aria-label="Remove"
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
+        <CourseAutocomplete
+          key={index}
+          value={pick.code}
+          onCourseSelect={(course) => updateSlot(index, course)}
+          placeholder="e.g. CSE 1101"
+          type="code"
+        />
       ))}
-
-      {picks.length < MAX_PICKS && (
-        <button type="button" className="btn btn-secondary btn-sm" onClick={addSlot} style={{ fontSize: '11px' }}>
-          + Add course
-        </button>
-      )}
     </div>
   );
 }
 
-// A ranked leaderboard box: courses ordered by votes, most-voted on top.
 function Leaderboard({ title, icon, accent, rows, totalVoters }) {
   const maxVotes = rows.length > 0 ? rows[0].votes : 0;
 
@@ -111,7 +78,6 @@ function Leaderboard({ title, icon, accent, rows, totalVoters }) {
                 borderRadius: 'var(--radius-md)',
               }}
             >
-              {/* Rank */}
               <span
                 style={{
                   fontSize: '13px',
@@ -124,7 +90,6 @@ function Leaderboard({ title, icon, accent, rows, totalVoters }) {
                 {index + 1}
               </span>
 
-              {/* Course + vote bar */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="flex justify-between items-center">
                   <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{row.code}</span>
@@ -151,12 +116,20 @@ function Leaderboard({ title, icon, accent, rows, totalVoters }) {
 }
 
 export default function CoursePoll() {
-  const existing = useMemo(() => getMyBallot(), []);
-  const [best, setBest] = useState(() => existing?.best?.map((c) => ({ ...c })) || [{ code: '', name: '' }]);
-  const [worst, setWorst] = useState(() => existing?.worst?.map((c) => ({ ...c })) || [{ code: '', name: '' }]);
-  const [version, setVersion] = useState(0); // bump to refresh leaderboards
+  const [voted, setVoted] = useState(() => !!getMyBallot());
+  const [best, setBest] = useState(() =>
+    Array.from({ length: MAX_PICKS }, () => ({ code: '', name: '' }))
+  );
+  const [worst, setWorst] = useState(() =>
+    Array.from({ length: MAX_PICKS }, () => ({ code: '', name: '' }))
+  );
+  const [version, setVersion] = useState(0);
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    clearAllPollData();
+    setVoted(false);
+  }, []);
 
   const bestBoard = useMemo(() => getBestLeaderboard(), [version]);
   const worstBoard = useMemo(() => getWorstLeaderboard(), [version]);
@@ -167,24 +140,60 @@ export default function CoursePoll() {
     try {
       saveMyBallot(best, worst);
       setError('');
-      setMessage('Your picks are saved. The rankings update below.');
+      setVoted(true);
       setVersion((v) => v + 1);
     } catch (err) {
-      setMessage('');
       setError(err.message);
     }
   };
+
+  if (voted) {
+    return (
+      <div className="glass-card-static animate-fadeInUp">
+        <div className="mb-6">
+          <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Best &amp; Worst Courses</h2>
+        </div>
+
+        <div className="flex items-center gap-3 mb-6" style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)' }}>
+          <CheckCircle size={20} style={{ color: 'var(--accent-emerald)', flexShrink: 0 }} />
+          <div>
+            <p style={{ fontWeight: 'bold', margin: 0 }}>Your vote has been recorded</p>
+            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+              Thanks for sharing your opinion! You cannot change or delete your vote.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid-2" style={{ gap: '16px' }}>
+          <Leaderboard
+            title="Top Rated Courses"
+            icon={<Award size={18} />}
+            accent="var(--accent-emerald)"
+            rows={bestBoard}
+            totalVoters={totalVoters}
+          />
+          <Leaderboard
+            title="Lowest Rated Courses"
+            icon={<ThumbsDown size={18} />}
+            accent="var(--accent-rose)"
+            rows={worstBoard}
+            totalVoters={totalVoters}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-card-static animate-fadeInUp">
       <div className="mb-6">
         <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Best &amp; Worst Courses</h2>
         <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
-          Pick up to {MAX_PICKS} favourite and {MAX_PICKS} least-favourite courses. The most-voted courses rise to the top.
+          Pick up to {MAX_PICKS} favourite and {MAX_PICKS} least-favourite courses.
+          Your vote is one-time only — you cannot change or delete it after submitting.
         </p>
       </div>
 
-      {/* Voting form */}
       <form onSubmit={submit} className="mb-6">
         <div className="grid-2" style={{ gap: '16px' }}>
           <PickList
@@ -204,14 +213,12 @@ export default function CoursePoll() {
         </div>
 
         {error && <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--accent-rose)', marginTop: '12px' }}>{error}</p>}
-        {message && <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--accent-emerald)', marginTop: '12px' }}>{message}</p>}
 
         <button type="submit" className="btn btn-primary btn-sm" style={{ marginTop: '14px' }}>
-          <Send size={14} /> {existing ? 'Update my picks' : 'Submit my picks'}
+          <Send size={14} /> Submit my picks
         </button>
       </form>
 
-      {/* Ranked leaderboards */}
       <div className="grid-2" style={{ gap: '16px' }}>
         <Leaderboard
           title="Top Rated Courses"
