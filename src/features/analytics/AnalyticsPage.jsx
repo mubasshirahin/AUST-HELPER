@@ -1,12 +1,8 @@
 import React, { useState } from 'react';
-import {
-  TrendingUp, Layers, Grid3x3, Star, FlaskConical, Trophy,
-} from 'lucide-react';
+import { TrendingUp, Layers, Grid3x3, FlaskConical } from 'lucide-react';
 import CGPAGraph from './CGPAGraph';
 import SemesterTracker from './SemesterTracker';
 import DeptHeatmap from './DeptHeatmap';
-import CourseReview from './CourseReview';
-import CoursePoll from './CoursePoll';
 import GliderTabs from '../../components/GliderTabs';
 import './AnalyticsPage.css';
 
@@ -16,8 +12,6 @@ const gradeLabTabs = [
   { id: 'cgpagraph', label: 'CGPA Tracker', icon: TrendingUp, color: 'blue', desc: 'Grade trends' },
   { id: 'semestertracker', label: 'Semester', icon: Layers, color: 'purple', desc: 'Per-semester' },
   { id: 'heatmap', label: 'Dept Heatmap', icon: Grid3x3, color: 'rose', desc: 'Topic density' },
-  { id: 'reviews', label: 'Reviews', icon: Star, color: 'amber', desc: 'Course ratings' },
-  { id: 'bestworst', label: 'Best & Worst', icon: Trophy, color: 'emerald', desc: 'Course poll' },
 ];
 
 export default function AnalyticsPage() {
@@ -35,8 +29,6 @@ export default function AnalyticsPage() {
       case 'cgpagraph': return <CGPAGraph />;
       case 'semestertracker': return <SemesterTracker />;
       case 'heatmap': return <DeptHeatmap />;
-      case 'reviews': return <CourseReview />;
-      case 'bestworst': return <CoursePoll />;
       default: return <CGPAGraph />;
     }
   };

@@ -37,6 +37,7 @@ const AdminPanelPage = lazy(() => import('./features/admin/AdminPanelPage'));
 const MessagesPage = lazy(() => import('./features/messages/MessagesPage'));
 const TerminalPage = lazy(() => import('./features/terminal/TerminalPage'));
 const WorkspacePage = lazy(() => import('./features/workspace/WorkspacePage'));
+const ShadowPage = lazy(() => import('./features/shadow/ShadowPage'));
 
 import './App.css';
 
@@ -100,6 +101,7 @@ function AppContent() {
                 <Route path="/admin/applications" element={<ProtectedAdminRoute><AdminPanelPage /></ProtectedAdminRoute>} />
                 <Route path="/admin/cr-sr-directory" element={<ProtectedAdminRoute><AdminPanelPage /></ProtectedAdminRoute>} />
                 <Route path="/workspace" element={<WorkspacePage />} />
+                <Route path="/shadow" element={<ShadowPage />} />
                 <Route path="/login" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
@@ -130,6 +132,7 @@ function AppShell() {
     '/messages': 'Messages',
     '/admin': 'Admin Panel',
     '/terminal': 'Terminal',
+    '/shadow': 'Shadow',
     '/workspace': 'Workspace',
   };
   const pageName = Object.entries(pageTitles).find(([path]) => location.pathname.startsWith(path))?.[1] || 'Dashboard';

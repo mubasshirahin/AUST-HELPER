@@ -7,7 +7,7 @@ import {
   LayoutDashboard, CalendarDays, BarChart3, BookOpen, MapPin, Users, ShoppingBag, Settings, MessageSquare,
   LogIn, Shield, Eye, Megaphone, Utensils,
   Library, FileText, FolderOpen, FileSpreadsheet, Map, ScrollText,
-  ChevronLeft, ChevronRight, ExternalLink
+  ChevronLeft, ChevronRight, ExternalLink, Moon
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -22,6 +22,7 @@ const navItems = [
   { path: '/career-roadmaps', label: 'Career Roadmaps', icon: Map },
   { path: '/cheatsheets', label: 'Cheatsheets', icon: ScrollText },
   { path: '/settings', label: 'Settings', icon: Settings },
+  { path: '/shadow', label: 'Shadow', icon: Moon },
   { path: '/workspace', label: 'Workspace', icon: ExternalLink },
   { id: 'toggle', label: 'Collapse', icon: ChevronLeft },
 ];
