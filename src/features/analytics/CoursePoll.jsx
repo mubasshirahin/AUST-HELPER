@@ -3,7 +3,6 @@ import { ThumbsUp, ThumbsDown, Trophy, Users, Send, Award, CheckCircle } from 'l
 import CourseAutocomplete from '../../components/CourseAutocomplete';
 import {
   MAX_PICKS,
-  getMyBallot,
   saveMyBallot,
   getBestLeaderboard,
   getWorstLeaderboard,
@@ -116,7 +115,7 @@ function Leaderboard({ title, icon, accent, rows, totalVoters }) {
 }
 
 export default function CoursePoll() {
-  const [voted, setVoted] = useState(() => !!getMyBallot());
+  const [voted, setVoted] = useState(false);
   const [best, setBest] = useState(() =>
     Array.from({ length: MAX_PICKS }, () => ({ code: '', name: '' }))
   );
