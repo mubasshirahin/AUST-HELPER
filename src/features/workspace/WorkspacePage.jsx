@@ -337,6 +337,21 @@ export default function WorkspacePage() {
     });
   }, [isLoaded, tokenClient]);
 
+  // ─── Proactive token refresh every 25 min to avoid expiry ───
+  useEffect(() => {
+    if (!isLoaded || accounts.length === 0) return;
+    const interval = setInterval(() => {
+      const nearExpiry = accounts.filter(a =>
+        a.accessToken && Date.now() >= a.expiresAt - 600000
+      );
+      if (nearExpiry.length === 0) return;
+      nearExpiry.forEach(acc => {
+        silentRefreshToken(acc.accountId).catch(() => {});
+      });
+    }, 25 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [isLoaded, accounts.length]);
+
   // ─── Derived: all unique courses from all accounts (only selected ones) ───
   const visibleCourses = accounts.flatMap(acc =>
     (acc.courses || []).filter(c => acc.selectedCourseIds?.includes(c.id))
