@@ -492,6 +492,20 @@ export function restoreSessionUser() {
     return null;
   }
   const user = accountToUser(account);
+
+  // Fallback: if the account doesn't have an avatar (e.g. older account
+  // or Google picture wasn't persisted to the accounts list), try the
+  // cached user profile which might have it from a previous session.
+  if (!user.avatar) {
+    try {
+      const cached = localStorage.getItem(profileKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.avatar) user.avatar = parsed.avatar;
+      }
+    } catch { /* ignore */ }
+  }
+
   persistUserProfile(user);
   return user;
 }

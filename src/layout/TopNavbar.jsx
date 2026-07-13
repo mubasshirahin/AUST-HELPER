@@ -67,6 +67,9 @@ export default function TopNavbar({ onMenuClick, onSearchOpen }) {
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+  const handleAvatarError = useCallback(() => setAvatarError(true), []);
+  useEffect(() => { setAvatarError(false); }, [user?.avatar]);
   const [logoVariant, setLogoVariant] = useState(
     () => localStorage.getItem('logoVariant') || 'silver'
   );
@@ -350,7 +353,7 @@ export default function TopNavbar({ onMenuClick, onSearchOpen }) {
               aria-expanded={profileMenuOpen}
             >
               <div className="avatar" style={{ width: 32, height: 32, fontSize: '0.65rem' }}>
-                {user?.avatar ? <img src={user.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : user?.initials}
+                {user?.avatar && !avatarError ? <img src={user.avatar} alt="" onError={handleAvatarError} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : user?.initials}
               </div>
               <div className="profile-info">
                 <span className="profile-info-name">{user.name}</span>
@@ -366,7 +369,7 @@ export default function TopNavbar({ onMenuClick, onSearchOpen }) {
               <div className="profile-dropdown" role="menu" aria-label="User menu">
                 <div className="profile-dropdown-header">
                   <div className="avatar" style={{ width: 40, height: 40 }}>
-                    {user?.avatar ? <img src={user.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : user?.initials}
+                    {user?.avatar && !avatarError ? <img src={user.avatar} alt="" onError={handleAvatarError} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : user?.initials}
                   </div>
                   <div className="profile-dropdown-info">
                     <span className="profile-dropdown-name">{user.name}</span>
