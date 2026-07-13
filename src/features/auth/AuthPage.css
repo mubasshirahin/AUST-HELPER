@@ -1010,6 +1010,27 @@
   flex-shrink: 0;
   color: inherit;
 }
+.auth-social-picker-back {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 10px 0 0;
+  background: none;
+  border: none;
+  color: var(--accent-blue);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.auth-social-picker-back:hover {
+  text-decoration: underline;
+}
+.auth-social-email-form {
+  padding: 0 24px 16px;
+}
+.auth-social-email-form .auth-submit {
+  margin-top: 12px;
+  width: 100%;
+}
 .auth-social-picker-footer {
   display: flex;
   align-items: center;

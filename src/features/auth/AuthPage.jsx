@@ -156,6 +156,7 @@ export default function AuthPage() {
   const [socialErr, setSocialErr] = useState('');
   const [showSocialPicker, setShowSocialPicker] = useState(false);
   const [socialAccounts, setSocialAccounts] = useState([]);
+  const [socialShowEmailInput, setSocialShowEmailInput] = useState(false);
   const [pendingGoogleAccount, setPendingGoogleAccount] = useState(null);
 
   if (!isLoading && isAuthenticated) {
@@ -376,6 +377,7 @@ export default function AuthPage() {
     setShowSocialPicker(false);
     setSocialProvider(null);
     setSocialErr('');
+    setSocialShowEmailInput(false);
   };
 
   const handleLogin = async (event) => {
@@ -770,54 +772,77 @@ export default function AuthPage() {
               <div className="auth-social-overlay" onClick={closeSocialPicker}>
                 <div className="auth-social-picker" onClick={(e) => e.stopPropagation()}>
                   <button type="button" className="auth-social-close" onClick={closeSocialPicker}>×</button>
-                  <h2 className="auth-social-picker-title">Choose an account</h2>
-                  <div className="auth-social-picker-list">
-                    {socialAccounts.length === 0 ? (
-                      <p className="auth-social-picker-empty">No accounts found. Sign up first.</p>
-                    ) : (
-                      socialAccounts.map((acc) => (
-                        <button
-                          key={acc.id}
-                          type="button"
-                          className="auth-social-picker-item"
-                          onClick={() => selectSocialAccount(acc)}
-                        >
-                          <span className="auth-social-picker-avatar" style={{background: `hsl(${acc.name.length * 37}, 55%, 50%)`}}>
-                            {acc.avatar ? (
-                              <img src={acc.avatar} alt="" />
-                            ) : (
-                              (acc.name || '?').slice(0, 2).toUpperCase()
-                            )}
-                          </span>
-                          <span className="auth-social-picker-info">
-                            <strong>{acc.name}</strong>
-                            <span>{acc.email}</span>
-                            <small>Signed out</small>
-                          </span>
+
+                  {socialShowEmailInput ? (
+                    <>
+                      <h2 className="auth-social-picker-title">Sign in with email</h2>
+                      <div className="auth-social-email-form">
+                        <label className="auth-field">
+                          <span className="auth-label">Email address</span>
+                          <input
+                            type="email"
+                            className="auth-input"
+                            placeholder="your@email.com"
+                            value={socialEmail}
+                            onChange={(e) => setSocialEmail(e.target.value)}
+                            autoFocus
+                          />
+                        </label>
+                        {socialErr && <p className="auth-error">{socialErr}</p>}
+                        <button type="button" className="btn btn-primary auth-submit" onClick={submitSocialLogin}>
+                          Continue
                         </button>
-                      ))
-                    )}
-                  </div>
-                  <div className="auth-social-picker-alt">
-                    <button type="button" className="auth-social-picker-alt-btn" onClick={() => setShowSocialPicker(false)}>
-                      <span className="auth-social-picker-alt-icon">+</span>
-                      Use another account
-                    </button>
-                  </div>
-                  <div className="auth-social-picker-remove">
-                    <button type="button" className="auth-social-picker-alt-btn" onClick={() => setShowSocialPicker(false)}>
-                      <span className="auth-social-picker-alt-icon">−</span>
-                      Remove an account
-                    </button>
-                  </div>
-                  <div className="auth-social-picker-footer">
-                    <span>English (United Kingdom)</span>
-                    <div className="auth-social-picker-links">
-                      <button type="button" onClick={closeSocialPicker}>Help</button>
-                      <button type="button" onClick={closeSocialPicker}>Privacy</button>
-                      <button type="button" onClick={closeSocialPicker}>Terms</button>
-                    </div>
-                  </div>
+                        <button type="button" className="auth-social-picker-back" onClick={() => setSocialShowEmailInput(false)}>
+                          ← Back
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h2 className="auth-social-picker-title">Choose an account</h2>
+                      <div className="auth-social-picker-list">
+                        {socialAccounts.length === 0 ? (
+                          <p className="auth-social-picker-empty">No accounts found. Sign up first.</p>
+                        ) : (
+                          socialAccounts.map((acc) => (
+                            <button
+                              key={acc.id}
+                              type="button"
+                              className="auth-social-picker-item"
+                              onClick={() => selectSocialAccount(acc)}
+                            >
+                              <span className="auth-social-picker-avatar" style={{background: `hsl(${acc.name.length * 37}, 55%, 50%)`}}>
+                                {acc.avatar ? (
+                                  <img src={acc.avatar} alt="" />
+                                ) : (
+                                  (acc.name || '?').slice(0, 2).toUpperCase()
+                                )}
+                              </span>
+                              <span className="auth-social-picker-info">
+                                <strong>{acc.name}</strong>
+                                <span>{acc.email}</span>
+                                <small>Signed out</small>
+                              </span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                      <div className="auth-social-picker-alt">
+                        <button type="button" className="auth-social-picker-alt-btn" onClick={() => setSocialShowEmailInput(true)}>
+                          <span className="auth-social-picker-alt-icon">+</span>
+                          Use another account
+                        </button>
+                      </div>
+                      <div className="auth-social-picker-footer">
+                        <span>English (United Kingdom)</span>
+                        <div className="auth-social-picker-links">
+                          <button type="button" onClick={closeSocialPicker}>Help</button>
+                          <button type="button" onClick={closeSocialPicker}>Privacy</button>
+                          <button type="button" onClick={closeSocialPicker}>Terms</button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
