@@ -283,8 +283,6 @@ export default function RoutineAttendanceTracker() {
                 <span className="att-hero-meta-dot">&middot;</span>
                 <span><strong style={{ color: 'var(--accent-amber)' }}>{overallStats.warningCount}</strong> at risk</span>
                 <span className="att-hero-meta-dot">&middot;</span>
-                <span><strong style={{ color: 'var(--accent-blue)' }}>{overallStats.totalCanMiss}</strong> can miss</span>
-                <span className="att-hero-meta-dot">&middot;</span>
                 <span><strong style={{ color: 'var(--text-primary)' }}>{Object.keys(courseStats).length}</strong> courses</span>
               </div>
               <div className="att-hero-bar-wrap">
