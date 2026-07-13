@@ -66,6 +66,20 @@ const defaultSignup = {
 };
 
 const GOOGLE_CLIENT_ID = '736141389272-m680j6nh45evbe36mnmhuqpi8i06cv4q.apps.googleusercontent.com';
+const FACEBOOK_APP_ID = '1391466806220938';
+
+let _fbSdkLoaded = false;
+const loadFbSdk = () => {
+  if (_fbSdkLoaded) return;
+  _fbSdkLoaded = true;
+  window.fbAsyncInit = () => {
+    FB.init({ appId: FACEBOOK_APP_ID, version: 'v18.0', cookie: true, xfbml: false });
+  };
+  const script = document.createElement('script');
+  script.src = 'https://connect.facebook.net/en_US/sdk.js';
+  script.async = true; script.defer = true;
+  document.head.appendChild(script);
+};
 
 export default function AuthPage() {
   const { isAuthenticated, isLoading, login, loginDirect, loginGuest, signup, updateUser } = useAuth();
@@ -329,6 +343,53 @@ export default function AuthPage() {
       }
     }
   }, []);
+
+  /* ==== Facebook OAuth login ==== */
+  const finalizeFacebookLogin = useCallback(async (payload, accessToken) => {
+    let pictureUrl = payload.picture;
+    if (!pictureUrl && accessToken) {
+      try {
+        const res = await fetch(`https://graph.facebook.com/v18.0/me?fields=picture.type(large)&access_token=${accessToken}`);
+        const data = await res.json();
+        pictureUrl = data.picture?.data?.url || null;
+      } catch {}
+    }
+
+    const accounts = getAllAccounts().filter((a) => a.id !== 'guest');
+    const existing = accounts.find((a) => a.email === payload.email);
+    if (existing) {
+      try {
+        const enriched = { ...existing, avatar: pictureUrl || existing.avatar, linkedSocial: { ...(existing.linkedSocial || {}), facebook: payload.email } };
+        loginDirect(enriched);
+        updateAccountProfile(existing.id, { avatar: pictureUrl || existing.avatar, linkedSocial: { ...(existing.linkedSocial || {}), facebook: payload.email } });
+      } catch { setSocialErr('Failed to log in'); }
+    } else {
+      try {
+        const newAccount = signupWithGoogle({ name: payload.name, email: payload.email, picture: pictureUrl });
+        setPendingGoogleAccount(newAccount);
+        setSignupForm((prev) => ({ ...prev, name: payload.name || '', email: payload.email || '', password: '', confirmPassword: '' }));
+        setMode('signup'); setSignupStep(2); setError(''); setSocialErr('');
+      } catch (e) { setSocialErr(e.message || 'Failed to create account with Facebook.'); }
+    }
+  }, [loginDirect]);
+
+  const fbFinalizeRef = useRef(finalizeFacebookLogin);
+  fbFinalizeRef.current = finalizeFacebookLogin;
+
+  const handleFacebookLogin = useCallback(() => {
+    setSocialErr('');
+    if (typeof FB === 'undefined') { loadFbSdk(); setSocialErr('Loading Facebook... Try again.'); return; }
+    FB.login((res) => {
+      if (res.status !== 'connected') { setSocialErr('Facebook login cancelled.'); return; }
+      FB.api('/me', { fields: 'name,email,picture.type(large)' }, (info) => {
+        if (!info || info.error) { setSocialErr('Failed to get Facebook profile.'); return; }
+        fbFinalizeRef.current({ name: info.name, email: info.email, picture: info.picture?.data?.url }, res.authResponse.accessToken);
+      });
+    }, { scope: 'public_profile,email' });
+  }, []);
+
+  /* Load FB SDK on mount */
+  useEffect(() => { loadFbSdk(); }, []);
 
   const handleSocialLogin = (provider) => {
     const accounts = getAllAccounts().filter((a) => a.id !== 'guest');
@@ -763,7 +824,7 @@ export default function AuthPage() {
                 </button>
                 <div ref={googleBtnRef} className="btn-google-overlay"></div>
               </div>
-              <button type="button" className="btn btn-social btn-facebook" onClick={() => handleSocialLogin('facebook')}>
+              <button type="button" className="btn btn-social btn-facebook" onClick={handleFacebookLogin}>
                 <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
                 Login with Facebook
               </button>
