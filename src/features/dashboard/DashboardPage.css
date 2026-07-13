@@ -2284,22 +2284,7 @@
   50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(111, 163, 134, 0); }
 }
 
-/* ─── 5. Exam Tracker: Countdown Ring + Staggered Entrance ─── */
-.exam-course-card {
-  animation: examCardSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-
-.exam-course-card:nth-child(1) { animation-delay: 0.05s; }
-.exam-course-card:nth-child(2) { animation-delay: 0.1s; }
-.exam-course-card:nth-child(3) { animation-delay: 0.15s; }
-.exam-course-card:nth-child(4) { animation-delay: 0.2s; }
-
-@keyframes examCardSlideIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Exam slot urgent state glow */
+/* ─── Exam Slot Urgent State Glow ─── */
 .exam-slot-state.urgent {
   animation: urgentGlow 1.5s ease-in-out infinite;
 }
@@ -2307,23 +2292,6 @@
 @keyframes urgentGlow {
   0%, 100% { text-shadow: none; }
   50% { text-shadow: 0 0 8px currentColor; }
-}
-
-/* ─── Exam Countdown Ring ─── */
-.exam-slot-state-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.exam-countdown-ring {
-  flex-shrink: 0;
-  animation: ringFadeIn 0.5s ease both;
-}
-
-@keyframes ringFadeIn {
-  from { opacity: 0; transform: scale(0.8); }
-  to { opacity: 1; transform: scale(1); }
 }
 
 /* ─── 6. Deadline Ticker: Scrolling Marquee for Urgent + Shake ─── */

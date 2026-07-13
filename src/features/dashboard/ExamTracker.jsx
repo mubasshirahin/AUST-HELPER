@@ -33,38 +33,13 @@ function formatDate(dateStr) {
 
 function SlotCard({ slot, slotData, isEditing, editDate, editSyllabus, onDateChange, onSyllabusChange, isExpanded, onToggle, courseCode }) {
   const state = getSlotState(slotData?.date);
-  const getDaysRemaining = () => {
-    if (!slotData?.date) return null;
-    const now = new Date(); now.setHours(0, 0, 0, 0);
-    const target = new Date(slotData.date); target.setHours(0, 0, 0, 0);
-    return Math.ceil((target - now) / (1000 * 60 * 60 * 24));
-  };
-  const daysLeft = getDaysRemaining();
-  const showRing = daysLeft !== null && daysLeft > 0 && daysLeft <= 14;
-  const ringProgress = showRing ? Math.max(0, Math.min(100, ((14 - daysLeft) / 14) * 100)) : 0;
 
   return (
     <div className="exam-slot" style={{ '--slot-clr': slot.color }}>
       <div className="exam-slot-header">
         <span className="exam-slot-name">{slot.label}</span>
         {!isEditing && (
-          <div className="exam-slot-state-row">
-            {showRing && (
-              <svg className="exam-countdown-ring" width="24" height="24" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" fill="none" stroke="var(--border-primary)" strokeWidth="2" />
-                <circle
-                  cx="12" cy="12" r="10" fill="none"
-                  stroke={state.cls === 'urgent' ? 'var(--accent-rose)' : state.cls === 'soon' ? 'var(--accent-amber)' : slot.color}
-                  strokeWidth="2" strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 10}`}
-                  strokeDashoffset={`${2 * Math.PI * 10 * (1 - ringProgress / 100)}`}
-                  transform="rotate(-90 12 12)"
-                  style={{ transition: 'stroke-dashoffset 0.5s ease' }}
-                />
-              </svg>
-            )}
-            <span className={`exam-slot-state ${state.cls}`}>{state.label}</span>
-          </div>
+          <span className={`exam-slot-state ${state.cls}`}>{state.label}</span>
         )}
       </div>
       {isEditing ? (
