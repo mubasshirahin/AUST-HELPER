@@ -7,7 +7,7 @@ import {
   LayoutDashboard, CalendarDays, BarChart3, BookOpen, MapPin, Users, ShoppingBag, Settings, MessageSquare,
   LogIn, Shield, Eye, Megaphone, Utensils,
   Library, FileText, FolderOpen, FileSpreadsheet, Map, ScrollText,
-  ChevronLeft, ChevronRight, ExternalLink
+  ChevronLeft, ChevronRight, ExternalLink, Moon
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -30,6 +30,7 @@ export default function Sidebar({ collapsed, onToggle }) {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [unread, setUnread] = useState(() => (user?.id ? getUnreadCount(user.id) : 0));
+  const [showShadow, setShowShadow] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -114,12 +115,25 @@ export default function Sidebar({ collapsed, onToggle }) {
       </nav>
 
       <div className="sidebar-footer">
+        <button
+          type="button"
+          className={`nav-item shadow-btn ${collapsed ? 'collapsed' : ''}`}
+          onClick={() => setShowShadow(true)}
+          style={{ width: '100%', border: 'none', cursor: 'pointer' }}
+        >
+          <div className="nav-icon-wrapper">
+            <Moon size={16} />
+          </div>
+          {!collapsed && <span className="nav-label">Become Shadow</span>}
+          {collapsed && <div className="nav-tooltip">Become Shadow</div>}
+        </button>
+
         {!isAuthenticated && (
           <button
             type="button"
             className={`nav-item logout-btn ${collapsed ? 'collapsed' : ''}`}
             onClick={() => navigate('/login')}
-            style={{ marginTop: '8px', width: '100%', border: 'none', cursor: 'pointer' }}
+            style={{ marginTop: '4px', width: '100%', border: 'none', cursor: 'pointer' }}
           >
             <div className="nav-icon-wrapper">
               <LogIn size={18} />
@@ -129,6 +143,31 @@ export default function Sidebar({ collapsed, onToggle }) {
           </button>
         )}
       </div>
+
+      {showShadow && (
+        <div className="modal-overlay" onClick={() => setShowShadow(false)} style={{ zIndex: 100000 }}>
+          <div className="modal glass-card-static shadow-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="shadow-modal-body">
+              <Moon size={32} style={{ color: 'var(--accent-purple)' }} />
+              <h3>Become a Shadow</h3>
+              <p>
+                Shadows are the elite force behind AUST Helper — trusted contributors who help shape
+                the platform, moderate content, and build new features.
+              </p>
+              <p>
+                Interested? Reach out to the admin team or contribute actively to the community.
+              </p>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => setShowShadow(false)}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }
