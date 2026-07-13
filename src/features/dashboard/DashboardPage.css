@@ -1606,9 +1606,7 @@
 }
 
 [data-theme="cyberpunk"] .routine-item:hover,
-[data-theme="cyberpunk"] .notice-item:hover,
-[data-theme="cyberpunk"] .exam-course-card:hover,
-[data-theme="cyberpunk"] .exam-slot-display:hover {
+[data-theme="cyberpunk"] .notice-item:hover {
   border-left-color: var(--accent-blue);
   background: var(--accent-blue-glow);
 }
@@ -2289,7 +2287,6 @@
 /* ─── 5. Exam Tracker: Countdown Ring + Staggered Entrance ─── */
 .exam-course-card {
   animation: examCardSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .exam-course-card:nth-child(1) { animation-delay: 0.05s; }
@@ -2300,11 +2297,6 @@
 @keyframes examCardSlideIn {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-.exam-course-card:hover {
-  border-color: color-mix(in srgb, var(--accent-amber) 30%, transparent);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 /* Exam slot urgent state glow */

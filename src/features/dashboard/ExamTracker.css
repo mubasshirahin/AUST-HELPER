@@ -16,10 +16,6 @@
   border-radius: var(--radius-lg);
   background: var(--bg-card);
   padding: var(--sp-5);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.exam-course-card:hover {
-  border-color: var(--border-focus);
 }
 .exam-course-card.editing {
   border-color: var(--accent-blue);
@@ -102,11 +98,6 @@
   background: var(--bg-input);
   border: 1px solid var(--border-primary);
   border-left: 3px solid var(--border-primary);
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-.exam-slot:hover {
-  border-color: var(--slot-clr, var(--accent-blue));
-  background: color-mix(in srgb, var(--slot-clr, var(--accent-blue)) 6%, var(--bg-input));
 }
 
 .exam-slot-header {
