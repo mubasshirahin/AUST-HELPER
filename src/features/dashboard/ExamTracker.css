@@ -97,7 +97,6 @@
   border-radius: var(--radius-md);
   background: var(--bg-input);
   border: 1px solid var(--border-primary);
-  border-left: 3px solid var(--border-primary);
 }
 
 .exam-slot-header {
