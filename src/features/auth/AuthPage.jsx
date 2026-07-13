@@ -213,6 +213,7 @@ export default function AuthPage() {
       // Server might not be running — proceed with client-side login
     }
 
+    console.log('[Google Login] payload.picture:', payload.picture);
     const accounts = getAllAccounts().filter((a) => a.id !== 'guest');
     const existing = accounts.find((a) => a.email === payload.email);
     if (existing) {
