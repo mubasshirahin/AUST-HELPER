@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { GraduationCap, Briefcase, BookOpen, Monitor, Moon, Sun, Newspaper, Terminal, Sparkles, Gauge, MoonStar, Pen, PenTool, Building2, Check, Eye, EyeOff, Zap, Type, Grid2x2 } from 'lucide-react';
+import { GraduationCap, Briefcase, BookOpen, Monitor, Moon, Sun, Newspaper, Terminal, Sparkles, Gauge, MoonStar, Pen, PenTool, Building2, Check, Eye, EyeOff, Zap, Type, Grid2x2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { getYearSemOptions } from '../../utils/semester';
@@ -108,6 +108,8 @@ export default function AuthPage() {
     'Check your routine today.',
     'Find past papers in Vault.',
     'Stay ahead, every semester.',
+    'Find seniors & alumni quickly.',
+    'No way to find batchmates fast.',
   ];
   const [tickerText, setTickerText] = useState('');
   const [tickerPhaseIdx, setTickerPhaseIdx] = useState(0);
@@ -536,6 +538,15 @@ export default function AuthPage() {
         <div key={`${theme}-orb-3`} className="auth-page-orb auth-page-orb-3" />
         <div className="auth-page-noise" aria-hidden="true" />
       </div>
+      <button
+        type="button"
+        className="auth-back-home-btn"
+        onClick={() => navigate('/')}
+        aria-label="Back to home"
+      >
+        <ArrowLeft size={16} />
+        <span>Back to Home</span>
+      </button>
       <div className={`auth-shell ${sending ? 'is-sending' : ''}`}>
         <div className="auth-brand-outside">
           <div className="auth-logo-wrapper">

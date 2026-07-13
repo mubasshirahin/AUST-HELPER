@@ -8,8 +8,7 @@ import {
   Building2, Type, Grid2x2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
-import SearchModal from './SearchModal';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useInAppNotifications } from '../hooks/useInAppNotifications';
 import logoSilver from '../assets/logo-silver.png';
 import logoRed from '../assets/logo-red.png';
@@ -61,11 +60,10 @@ const lightThemeOptions = [
   { id: 'minimalist-monochrome', label: 'Monochrome', icon: Pen },
 ];
 
-export default function TopNavbar({ onMenuClick }) {
+export default function TopNavbar({ onMenuClick, onSearchOpen }) {
   const { theme, setTheme } = useTheme();
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -73,10 +71,27 @@ export default function TopNavbar({ onMenuClick }) {
     () => localStorage.getItem('logoVariant') || 'silver'
   );
   const [logoClicked, setLogoClicked] = useState(false);
+  const logoClickTimes = useRef([]);
+  const easterEggTimer = useRef(null);
+
+  const checkEasterEgg = useCallback(() => {
+    const now = Date.now();
+    logoClickTimes.current.push(now);
+
+    const windowMs = 3000;
+    const threshold = 3;
+    logoClickTimes.current = logoClickTimes.current.filter(t => now - t < windowMs);
+
+    if (logoClickTimes.current.length >= threshold) {
+      logoClickTimes.current = [];
+      navigate('/terminal');
+    }
+  }, [navigate]);
 
   const toggleLogo = () => {
     setLogoClicked(true);
     setTimeout(() => setLogoClicked(false), 600);
+    checkEasterEgg();
     setLogoVariant((prev) => {
       const next = prev === 'silver' ? 'red' : 'silver';
       localStorage.setItem('logoVariant', next);
@@ -99,7 +114,7 @@ export default function TopNavbar({ onMenuClick }) {
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setIsSearchOpen(true);
+        onSearchOpen(true);
       }
       if (e.key === 'Escape') {
         setThemeMenuOpen(false);
@@ -137,7 +152,7 @@ export default function TopNavbar({ onMenuClick }) {
               type="button"
               className={`topbar-logo-icon ${logoClicked ? 'clicked' : ''}`}
               onClick={toggleLogo}
-              title="Click to switch logo"
+              title="Click to switch logo | Click 3x for Nexus Terminal"
               aria-label="Toggle logo color"
             >
               <img
@@ -171,8 +186,7 @@ export default function TopNavbar({ onMenuClick }) {
 
       </div>
 
-      <div className="topbar-mid">
-        <div className="topbar-search" onClick={() => setIsSearchOpen(true)} role="button" tabIndex={0}>
+      <div className="topbar-mid">          <div className="topbar-search" onClick={() => onSearchOpen(true)} role="button" tabIndex={0}>
           <Search size={16} />
           <input
             type="text"
@@ -470,7 +484,6 @@ export default function TopNavbar({ onMenuClick }) {
         )}
       </div>
 
-      <SearchModal key={isSearchOpen ? 'open' : 'closed'} isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </header>
   );
 }

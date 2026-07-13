@@ -56,13 +56,13 @@ export default function DeptHeatmap() {
           </div>
         </div>
 
-        <label className="flex items-center gap-2" style={{ fontSize: 'var(--fs-sm)' }}>
+        <label className="flex items-center gap-2" style={{ fontSize: 'var(--fs-sm)', whiteSpace: 'nowrap' }}>
           <span style={{ color: 'var(--text-secondary)' }}>Department</span>
           <select
             className="input"
             value={selectedDepartment}
             onChange={(event) => setSelectedDepartment(event.target.value)}
-            style={{ minWidth: '120px' }}
+            style={{ minWidth: '120px', width: 'auto' }}
           >
             {heatmapDepartments.map((department) => (
               <option key={department} value={department}>{department}</option>
@@ -115,8 +115,8 @@ export default function DeptHeatmap() {
                   >
                     <div style={{ paddingLeft: '8px', fontSize: '12px', fontWeight: isUserBatch ? 'bold' : 'normal', color: isUserBatch ? 'var(--accent-blue)' : 'var(--text-primary)' }}>
                       {batch.label}{isUserBatch ? ' (You)' : ''}
-                      <span style={{ display: 'inline-flex', alignItems:'center', gap:'3px', marginLeft:'6px', fontSize:'9px', fontWeight:'bold', padding:'1px 6px', borderRadius:'8px', background:batch.contributorCount >= MIN_BATCH_CONTRIBUTORS ? 'var(--accent-emerald-glow)' : 'var(--accent-amber-glow)', color:batch.contributorCount >= MIN_BATCH_CONTRIBUTORS ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>
-                        {batch.contributorCount}
+                      <span style={{ display: 'inline-flex', alignItems:'center', gap:'3px', marginLeft:'8px', fontSize:'9px', fontWeight:'bold', padding:'1px 8px', borderRadius:'10px', background:batch.contributorCount >= MIN_BATCH_CONTRIBUTORS ? 'var(--accent-emerald-glow)' : 'var(--accent-amber-glow)', color:batch.contributorCount >= MIN_BATCH_CONTRIBUTORS ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>
+                        {batch.contributorCount}/{MIN_BATCH_CONTRIBUTORS} students
                       </span>
                     </div>
 

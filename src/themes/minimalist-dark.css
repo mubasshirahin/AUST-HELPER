@@ -258,7 +258,7 @@
 /* ─── Inputs: glass wells with an amber focus bloom ─── */
 [data-theme="midnight"] .input,
 [data-theme="midnight"] .search-box input {
-  background: var(--bg-input);
+  background-color: var(--bg-input);
   -webkit-backdrop-filter: var(--md-blur);
   backdrop-filter: var(--md-blur);
   border: 1px solid var(--border-primary);

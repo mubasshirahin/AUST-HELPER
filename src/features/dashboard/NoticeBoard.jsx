@@ -40,7 +40,6 @@ export default function NoticeBoard() {
             <BellRing size={18} />
           </div>
           <div>
-            <h3 className="section-title" style={{ fontSize: 'var(--fs-md)', margin: 0 }}>Notice Board</h3>
             <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>Official University Announcements</p>
           </div>
         </div>

@@ -344,7 +344,7 @@
 /* ─── Inputs — underlined elegance (transparent, bottom-border only) ─── */
 [data-theme="art-deco"] .input,
 [data-theme="art-deco"] .search-box input {
-  background: transparent;
+  background-color: transparent;
   border: none;
   border-bottom: 2px solid rgba(212, 175, 55, 0.35);
   border-radius: 0;
@@ -372,6 +372,8 @@
 /* Select arrow matches the gold palette */
 [data-theme="art-deco"] select.input {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23D4AF37' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
 }
 
 /* ─── Tabs — architectural pilasters with gold bottom rules ─── */

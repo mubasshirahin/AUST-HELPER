@@ -1,13 +1,26 @@
-import { lazy, Suspense, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { RoutineProvider } from './context/RoutineContext';
 import Sidebar from './layout/Sidebar';
 import TopNavbar from './layout/TopNavbar';
+import SearchModal from './layout/SearchModal';
 import MobileNav from './layout/MobileNav';
 import AuthPage from './features/auth/AuthPage';
+import LandingPage from './features/landing/LandingPage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
+import CookiePolicyPage from './pages/CookiePolicyPage';
+import DocsPage from './pages/DocsPage';
+import BlogPage from './pages/BlogPage';
+import ChangelogPage from './pages/ChangelogPage';
+import FeedbackPage from './pages/FeedbackPage';
+import FeaturesPage from './pages/FeaturesPage';
+import PricingPage from './pages/PricingPage';
+import AboutUsPage from './pages/AboutUsPage';
 import NotificationRunner from './components/NotificationRunner';
+import QuotePopup from './features/dashboard/QuotePopup';
 
 const DashboardPage = lazy(() => import('./features/dashboard/DashboardPage'));
 const RoutineTemplatesPage = lazy(() => import('./features/dashboard/RoutineTemplatesPage'));
@@ -22,6 +35,8 @@ const MarketplacePage = lazy(() => import('./features/marketplace/index.jsx'));
 const SettingsPage = lazy(() => import('./features/settings/SettingsPage'));
 const AdminPanelPage = lazy(() => import('./features/admin/AdminPanelPage'));
 const MessagesPage = lazy(() => import('./features/messages/MessagesPage'));
+const TerminalPage = lazy(() => import('./features/terminal/TerminalPage'));
+const WorkspacePage = lazy(() => import('./features/workspace/WorkspacePage'));
 
 import './App.css';
 
@@ -34,20 +49,33 @@ function AdminRoute() {
   return <DashboardPage />;
 }
 
+// Protected Admin Route - only admin/moderator can access
+function ProtectedAdminRoute({ children }) {
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole?.('admin') || hasRole?.('moderator');
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
 // Main App Content Component (authenticated routes)
 function AppContent() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
     <RoutineProvider>
+      <QuotePopup />
       <NotificationRunner />
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       <div className="app-layout">
         <Sidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
         <div className={`main-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-          <TopNavbar onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
+          <TopNavbar onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)} onSearchOpen={setIsSearchOpen} />
           <div className="page-wrapper">
             <Suspense fallback={<div className="page-loading">Loading...</div>}>
               <Routes>
@@ -63,14 +91,15 @@ function AppContent() {
                 <Route path="/marketplace" element={<MarketplacePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/messages" element={<MessagesPage />} />
-                <Route path="/admin" element={<AdminPanelPage />} />
-                <Route path="/admin/overview" element={<AdminPanelPage />} />
-                <Route path="/admin/notice-board" element={<AdminPanelPage />} />
-                <Route path="/admin/canteen" element={<AdminPanelPage />} />
-                <Route path="/admin/library" element={<AdminPanelPage />} />
-                <Route path="/admin/users" element={<AdminPanelPage />} />
-                <Route path="/admin/applications" element={<AdminPanelPage />} />
-                <Route path="/admin/cr-sr-directory" element={<AdminPanelPage />} />
+                <Route path="/admin" element={<ProtectedAdminRoute><AdminPanelPage /></ProtectedAdminRoute>} />
+                <Route path="/admin/overview" element={<ProtectedAdminRoute><AdminPanelPage /></ProtectedAdminRoute>} />
+                <Route path="/admin/notice-board" element={<ProtectedAdminRoute><AdminPanelPage /></ProtectedAdminRoute>} />
+                <Route path="/admin/canteen" element={<ProtectedAdminRoute><AdminPanelPage /></ProtectedAdminRoute>} />
+                <Route path="/admin/library" element={<ProtectedAdminRoute><AdminPanelPage /></ProtectedAdminRoute>} />
+                <Route path="/admin/users" element={<ProtectedAdminRoute><AdminPanelPage /></ProtectedAdminRoute>} />
+                <Route path="/admin/applications" element={<ProtectedAdminRoute><AdminPanelPage /></ProtectedAdminRoute>} />
+                <Route path="/admin/cr-sr-directory" element={<ProtectedAdminRoute><AdminPanelPage /></ProtectedAdminRoute>} />
+                <Route path="/workspace" element={<WorkspacePage />} />
                 <Route path="/login" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
@@ -85,6 +114,26 @@ function AppContent() {
 // Root App Shell with Auth Check — no BrowserRouter here, uses parent's single instance
 function AppShell() {
   const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+
+  const pageTitles = {
+    '/dashboard': 'Dashboard',
+    '/templates': 'Routine Templates',
+    '/analytics': 'Grade Lab',
+    '/vault': 'Vault',
+    '/career-roadmaps': 'Career Roadmaps',
+    '/cheatsheets': 'Cheat Sheets',
+    '/campus': 'Campus',
+    '/community': 'Community',
+    '/marketplace': 'Marketplace',
+    '/settings': 'Settings',
+    '/messages': 'Messages',
+    '/admin': 'Admin Panel',
+    '/terminal': 'Terminal',
+    '/workspace': 'Workspace',
+  };
+  const pageName = Object.entries(pageTitles).find(([path]) => location.pathname.startsWith(path))?.[1] || 'Dashboard';
+  useEffect(() => { document.title = `AUSTWise — ${pageName}`; }, [location.pathname]);
 
   // Show loading state while checking auth
   if (isLoading) {
@@ -104,12 +153,34 @@ function AppShell() {
     );
   }
 
-  // If not authenticated, show only the login page
+  // Terminal route — full screen overlay outside main layout
+  if (isAuthenticated && location.pathname === '/terminal') {
+    return (
+      <Suspense fallback={null}>
+        <Routes>
+          <Route path="/terminal" element={<TerminalPage />} />
+        </Routes>
+      </Suspense>
+    );
+  }
+
+  // If not authenticated, show landing page at / and auth page at /login
   if (!isAuthenticated) {
     return (
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<AuthPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+        <Route path="/docs" element={<DocsPage />} />
+        <Route path="/blog" element={<BlogPage />} />
+        <Route path="/changelog" element={<ChangelogPage />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
+        <Route path="/features" element={<FeaturesPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/about" element={<AboutUsPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }

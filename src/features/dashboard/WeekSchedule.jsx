@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Calendar, Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Calendar, Plus, Trash2, ChevronLeft, ChevronRight, ChevronDown, FileDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import CourseAutocomplete from '../../components/CourseAutocomplete';
 import { findCourseByCode } from '../../data/courses';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import logoUrl from '../../assets/logo-silver.png';
 
 export default function WeekSchedule() {
   const { user } = useAuth();
@@ -227,31 +230,226 @@ export default function WeekSchedule() {
     }
   };
 
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportRef = useRef(null);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (exportRef.current && !exportRef.current.contains(e.target)) {
+        setShowExportMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const scheduleRef = useRef(null);
+
+  const downloadSchedulePDF = useCallback(async () => {
+    const el = scheduleRef.current;
+    if (!el) return;
+
+    const root = document.documentElement;
+    const cs = (n) => getComputedStyle(root).getPropertyValue(n).trim();
+    const bg = cs('--bg-primary');
+    const textPri = cs('--text-primary');
+    const textSec = cs('--text-secondary');
+    const textTer = cs('--text-tertiary');
+
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position: fixed; left: -9999px; top: 0; width: fit-content; max-width: 1200px;
+      background: ${bg};
+      font-family: system-ui, -apple-system, sans-serif;
+      padding-bottom: 10px;
+    `;
+
+    const ord = (n) => n + ({1:'st',2:'nd',3:'rd'}[n]||'th');
+    const fmtSem = (s) => {
+      const m = (s||'').match(/Year\s*(\d+)\s*-\s*Semester\s*(\d+)/i);
+      return m ? `${ord(+m[1])} Year, ${+m[2]}${['th','st','nd','rd'][+m[2]]||'th'} Sem` : s;
+    };
+    const semStr = user?.yearSemester || user?.semester || '';
+    const deptStr = user?.department || '';
+
+    const brandBar = document.createElement('div');
+    brandBar.style.cssText = 'padding: 4px 8px;';
+    brandBar.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <img src="${logoUrl}" alt="AUSTWise" style="width: 28px; height: 28px; object-fit: contain; flex-shrink: 0;" />
+          <div style="display: flex; flex-direction: column; justify-content: center; margin-top: -14px;">
+            <div style="font-size: 16px; font-weight: 800; color: ${textPri}; letter-spacing: -0.01em; line-height: 1.1;">AUSTWise</div>
+            <div style="font-size: 8px; color: ${textTer}; letter-spacing: 0.06em; text-transform: uppercase;">Your Academic Companion</div>
+          </div>
+        </div>
+        ${(deptStr || semStr) ? `<div style="font-size: 12px; color: ${textSec}; font-weight: 600; text-align: center; line-height: 1.5;">
+          ${deptStr ? `<div>${deptStr}</div>` : ''}
+          ${semStr ? `<div>${fmtSem(semStr)}</div>` : ''}
+        </div>` : ''}
+        <div style="text-align: right;">
+          <div style="font-size: 8px; color: ${textTer}; text-transform: uppercase; letter-spacing: 0.06em;">Generated</div>
+          <div style="font-size: 11px; color: ${textPri}; font-weight: 700; margin-top: 1px;">
+            ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(brandBar);
+
+    const isMonthly = viewMode === 'monthly';
+    const clone = el.cloneNode(true);
+    clone.style.cssText = `overflow: visible; border-radius: ${isMonthly ? 0 : 8}px; padding: 0;`;
+    clone.style.margin = '6px 8px 0';
+    container.appendChild(clone);
+
+    document.body.appendChild(container);
+
+    try {
+      const canvas = await html2canvas(container, {
+        scale: isMonthly ? 3 : 2.5, useCORS: true, backgroundColor: bg || '#ffffff',
+        logging: false, width: container.scrollWidth, height: container.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const imgW = isMonthly ? canvas.width * 0.2646 : 290;
+      const imgH = isMonthly ? canvas.height * 0.2646 : (canvas.height * imgW) / canvas.width;
+      const pageW = imgW + 8;
+      const pageH = imgH + 4;
+
+      const pdf = new jsPDF({ orientation: 'l', unit: 'mm', format: [pageW, pageH] });
+      const hex = bg.replace('#', '');
+      if (hex.length >= 6) {
+        pdf.setFillColor(parseInt(hex.substring(0,2),16), parseInt(hex.substring(2,4),16), parseInt(hex.substring(4,6),16));
+        pdf.rect(0, 0, pageW, pageH, 'F');
+      }
+      pdf.addImage(imgData, 'PNG', 4, 2, imgW, imgH);
+      pdf.save('AUST-14Week-Schedule.pdf');
+    } finally {
+      document.body.removeChild(container);
+    }
+  }, [user, viewMode]);
+
+  const downloadScheduleImage = useCallback(async () => {
+    const el = scheduleRef.current;
+    if (!el) return;
+
+    const root = document.documentElement;
+    const cs = (n) => getComputedStyle(root).getPropertyValue(n).trim();
+    const bg = cs('--bg-primary');
+    const textPri = cs('--text-primary');
+    const textSec = cs('--text-secondary');
+    const textTer = cs('--text-tertiary');
+
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position: fixed; left: -9999px; top: 0; width: fit-content; max-width: 1200px;
+      background: ${bg};
+      font-family: system-ui, -apple-system, sans-serif;
+      padding-bottom: 10px;
+    `;
+
+    const ord = (n) => n + ({1:'st',2:'nd',3:'rd'}[n]||'th');
+    const fmtSem = (s) => {
+      const m = (s||'').match(/Year\s*(\d+)\s*-\s*Semester\s*(\d+)/i);
+      return m ? `${ord(+m[1])} Year, ${+m[2]}${['th','st','nd','rd'][+m[2]]||'th'} Sem` : s;
+    };
+    const semStr = user?.yearSemester || user?.semester || '';
+    const deptStr = user?.department || '';
+
+    const brandBar = document.createElement('div');
+    brandBar.style.cssText = 'padding: 4px 8px;';
+    brandBar.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <img src="${logoUrl}" alt="AUSTWise" style="width: 28px; height: 28px; object-fit: contain; flex-shrink: 0;" />
+          <div style="display: flex; flex-direction: column; justify-content: center; margin-top: -14px;">
+            <div style="font-size: 16px; font-weight: 800; color: ${textPri}; letter-spacing: -0.01em; line-height: 1.1;">AUSTWise</div>
+            <div style="font-size: 8px; color: ${textTer}; letter-spacing: 0.06em; text-transform: uppercase;">Your Academic Companion</div>
+          </div>
+        </div>
+        ${(deptStr || semStr) ? `<div style="font-size: 12px; color: ${textSec}; font-weight: 600; text-align: center; line-height: 1.5;">
+          ${deptStr ? `<div>${deptStr}</div>` : ''}
+          ${semStr ? `<div>${fmtSem(semStr)}</div>` : ''}
+        </div>` : ''}
+        <div style="text-align: right;">
+          <div style="font-size: 8px; color: ${textTer}; text-transform: uppercase; letter-spacing: 0.06em;">Generated</div>
+          <div style="font-size: 11px; color: ${textPri}; font-weight: 700; margin-top: 1px;">
+            ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(brandBar);
+
+    const isMonthly = viewMode === 'monthly';
+    const clone = el.cloneNode(true);
+    clone.style.cssText = `overflow: visible; border-radius: ${isMonthly ? 0 : 8}px; padding: 0;`;
+    clone.style.margin = '6px 8px 0';
+    container.appendChild(clone);
+
+    document.body.appendChild(container);
+
+    try {
+      const canvas = await html2canvas(container, {
+        scale: isMonthly ? 3 : 2.5, useCORS: true, backgroundColor: bg || '#ffffff',
+        logging: false, width: container.scrollWidth, height: container.scrollHeight,
+      });
+
+      const link = document.createElement('a');
+      link.download = 'AUST-14Week-Schedule.png';
+      link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } finally {
+      document.body.removeChild(container);
+    }
+  }, [user, viewMode]);
+
   return (
     <div className="glass-card-static animate-fadeInUp">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
+      <div className="dash-header-three mb-8">
+        <div className="dash-header-left">
           <div className="icon" style={{ backgroundColor: 'var(--accent-cyan-glow)', color: 'var(--accent-cyan)', padding: '12px', borderRadius: '12px' }}>
             <Calendar size={28} />
           </div>
           <div>
-            <h3 className="section-title" style={{ fontSize: 'var(--fs-xl)', margin: 0 }}>14-Week Schedule</h3>
             <p style={{ fontSize: 'var(--fs-md)', color: 'var(--text-secondary)' }}>Academic calendar with tasks & events</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        {/* Middle: Export + Settings */}
+        <div className="dash-header-center">
+          <div className="export-dropdown" ref={exportRef}>
+            <button className="btn btn-secondary btn-sm" onClick={() => setShowExportMenu(!showExportMenu)} aria-label="Export schedule" aria-haspopup="true">
+              <FileDown size={14} /> Export <ChevronDown size={12} />
+            </button>
+            {showExportMenu && (
+              <div className="export-menu">
+                <button className="export-menu-item" onClick={() => { downloadSchedulePDF(); setShowExportMenu(false); }}>
+                  <FileDown size={14} /> Export as PDF
+                </button>
+                <button className="export-menu-item" onClick={() => { downloadScheduleImage(); setShowExportMenu(false); }}>
+                  <FileDown size={14} /> Export as Image
+                </button>
+              </div>
+            )}
+          </div>
           <button
-            className="btn btn-icon"
+            className="schedule-nav-btn"
             onClick={() => setShowSettings(true)}
-            style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', padding: '6px' }}
             title="Set semester start date"
           >
             <Calendar size={18} />
           </button>
-          <div className="flex items-center" style={{ gap: '4px', background: 'var(--bg-input)', borderRadius: '8px', padding: '3px' }}>
+        </div>
+        {/* Right: View toggle + Navigation */}
+        <div className="dash-header-right">
+          <div className="view-toggle">
             {['daily', 'weekly', 'monthly'].map(mode => (
               <button
                 key={mode}
+                className={`view-toggle-btn${viewMode === mode ? ' active' : ''}`}
                 onClick={() => {
                   if (mode === 'daily' && viewMode !== 'daily') {
                     setCurrentDate(new Date());
@@ -262,95 +460,80 @@ export default function WeekSchedule() {
                   }
                   setViewMode(mode);
                 }}
-                style={{
-                  border: 'none', cursor: 'pointer', borderRadius: '6px',
-                  padding: '4px 10px', fontSize: '11px', fontWeight: 'bold',
-                  background: viewMode === mode ? 'var(--accent-cyan)' : 'transparent',
-                  color: viewMode === mode ? '#fff' : 'var(--text-secondary)',
-                  textTransform: 'capitalize',
-                  transition: 'all 0.15s ease'
-                }}
               >
                 {mode === 'daily' ? 'Day' : mode === 'weekly' ? 'Week' : 'Month'}
               </button>
             ))}
           </div>
-          <button
-            className="btn btn-icon"
-            onClick={() => {
-              const d = new Date(currentDate);
-              if (viewMode === 'daily') d.setDate(d.getDate() - 1);
-              else if (viewMode === 'monthly') d.setMonth(d.getMonth() - 1);
-              else d.setDate(d.getDate() - 7);
-              setCurrentDate(d);
-            }}
-            style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', padding: '6px' }}
-          >
+          <button className="schedule-nav-btn" onClick={() => {
+            const d = new Date(currentDate);
+            if (viewMode === 'daily') d.setDate(d.getDate() - 1);
+            else if (viewMode === 'monthly') d.setMonth(d.getMonth() - 1);
+            else d.setDate(d.getDate() - 7);
+            setCurrentDate(d);
+          }}>
             <ChevronLeft size={20} />
           </button>
-          <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', minWidth: '120px', textAlign: 'center' }}>
+          <span className="schedule-week-label">
             {viewMode === 'daily'
               ? currentDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })
               : viewMode === 'monthly'
                 ? currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
                 : `Week ${getCurrentWeekNum()}`}
           </span>
-          <button
-            className="btn btn-icon"
-            onClick={() => {
-              const d = new Date(currentDate);
-              if (viewMode === 'daily') d.setDate(d.getDate() + 1);
-              else if (viewMode === 'monthly') d.setMonth(d.getMonth() + 1);
-              else d.setDate(d.getDate() + 7);
-              setCurrentDate(d);
-            }}
-            style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', padding: '6px' }}
-          >
+          <button className="schedule-nav-btn" onClick={() => {
+            const d = new Date(currentDate);
+            if (viewMode === 'daily') d.setDate(d.getDate() + 1);
+            else if (viewMode === 'monthly') d.setMonth(d.getMonth() + 1);
+            else d.setDate(d.getDate() + 7);
+            setCurrentDate(d);
+          }}>
             <ChevronRight size={20} />
           </button>
         </div>
       </div>
 
+      <div ref={scheduleRef}>
       {viewMode === 'daily' ? (() => {
         const date = currentDate;
         const dayTasks = getTasksForDate(date);
         return (
-          <div style={{ padding: '32px', borderRadius: 'var(--radius-xl)', background: isToday(date) ? 'var(--accent-blue-glow)' : 'var(--bg-input)', border: isToday(date) ? '2px solid var(--accent-blue)' : '1px solid var(--border-primary)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '14px', borderBottom: '2px solid var(--border-secondary)' }}>
+          <div className={`schedule-daily-view${isToday(date) ? ' today' : ''}`}>
+            <div className="schedule-daily-header">
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px' }}>
-                <span style={{ fontSize: '32px', fontWeight: 'bold', color: isToday(date) ? 'var(--accent-blue)' : 'var(--text-primary)' }}>
+                <span className={`schedule-daily-dayname${isToday(date) ? ' today' : ''}`}>
                   {date.toLocaleDateString('en-US', { weekday: 'long' })}
                 </span>
-                <span style={{ fontSize: '20px', color: 'var(--text-tertiary)' }}>
+                <span className="schedule-daily-date">
                   {date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </span>
               </div>
               {isToday(date) && (
-                <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--accent-blue)', background: 'var(--accent-blue-glow)', padding: '4px 12px', borderRadius: '6px' }}>TODAY</span>
+                <span className="schedule-daily-badge">TODAY</span>
               )}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {dayTasks.map(task => (
                 <div key={task.id} onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
-                  style={{ fontSize: '15px', padding: '14px 16px', background: `${getTypeColor(task.type)}15`, borderLeft: `5px solid ${getTypeColor(task.type)}`, borderRadius: '10px', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: '500' }}
+                  className="schedule-daily-task"
+                  style={{ background: `${getTypeColor(task.type)}15`, borderLeft: `3px solid ${getTypeColor(task.type)}` }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = `${getTypeColor(task.type)}30`; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = `${getTypeColor(task.type)}15`; }}
                 >
-                  <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>{task.title}</div>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {task.courseCode && <span style={{ fontSize: '12px', color: 'var(--accent-cyan)', background: 'var(--accent-cyan-glow)', padding: '2px 10px', borderRadius: '5px', fontWeight: 'bold' }}>{task.courseCode}</span>}
-                    {task.batchGroup && <span style={{ fontSize: '12px', color: 'var(--accent-amber)', background: 'var(--accent-amber-glow)', padding: '2px 10px', borderRadius: '5px', fontWeight: 'bold' }}>{task.batchGroup}</span>}
-                    {task.time && <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{task.time}</span>}
+                  <div className="schedule-daily-task-title">{task.title}</div>
+                  <div className="schedule-daily-task-meta">
+                    {task.courseCode && <span className="schedule-daily-task-code">{task.courseCode}</span>}
+                    {task.batchGroup && <span className="schedule-daily-task-batch">{task.batchGroup}</span>}
+                    {task.time && <span className="schedule-daily-task-time">{task.time}</span>}
                   </div>
                 </div>
               ))}
               {dayTasks.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)', fontSize: '15px', fontStyle: 'italic' }}>No tasks for this day</div>
+                <div className="schedule-daily-empty">No tasks for this day</div>
               )}
             </div>
             {canAddTask && (
-              <button onClick={(e) => { e.stopPropagation(); setSelectedDay(date); setNewTask({ ...newTask, date: formatDateKey(date) }); setShowAddModal(true); }}
-                style={{ marginTop: '16px', width: '100%', padding: '14px', background: 'var(--bg-secondary)', border: '1px dashed var(--border-secondary)', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', color: 'var(--accent-cyan)', fontWeight: 'bold' }}>
+              <button className="schedule-add-btn" onClick={(e) => { e.stopPropagation(); setSelectedDay(date); setNewTask({ ...newTask, date: formatDateKey(date) }); setShowAddModal(true); }}>
                 + Add Task
               </button>
             )}
@@ -358,35 +541,34 @@ export default function WeekSchedule() {
         );
       })() : viewMode === 'monthly' ? (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', marginBottom: '12px' }}>
+          <div className="schedule-month-grid" style={{ marginBottom: '12px' }}>
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} style={{ textAlign: 'center', padding: '10px', fontSize: 'var(--fs-sm)', fontWeight: 'bold', color: 'var(--text-secondary)' }}>{day}</div>
+              <div key={day} className="schedule-month-header">{day}</div>
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', alignItems: 'start' }}>
+          <div className="schedule-month-grid" style={{ alignItems: 'start' }}>
             {getMonthDates().map((date, idx) => {
               if (!date) return <div key={`pad-${idx}`} />;
               const dayTasks = getTasksForDate(date);
               return (
-                <div key={idx} style={{ padding: '10px', borderRadius: 'var(--radius-lg)', background: isToday(date) ? 'var(--accent-blue-glow)' : 'var(--bg-input)', border: isToday(date) ? '2px solid var(--accent-blue)' : '1px solid var(--border-primary)', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', paddingBottom: '6px', borderBottom: '1px solid var(--border-secondary)' }}>
-                    <span style={{ fontSize: '15px', fontWeight: 'bold', color: isToday(date) ? 'var(--accent-blue)' : 'var(--text-primary)' }}>{getDayNumber(date)}</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                <div key={idx} className={`schedule-day-card${isToday(date) ? ' today' : ''}`}>
+                  <div className={`schedule-day-num${isToday(date) ? ' today' : ''}`}>{getDayNumber(date)}</div>
+                  <div className="schedule-task-list">
                     {dayTasks.slice(0, 5).map(task => (
                       <div key={task.id} onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
-                        style={{ fontSize: '10px', padding: '3px 6px', background: `${getTypeColor(task.type)}15`, borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          {task.batchGroup && <span style={{ fontSize: '9px', fontWeight: 'bold', color: 'var(--accent-amber)', background: 'var(--accent-amber-glow)', padding: '1px 4px', borderRadius: '2px', flexShrink: 0 }}>{task.batchGroup}</span>}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', overflow: 'hidden' }}>
-                            {task.courseCode && <span style={{ fontSize: '8px', color: 'var(--accent-cyan)', fontWeight: 'bold' }}>{task.courseCode}</span>}
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '9px' }}>{task.title}</span>
+                        className="schedule-task-item"
+                        style={{ background: `${getTypeColor(task.type)}15` }}>
+                          {task.batchGroup && <span className="schedule-task-batch">{task.batchGroup}</span>}
+                          <div className="schedule-task-info">
+                            {task.courseCode && <span className="schedule-task-code">{task.courseCode}</span>}
+                            <span className="schedule-task-title">{task.title}</span>
                           </div>
                       </div>
                     ))}
                     {dayTasks.length > 5 && (
                       <div style={{ fontSize: '9px', color: 'var(--text-tertiary)', textAlign: 'center' }}>+{dayTasks.length - 5} more</div>
                     )}
-                    {dayTasks.length === 0 && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: '10px', fontStyle: 'italic', padding: '14px 0' }}>No tasks</div>}
+                    {dayTasks.length === 0 && <div className="schedule-empty">No tasks</div>}
                   </div>
                 </div>
               );
@@ -395,40 +577,34 @@ export default function WeekSchedule() {
         </>
       ) : (
         <>
-          {/* Weekly Calendar Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '12px', marginBottom: '16px' }}>
+          <div className="schedule-grid" style={{ marginBottom: '12px' }}>
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} style={{ textAlign: 'center', padding: '14px', fontSize: 'var(--fs-md)', fontWeight: 'bold', color: 'var(--text-secondary)' }}>{day}</div>
+              <div key={day} className="schedule-day-header">{day}</div>
             ))}
           </div>
-
-          {/* Weekly Calendar Days */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '12px', alignItems: 'start' }}>
+          <div className="schedule-grid" style={{ alignItems: 'start' }}>
             {weekDates.map((date, idx) => {
               const dayTasks = getTasksForDate(date);
               return (
-                <div key={idx} style={{ padding: '18px', borderRadius: 'var(--radius-xl)', background: isToday(date) ? 'var(--accent-blue-glow)' : 'var(--bg-input)', border: isToday(date) ? '2px solid var(--accent-blue)' : '1px solid var(--border-primary)', minHeight: '100px', cursor: 'default', display: 'flex', flexDirection: 'column' }}>
+                <div key={idx} className={`schedule-day-card${isToday(date) ? ' today' : ''}${isBeforeSemesterStart(date) ? ' before-semester' : ''}`}>
                   {isBeforeSemesterStart(date) ? (
-                    <div style={{ textAlign: 'center', padding: '14px 0', color: 'var(--text-tertiary)', opacity: 0.3, flex: 1 }}>
-                      <span style={{ fontSize: '18px' }}>{getDayNumber(date)}</span>
-                    </div>
+                    <div className="schedule-empty">{getDayNumber(date)}</div>
                   ) : (
                     <>
-                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', paddingBottom: '0' }}>
-                        <span style={{ fontSize: '16px', fontWeight: 'bold', color: isToday(date) ? 'var(--accent-blue)' : 'var(--text-primary)', lineHeight: 1 }}>{getDayNumber(date)}</span>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div className={`schedule-day-num${isToday(date) ? ' today' : ''}`}>{getDayNumber(date)}</div>
+                      <div className="schedule-task-list">
                         {dayTasks.map(task => (
                           <div key={task.id} onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
-                            style={{ fontSize: '11px', padding: '4px 8px', background: `${getTypeColor(task.type)}15`, borderRadius: '5px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {task.batchGroup && <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--accent-amber)', background: 'var(--accent-amber-glow)', padding: '2px 5px', borderRadius: '3px', flexShrink: 0 }}>{task.batchGroup}</span>}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', overflow: 'hidden' }}>
-                              {task.courseCode && <span style={{ fontSize: '9px', color: 'var(--accent-cyan)', fontWeight: 'bold' }}>{task.courseCode}</span>}
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '10px' }}>{task.title}</span>
+                            className="schedule-task-item"
+                            style={{ background: `${getTypeColor(task.type)}15` }}>
+                            {task.batchGroup && <span className="schedule-task-batch">{task.batchGroup}</span>}
+                            <div className="schedule-task-info">
+                              {task.courseCode && <span className="schedule-task-code">{task.courseCode}</span>}
+                              <span className="schedule-task-title">{task.title}</span>
                             </div>
                           </div>
                         ))}
-                        {dayTasks.length === 0 && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: '12px', fontStyle: 'italic', padding: '20px 0' }}>No tasks</div>}
+                        {dayTasks.length === 0 && <div className="schedule-empty">No tasks</div>}
                       </div>
                     </>
                   )}
@@ -438,66 +614,39 @@ export default function WeekSchedule() {
           </div>
         </>
       )}
+      </div>
 
       {canAddTask && viewMode !== 'daily' && (
-        <button
-          onClick={() => {
-            const d = currentDate;
-            setSelectedDay(d);
-            setNewTask({ ...newTask, date: formatDateKey(d) });
-            setShowAddModal(true);
-          }}
-          style={{
-            marginTop: '12px', width: '100%', padding: '12px',
-            background: 'var(--bg-secondary)', border: '1px dashed var(--border-secondary)',
-            borderRadius: '8px', cursor: 'pointer', fontSize: '13px',
-            color: 'var(--accent-cyan)', fontWeight: 'bold',
-            transition: 'all 0.2s ease'
-          }}
-        >
+        <button className="schedule-add-btn" onClick={() => {
+          const d = currentDate;
+          setSelectedDay(d);
+          setNewTask({ ...newTask, date: formatDateKey(d) });
+          setShowAddModal(true);
+        }}>
           + Add Task
         </button>
       )}
 
       {/* Batch Filter */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px', paddingTop: '12px', borderTop: '2px solid var(--border-secondary)' }}>
-        <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Filter:</span>
+      <div className="schedule-filter-bar">
+        <span className="schedule-filter-label">Filter:</span>
         <button
+          className={`schedule-filter-btn${batchFilter === 'all' ? ' active-all' : ''}`}
           onClick={() => setBatchFilter('all')}
-          style={{
-            fontSize: '10px',
-            padding: '4px 12px',
-            borderRadius: '6px',
-            border: 'none',
-            cursor: 'pointer',
-            background: batchFilter === 'all' ? 'var(--accent-blue)' : 'var(--bg-secondary)',
-            color: batchFilter === 'all' ? '#fff' : 'var(--text-secondary)',
-            transition: 'all 0.2s ease'
-          }}
         >
           All
         </button>
         {batchGroups.map(bg => (
           <button
             key={bg}
+            className={`schedule-filter-btn${batchFilter === bg ? ' active-batch' : ''}`}
             onClick={() => setBatchFilter(bg)}
-            style={{
-              fontSize: '10px',
-              padding: '4px 12px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              background: batchFilter === bg ? 'var(--accent-amber)' : 'var(--bg-secondary)',
-              color: batchFilter === bg ? '#fff' : 'var(--text-secondary)',
-              fontWeight: batchFilter === bg ? 'bold' : 'normal',
-              transition: 'all 0.2s ease'
-            }}
           >
             {bg}
           </button>
         ))}
         {batchFilter !== 'all' && (
-          <span style={{ fontSize: '9px', color: 'var(--text-tertiary)', marginLeft: '6px' }}>
+          <span className="schedule-filter-hint">
             (Showing {batchFilter} only)
           </span>
         )}
@@ -505,31 +654,52 @@ export default function WeekSchedule() {
 
       {/* Settings Modal - Set Semester Start Date */}
       {showSettings && (
-        <div className="modal-overlay" onClick={() => setShowSettings(false)} style={{ overflow: 'hidden' }}>
-          <div className="modal glass-card-static" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px', width: '90%', maxHeight: '92vh', overflowY: 'auto' }}>
-            <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', margin: '0 0 16px' }}>Semester Settings</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="modal-overlay" onClick={() => setShowSettings(false)} style={{ overflow: 'hidden', padding: '16px' }}>
+          <div className="modal glass-card-static" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '380px', width: '88%', padding: '18px 20px 16px', margin: 0, animation: 'scaleIn 0.2s ease' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid var(--border-secondary)' }}>
+              <div className="btn-icon" style={{ background: 'var(--accent-blue-glow)', color: 'var(--accent-blue)', fontSize: '15px', borderRadius: 'var(--radius-sm)', width: '32px', height: '32px' }}>
+                📅
+              </div>
               <div>
-                <label className="input-label">Semester Start Date</label>
-                <input
-                  type="date"
-                  value={semesterStart}
-                  onChange={(e) => saveSemesterStart(e.target.value)}
-                  className="input"
-                />
-                <p style={{ fontSize: '9px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                  This sets when Week 1 begins. Adjust for semester breaks.
-                </p>
+                <h3 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-bold)', margin: 0, lineHeight: 1.3 }}>Semester Settings</h3>
+                <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)', margin: '1px 0 0' }}>Start date for week calculation</p>
               </div>
-              <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
-                <p style={{ margin: '0 0 4px' }}>Current Week {getCurrentWeekNum()} starts on:</p>
-                <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--text-primary)' }}>
-                  {new Date(semesterStart).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                </p>
-              </div>
-              <button className="btn btn-primary" onClick={() => setShowSettings(false)}>
-                Done
+              <button className="btn btn-icon btn-ghost" onClick={() => setShowSettings(false)} style={{ marginLeft: 'auto', fontSize: '14px' }}>
+                ✕
               </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div>
+                <label style={{ fontSize: 'var(--fs-xs)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                  Semester Start Date
+                </label>
+                <input type="date" value={semesterStart} onChange={(e) => saveSemesterStart(e.target.value)} className="input" />
+                <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                  Sets when <strong>Week 1</strong> begins.
+                </p>
+              </div>
+
+              <div style={{
+                background: 'var(--accent-blue-glow)',
+                border: '1px solid color-mix(in srgb, var(--accent-blue) 18%, transparent)',
+                borderRadius: 'var(--radius-sm)', padding: '10px 12px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                  <span style={{ fontSize: 'var(--fs-xs)' }}>📊</span>
+                  <span style={{ fontSize: 'var(--fs-xs)', fontWeight: 'var(--fw-semibold)', color: 'var(--accent-blue)' }}>
+                    Week {getCurrentWeekNum()}
+                  </span>
+                </div>
+                <p style={{ margin: 0, fontSize: 'var(--fs-xs)', fontWeight: 'var(--fw-bold)' }}>
+                  {new Date(semesterStart).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} — started
+                </p>
+              </div>
+
+              <div className="flex gap-2" style={{ paddingTop: '2px' }}>
+                <button className="btn btn-secondary flex-1" onClick={() => setShowSettings(false)} style={{ fontSize: 'var(--fs-xs)' }}>Cancel</button>
+                <button className="btn btn-primary flex-1" onClick={() => setShowSettings(false)} style={{ fontSize: 'var(--fs-xs)' }}>Done</button>
+              </div>
             </div>
           </div>
         </div>
@@ -537,143 +707,66 @@ export default function WeekSchedule() {
 
       {/* Task Details Modal */}
       {selectedTask && (
-        <div 
-          className="modal-overlay" 
-          onClick={() => setSelectedTask(null)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.6)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '16px',
-            animation: 'fadeIn 0.15s ease',
-            overflow: 'hidden'
-          }}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()} 
-            style={{ 
-              maxWidth: '520px', 
-              width: '90%',
-              maxHeight: '92vh',
-              overflowY: 'auto',
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-primary)',
-              borderRadius: 'var(--radius-lg)',
-              padding: '24px',
-              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
-              animation: 'scaleIn 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+        <div className="modal-overlay" onClick={() => setSelectedTask(null)}>
+          <div className="modal glass-card-static" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px', width: '90%', padding: 'var(--sp-5)', margin: 0 }}>
+            <div className="flex justify-between items-start" style={{ marginBottom: '12px' }}>
               <div>
-                <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', margin: 0, color: 'var(--text-primary)' }}>{selectedTask.title}</h3>
+                <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', margin: 0 }}>{selectedTask.title}</h3>
                 {selectedTask.courseName && (
                   <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--accent-cyan)', margin: '4px 0 0' }}>{selectedTask.courseName}</p>
                 )}
               </div>
-              <button
-                onClick={() => setSelectedTask(null)}
-                style={{ 
-                  border: 'none', 
-                  background: 'var(--bg-input)', 
-                  cursor: 'pointer', 
-                  color: 'var(--text-secondary)', 
-                  padding: '4px',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                ×
+              <button className="btn btn-ghost btn-icon" onClick={() => setSelectedTask(null)} style={{ flexShrink: 0 }}>
+                ✕
               </button>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {selectedTask.courseCode && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="flex items-center gap-2">
                   <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', minWidth: '60px' }}>Course:</span>
-                  <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--accent-cyan)', background: 'var(--accent-cyan-glow)', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold' }}>{selectedTask.courseCode}</span>
+                  <span className="badge badge-cyan" style={{ fontWeight: 'bold' }}>{selectedTask.courseCode}</span>
                 </div>
               )}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="flex items-center gap-2">
                 <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', minWidth: '60px' }}>Date:</span>
                 <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-primary)' }}>{selectedTask.date}</span>
               </div>
               {selectedTask.time && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="flex items-center gap-2">
                   <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', minWidth: '60px' }}>Time:</span>
-                  <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-primary)' }}>{selectedTask.time}</span>
+                  <span style={{ fontSize: 'var(--fs-sm)' }}>{selectedTask.time}</span>
                 </div>
               )}
               {selectedTask.batchGroup && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="flex items-center gap-2">
                   <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', minWidth: '60px' }}>Batch:</span>
-                  <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--accent-amber)', background: 'var(--accent-amber-glow)', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold' }}>{selectedTask.batchGroup}</span>
+                  <span className="badge badge-amber" style={{ fontWeight: 'bold' }}>{selectedTask.batchGroup}</span>
                 </div>
               )}
               {selectedTask.syllabus && (
                 <div style={{ marginTop: '4px' }}>
                   <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Syllabus:</span>
-                  <p style={{ 
-                    fontSize: 'var(--fs-sm)', 
-                    color: 'var(--text-primary)', 
-                    background: 'var(--bg-input)', 
-                    padding: '10px', 
-                    borderRadius: 'var(--radius-md)',
-                    whiteSpace: 'pre-wrap',
-                    lineHeight: '1.5'
-                  }}>{selectedTask.syllabus}</p>
+                  <div className="input" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5', padding: 'var(--sp-3)', cursor: 'default', opacity: 0.9 }}>
+                    {selectedTask.syllabus}
+                  </div>
                 </div>
               )}
               {selectedTask.crGroup && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="flex items-center gap-2">
                   <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', minWidth: '60px' }}>Posted by:</span>
-                  <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--accent-emerald)', background: 'var(--accent-emerald-glow)', padding: '2px 8px', borderRadius: '4px' }}>{selectedTask.crGroup}</span>
+                  <span className="badge badge-emerald">{selectedTask.crGroup}</span>
                 </div>
               )}
             </div>
             
-            <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-secondary)', display: 'flex', gap: '8px' }}>
+            <div className="flex gap-2" style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-secondary)' }}>
               {canAddTask && (
-                <button
-                  onClick={() => { handleDeleteTask(selectedTask.id); setSelectedTask(null); }}
-                  style={{ 
-                    flex: 1,
-                    padding: '8px',
-                    background: 'var(--accent-rose-glow)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--accent-rose)',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: 'var(--fs-xs)',
-                    fontWeight: 'bold'
-                  }}
-                >
+                <button className="btn btn-danger btn-sm flex-1" onClick={() => { handleDeleteTask(selectedTask.id); setSelectedTask(null); }}>
                   Delete Task
                 </button>
               )}
-              <button
-                onClick={() => setSelectedTask(null)}
-                style={{ 
-                  flex: 1,
-                  padding: '8px',
-                  background: 'var(--bg-input)',
-                  border: '1px solid var(--border-primary)',
-                  cursor: 'pointer',
-                  color: 'var(--text-secondary)',
-                  borderRadius: 'var(--radius-md)',
-                  fontSize: 'var(--fs-xs)'
-                }}
-              >
+              <button className="btn btn-secondary btn-sm flex-1" onClick={() => setSelectedTask(null)}>
                 Close
               </button>
             </div>
@@ -681,116 +774,29 @@ export default function WeekSchedule() {
         </div>
       )}
 
-      {/* Add Task Modal */}
+      {/* Add Task Modal — minimal */}
       {showAddModal && canAddTask && (
-        <div 
-          className="modal-overlay" 
-          onClick={() => setShowAddModal(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.6)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '8px',
-            animation: 'fadeIn 0.15s ease',
-            overflow: 'hidden'
-          }}
-        >
-          <div 
-            className="modal glass-card-static" 
-            onClick={(e) => e.stopPropagation()} 
-            style={{ 
-              maxWidth: '520px', 
-              width: '90%',
-              maxHeight: '92vh',
-              overflowY: 'auto',
-              animation: 'scaleIn 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
-              padding: '12px'
-            }}
-          >
-            <h3 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', margin: '0 0 6px' }}>Add Task</h3>
-            <form onSubmit={handleAddTask} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div>
-                <label style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginBottom: '2px', display: 'block' }}>Course Code *</label>
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)} style={{ overflow: 'hidden', padding: '24px' }}>
+          <div className="modal glass-card-static" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '300px', width: '85%', padding: '8px 10px 8px', margin: 0, maxHeight: 'none', overflow: 'visible', boxSizing: 'border-box' }}>
+            <h3 style={{ fontSize: '11px', fontWeight: '600', margin: '0 0 4px', color: 'var(--text-secondary)' }}>New Task</h3>
+            <form onSubmit={handleAddTask} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              <div style={{ maxWidth: '100%' }}>
                 <CourseAutocomplete
                   value={newTask.courseCode}
                   onCourseSelect={handleCourseCodeSelect}
-                  placeholder="Course code..."
+                  placeholder="Course code (e.g. CSE1101)"
                   type="code"
                 />
               </div>
-              <div>
-                <label style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginBottom: '2px', display: 'block' }}>Course Name</label>
-                <input
-                  type="text"
-                  value={newTask.courseName}
-                  onChange={(e) => setNewTask({ ...newTask, courseName: e.target.value })}
-                  className="input"
-                  placeholder="Auto-filled"
-                  disabled
-                  style={{ opacity: newTask.courseName ? 1 : 0.6, fontSize: 'var(--fs-xs)' }}
-                />
+              <input type="text" value={newTask.courseName} onChange={(e) => setNewTask({ ...newTask, courseName: e.target.value })} className="input" placeholder="Course name" disabled style={{ opacity: newTask.courseName ? 1 : 0.6, fontSize: '9px', padding: '3px 6px', maxWidth: '100%', boxSizing: 'border-box', margin: 0 }} />
+              <input type="text" value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })} className="input" placeholder="Title (e.g. Quiz 1)" required style={{ fontSize: '9px', padding: '3px 6px', maxWidth: '100%', boxSizing: 'border-box', margin: 0 }} />
+              <div style={{ display: 'flex', gap: '2px' }}>
+                <input type="date" value={newTask.date} onChange={(e) => setNewTask({ ...newTask, date: e.target.value })} className="input" required style={{ fontSize: '9px', padding: '3px 6px', width: '100%', minWidth: 0, boxSizing: 'border-box', margin: 0 }} />
+                <input type="time" value={newTask.time} onChange={(e) => setNewTask({ ...newTask, time: e.target.value })} className="input" style={{ fontSize: '9px', padding: '3px 6px', width: '100%', minWidth: 0, boxSizing: 'border-box', margin: 0 }} />
               </div>
-              <div>
-                <label style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginBottom: '2px', display: 'block' }}>Title *</label>
-                <input
-                  type="text"
-                  value={newTask.title}
-                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  className="input"
-                  placeholder="Quiz -1"
-                  required
-                  style={{ fontSize: 'var(--fs-xs)' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginBottom: '2px', display: 'block' }}>Syllabus</label>
-                <textarea
-                  value={newTask.syllabus}
-                  onChange={(e) => setNewTask({ ...newTask, syllabus: e.target.value })}
-                  className="input"
-                  placeholder="Topics..."
-                  rows={2}
-                  style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: 'var(--fs-xs)' }}
-                />
-              </div>
-              <div className="grid-2" style={{ gap: '4px' }}>
-                <div>
-                  <label style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginBottom: '2px', display: 'block' }}>Date *</label>
-                  <input
-                    type="date"
-                    value={newTask.date}
-                    onChange={(e) => setNewTask({ ...newTask, date: e.target.value })}
-                    className="input"
-                    required
-                    style={{ fontSize: 'var(--fs-xs)' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginBottom: '2px', display: 'block' }}>Time</label>
-                  <input
-                    type="time"
-                    value={newTask.time}
-                    onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
-                    className="input"
-                    style={{ fontSize: 'var(--fs-xs)' }}
-                  />
-                </div>
-              </div>
-              <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)' }}>
-                Batch: <strong style={{ color: 'var(--accent-amber)' }}>{userBatchGroup}</strong>
-              </div>
-              <div className="flex gap-2" style={{ marginTop: '4px' }}>
-                <button type="submit" className="btn btn-primary flex-1" style={{ fontSize: 'var(--fs-xs)', padding: '6px 8px' }}>Add</button>
-                <button type="button" className="btn btn-secondary flex-1" style={{ fontSize: 'var(--fs-xs)', padding: '6px 8px' }} onClick={() => setShowAddModal(false)}>Cancel</button>
+              <div style={{ display: 'flex', gap: '3px', marginTop: '1px' }}>
+                <button type="submit" className="btn btn-primary btn-sm" style={{ flex: 1, fontSize: '9px', padding: '3px 6px', minHeight: '22px' }}>Add</button>
+                <button type="button" className="btn btn-secondary btn-sm" style={{ flex: 1, fontSize: '9px', padding: '3px 6px', minHeight: '22px' }} onClick={() => setShowAddModal(false)}>Cancel</button>
               </div>
             </form>
           </div>

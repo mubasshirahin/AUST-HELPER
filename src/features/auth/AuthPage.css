@@ -99,6 +99,42 @@
   align-items: center;
 }
 
+/* ─── Back to Home Button ───
+   Placed outside auth-shell so it stays in normal flow — no overlap risk. */
+.auth-back-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  margin-bottom: 10px;
+  font-size: 0.76rem;
+  font-weight: var(--fw-medium);
+  color: var(--text-secondary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.auth-back-home-btn:hover {
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
+  background: var(--accent-blue-glow);
+  transform: translateX(-2px);
+}
+
+.auth-back-home-btn svg {
+  transition: transform var(--transition-fast);
+}
+
+.auth-back-home-btn:hover svg {
+  transform: translateX(-2px);
+}
+
 /* ─── Brand (logo + typewriter) — lives OUTSIDE the card box,
    so the page grid shows through behind it ─── */
 .auth-brand-outside {
@@ -120,6 +156,7 @@
   box-shadow: var(--shadow-xl);
   position: relative;
   z-index: 1;
+  overflow: hidden;
 }
 
 .auth-card::before {
@@ -760,9 +797,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   height: 40px;
-  padding: 0 12px;
+  padding: 0 8px;
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-md);
   background: var(--bg-card);
@@ -771,6 +808,9 @@
   font-weight: var(--fw-medium);
   cursor: pointer;
   transition: all var(--transition-base);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .btn-social:hover {
   background: var(--bg-hover);

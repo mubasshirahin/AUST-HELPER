@@ -7,7 +7,7 @@ import {
   LayoutDashboard, CalendarDays, BarChart3, BookOpen, MapPin, Users, ShoppingBag, Settings, MessageSquare,
   LogIn, Shield, Eye, Megaphone, Utensils,
   Library, FileText, FolderOpen, FileSpreadsheet, Map, ScrollText,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, ExternalLink
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -22,6 +22,7 @@ const navItems = [
   { path: '/career-roadmaps', label: 'Career Roadmaps', icon: Map },
   { path: '/cheatsheets', label: 'Cheatsheets', icon: ScrollText },
   { path: '/settings', label: 'Settings', icon: Settings },
+  { path: '/workspace', label: 'Workspace', icon: ExternalLink },
   { id: 'toggle', label: 'Collapse', icon: ChevronLeft },
 ];
 
@@ -55,6 +56,7 @@ export default function Sidebar({ collapsed, onToggle }) {
       { path: '/admin/cr-sr-directory', label: 'CR/SR Directory', icon: FolderOpen },
       { path: '/messages', label: 'Messages', icon: MessageSquare },
       { path: '/settings', label: 'Settings', icon: Settings },
+      { path: '/workspace', label: 'Workspace', icon: ExternalLink },
       { id: 'toggle', label: 'Collapse', icon: ChevronLeft },
     ];
   }

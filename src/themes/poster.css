@@ -247,7 +247,7 @@
 
 /* ─── Inputs: sharp, minimal, accent focus ─── */
 [data-theme="poster"] .input {
-  background: var(--bg-input);
+  background-color: var(--bg-input);
   border: 1px solid var(--border-primary);
   border-radius: 0;
   color: var(--text-primary);

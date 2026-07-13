@@ -4,8 +4,19 @@ import {
   GraduationCap, BookOpen, Layers,
   BadgeCheck, Star, School,
 } from 'lucide-react';
-import { getAllAccounts } from '../../utils/authStorage';
+import { getAllAccounts, createAwid } from '../../utils/authStorage';
 import { getSemesterCountForDepartment, formatSemesterLabel } from '../../utils/semester';
+
+// Extract student ID from @aust.edu email the same way the profile does
+function extractStudentId(student) {
+  const email = student.email || '';
+  if (email.includes('@aust.edu')) {
+    const prefix = email.split('@')[0] || '';
+    const id = prefix.replace(/^[a-z.]+/i, '');
+    if (id) return id;
+  }
+  return student.id || '';
+}
 
 const DEPARTMENTS = ['CSE', 'EEE', 'CE', 'ME', 'IPE', 'TE', 'ARCH', 'BBA'];
 
@@ -443,7 +454,8 @@ export default function StudentDirectory() {
                                   <thead>
                                     <tr>
                                       <th className="stu-th-name">Name</th>
-                                      <th className="stu-th-id">ID</th>
+                                      <th className="stu-th-id">AUST ID</th>
+                                      <th className="stu-th-awid">AWID</th>
                                       <th className="stu-th-email">Email</th>
                                       <th className="stu-th-lab">Lab</th>
                                       <th className="stu-th-blood">Blood</th>
@@ -455,18 +467,26 @@ export default function StudentDirectory() {
                                       <tr key={student.id} className="student-dir-table-row">
                                         <td className="stu-td-name">
                                           <span className="student-dir-student-avatar" style={{
-                                            background: `${deptColors[dept]}1A`,
+                                            background: student.avatar ? 'transparent' : `${deptColors[dept]}1A`,
                                             color: deptColors[dept],
                                             width: '28px',
                                             height: '28px',
                                             fontSize: '9px',
+                                            overflow: 'hidden',
                                           }}>
-                                            {student.initials || student.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?'}
+                                            {student.avatar ? (
+                                              <img src={student.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                                            ) : (
+                                              student.initials || student.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?'
+                                            )}
                                           </span>
                                           <span className="student-dir-table-stu-name">{student.name}</span>
                                         </td>
                                         <td className="stu-td-id">
-                                          <code className="student-dir-id-code">{student.id}</code>
+                                          <code className="student-dir-id-code">{extractStudentId(student)}</code>
+                                        </td>
+                                        <td className="stu-td-awid">
+                                          <code className="student-dir-id-code" style={{ fontSize: '9px' }}>{student.awid || createAwid(student.department) || '—'}</code>
                                         </td>
                                         <td className="stu-td-email">
                                           <span className="student-dir-email">{student.email || '—'}</span>
@@ -477,7 +497,7 @@ export default function StudentDirectory() {
                                             {student.bloodGroup || '—'}
                                           </span>
                                         </td>
-                                        <td className="stu-td-batch">{student.batchName && student.batchNo ? `${student.batchName} ${student.batchNo}` : student.batchName || student.batch || student.batchNo || '—'}</td>
+                                        <td className="stu-td-batch">{student.batch || student.batchName || student.batchNo || '—'}</td>
                                       </tr>
                                     ))}
                                   </tbody>

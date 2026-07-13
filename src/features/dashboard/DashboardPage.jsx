@@ -10,25 +10,30 @@ import RoutineAttendanceTracker from './RoutineAttendanceTracker';
 import GliderTabs from '../../components/GliderTabs';
 import { deadlines } from '../../data/mockData';
 import {
-  TrendingUp, Percent, Clock, BookOpen, LayoutDashboard,
-  CalendarDays, Target, Zap, AlertTriangle,
+  TrendingUp, Percent, Clock, BookOpen,
+  CalendarDays, Zap, AlertTriangle, Calendar,
+  Hourglass, BellRing,
 } from 'lucide-react';
 import { getUserStorageItem, getCurrentUserId } from '../../utils/authStorage';
 import { useAuth } from '../../context/AuthContext';
 import './DashboardPage.css';
 
 const FOCUS_SECTIONS = {
-  overview: ['all', 'stats', 'schedule', 'progress', 'notif', 'notice'],
-  schedule: ['all', 'schedule', 'notif', 'notice'],
-  progress: ['all', 'progress', 'stats', 'notif', 'notice'],
+  stats: ['stats', 'routine_day', 'deadlines', 'notices', 'notif'],
+  routine: ['routine'],
+  calendar: ['calendar'],
+  exams: ['exams'],
+  attendance: ['attendance'],
 };
 
 const storageKeyType = 'semesterResults';
 
 const focusModes = [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard, desc: 'Full picture', color: 'blue' },
-  { id: 'schedule', label: 'Schedule', icon: CalendarDays, desc: 'Classes & routine', color: 'purple' },
-  { id: 'progress', label: 'Progress', icon: Target, desc: 'Grades & goals', color: 'emerald' },
+  { id: 'stats', label: 'Quick Stats', icon: TrendingUp, desc: 'CGPA & metrics', color: 'blue' },
+  { id: 'routine', label: 'Routine Schedule', icon: CalendarDays, desc: 'Weekly timetable', color: 'cyan' },
+  { id: 'calendar', label: 'Academic Calendar', icon: Calendar, desc: '14-week view', color: 'purple' },
+  { id: 'exams', label: 'Exam Tracker', icon: BookOpen, desc: 'Quiz, Mid & Final', color: 'amber' },
+  { id: 'attendance', label: 'Attendance', icon: Percent, desc: 'Semester progress', color: 'emerald' },
 ];
 
 function getGreeting() {
@@ -154,7 +159,6 @@ function QuickStats() {
             className={`quick-stat-card glass-card-static quick-stat-${item.accent} animate-fadeInUp`}
             style={{ animationDelay: `${i * 80}ms` }}
           >
-            <div className="quick-stat-shine" aria-hidden="true" />
             <div className="quick-stat-icon" style={{ background: item.bg, color: item.color }}>
               <Icon size={18} />
             </div>
@@ -162,7 +166,6 @@ function QuickStats() {
               <span className={`quick-stat-value${item.placeholder ? ' placeholder' : ''}`} style={{ color: item.color }}>{item.value}</span>
               <span className="quick-stat-label">{item.label}</span>
             </div>
-            <div className="quick-stat-bar" style={{ background: item.color }} />
           </div>
         );
       })}
@@ -172,7 +175,7 @@ function QuickStats() {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [focusMode, setFocusMode] = useState('overview');
+  const [focusMode, setFocusMode] = useState('stats');
   const firstName = user?.name?.split(' ')[0] || 'Student';
 
   const profileIncomplete = user && (!user.department || !user.batch || !user.section || !user.yearSemester);
@@ -181,6 +184,7 @@ export default function DashboardPage() {
 
   return (
     <div className={`dashboard-page dashboard-focus-${focusMode} animate-fadeIn`}>
+
       <header className="dash-hero">
         <div className="dash-hero-bg" aria-hidden="true">
           <div className="dash-hero-grid" />
@@ -217,9 +221,19 @@ export default function DashboardPage() {
       />
 
       {isVisible('stats') && (
-        <div className="dash-section">
-          <QuickStats />
-        </div>
+        <section className="dash-section-group">
+          <div className="section-header">
+            <h2 className="section-title">
+              <span className="icon" style={{ background: 'var(--accent-blue-glow)', color: 'var(--accent-blue)' }}>
+                <TrendingUp size={16} />
+              </span>
+              Quick Statistics
+            </h2>
+          </div>
+          <div className="dash-section">
+            <QuickStats />
+          </div>
+        </section>
       )}
 
       {isVisible('notif') && (
@@ -228,47 +242,120 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {isVisible('schedule') && (
-        <div className="dash-section">
-          <WeeklyPlanner />
-        </div>
+      {isVisible('routine') && (
+        <section className="dash-section-group">
+          <div className="section-header">
+            <h2 className="section-title">
+              <span className="icon" style={{ background: 'var(--accent-cyan-glow)', color: 'var(--accent-cyan)' }}>
+                <CalendarDays size={16} />
+              </span>
+              Routine Schedule
+            </h2>
+            <p className="section-subtitle">Weekly class timetable &amp; semester calendar</p>
+          </div>
+          <div className="dash-section">
+            <WeeklyPlanner />
+          </div>
+        </section>
       )}
 
-      {isVisible('schedule') && (
-        <div className="dash-section">
-          <WeekSchedule />
-        </div>
+      {isVisible('calendar') && (
+        <section className="dash-section-group">
+          <div className="section-header">
+            <h2 className="section-title">
+              <span className="icon" style={{ background: 'var(--accent-purple-glow)', color: 'var(--accent-purple)' }}>
+                <Calendar size={16} />
+              </span>
+              Academic Calendar
+            </h2>
+            <p className="section-subtitle">14-week schedule with tasks &amp; events</p>
+          </div>
+          <div className="dash-section">
+            <WeekSchedule />
+          </div>
+        </section>
       )}
 
       <div className="dashboard-grid">
-        {isVisible('progress') && (
-          <div className="dash-section" style={{ gridColumn: '1 / -1' }}>
-            <ExamTracker />
-          </div>
+        {isVisible('exams') && (
+          <section className="dash-section-group" style={{ gridColumn: '1 / -1' }}>
+            <div className="section-header">
+              <h2 className="section-title">
+                <span className="icon" style={{ background: 'var(--accent-amber-glow)', color: 'var(--accent-amber)' }}>
+                  <BookOpen size={16} />
+                </span>
+                Exam Tracker
+              </h2>
+              <p className="section-subtitle">Quiz, Mid &amp; Final exam dates &amp; syllabus</p>
+            </div>
+            <div className="dash-section">
+              <ExamTracker />
+            </div>
+          </section>
         )}
         <div className="dashboard-main-col">
-          {isVisible('schedule') && (
-            <div className="dash-section">
-              <RoutineCard />
-            </div>
+          {isVisible('routine_day') && (
+            <section className="dash-section-group">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <span className="icon" style={{ background: 'var(--accent-blue-glow)', color: 'var(--accent-blue)' }}>
+                    <Clock size={16} />
+                  </span>
+                  Today's Routine
+                </h2>
+              </div>
+              <div className="dash-section">
+                <RoutineCard />
+              </div>
+            </section>
           )}
-          {isVisible('progress') && (
-            <div className="dash-section">
-              <RoutineAttendanceTracker />
-            </div>
+          {isVisible('attendance') && (
+            <section className="dash-section-group">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <span className="icon" style={{ background: 'var(--accent-emerald-glow)', color: 'var(--accent-emerald)' }}>
+                    <Percent size={16} />
+                  </span>
+                  Attendance Progress
+                </h2>
+              </div>
+              <div className="dash-section">
+                <RoutineAttendanceTracker />
+              </div>
+            </section>
           )}
         </div>
 
         <div className="dashboard-side-col">
-          {isVisible('progress') && (
-            <div className="dash-section">
-              <DeadlineTicker />
-            </div>
+          {isVisible('deadlines') && (
+            <section className="dash-section-group">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <span className="icon" style={{ background: 'var(--accent-rose-glow)', color: 'var(--accent-rose)' }}>
+                    <Hourglass size={16} />
+                  </span>
+                  Deadlines
+                </h2>
+              </div>
+              <div className="dash-section">
+                <DeadlineTicker />
+              </div>
+            </section>
           )}
-          {isVisible('notice') && (
-            <div className="dash-section">
-              <NoticeBoard />
-            </div>
+          {isVisible('notices') && (
+            <section className="dash-section-group">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <span className="icon" style={{ background: 'var(--accent-amber-glow)', color: 'var(--accent-amber)' }}>
+                    <BellRing size={16} />
+                  </span>
+                  Notice Board
+                </h2>
+              </div>
+              <div className="dash-section">
+                <NoticeBoard />
+              </div>
+            </section>
           )}
         </div>
       </div>

@@ -231,7 +231,7 @@
 
 /* ─── Inputs ──────────────────────────────────────────────────────────────── */
 [data-theme="swiss"] .input {
-  background: #f2f2f2;
+  background-color: #f2f2f2;
   border: 0 solid transparent;
   border-bottom: 2px solid #000000;   /* underline style — Swiss form field */
   border-radius: 0;

@@ -1,41 +1,74 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRoutine } from '../../context/RoutineContext';
 import { normalizeAccentColor } from '../../utils/colorPalette';
-import { ToggleLeft, ToggleRight, TrendingUp, AlertCircle, CheckCircle2, Send } from 'lucide-react';
-import { getUserStorageItem, setUserStorageItem, getUserStorageKey } from '../../utils/authStorage';
+import {
+  TrendingUp, AlertTriangle, ShieldAlert, ShieldCheck,
+  Info, BookOpen
+} from 'lucide-react';
+import { setUserStorageItem, getUserStorageKey } from '../../utils/authStorage';
 
 const SEMESTER_WEEKS = 14;
 const MIN_ATTENDANCE = 75;
 
-// Storage key types for user-specific storage
 const storageKeyTypes = {
   enabled: 'routineAttendanceEnabled',
   data: 'routineAttendanceData'
 };
 
-// Load saved state from localStorage (outside component to avoid effect warnings)
 function loadInitialAttendanceState() {
   try {
     const enabledKey = getUserStorageKey(storageKeyTypes.enabled);
     const dataKey = getUserStorageKey(storageKeyTypes.data);
-    const savedEnabled = enabledKey ? localStorage.getItem(enabledKey) : null;
-    const savedAttendance = dataKey ? localStorage.getItem(dataKey) : null;
     return {
-      isEnabled: savedEnabled === 'true',
-      attendanceData: savedAttendance ? JSON.parse(savedAttendance) : {}
+      isEnabled: enabledKey ? localStorage.getItem(enabledKey) === 'true' : false,
+      attendanceData: dataKey ? JSON.parse(localStorage.getItem(dataKey) || '{}') : {}
     };
-  } catch {
-    return { isEnabled: false, attendanceData: {} };
-  }
+  } catch { return { isEnabled: false, attendanceData: {} }; }
 }
 
-function loadTelegramChatId() {
-  return localStorage.getItem('telegram_chat_id') || '';
+function loadTelegramChatId() { return localStorage.getItem('telegram_chat_id') || ''; }
+function loadIsTelegramRegistered() { return localStorage.getItem('telegram_is_registered') === 'true'; }
+
+function AttendanceRing({ percentage, size = 52, strokeWidth = 4, color }) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - Math.min(percentage, 100) / 100);
+  const center = size / 2;
+  const isLow = percentage < MIN_ATTENDANCE;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+      <circle cx={center} cy={center} r={radius} fill="none" stroke="var(--bg-card)" strokeWidth={strokeWidth} />
+      <circle
+        cx={center} cy={center} r={radius} fill="none"
+        stroke={isLow ? 'var(--accent-rose)' : color || 'var(--accent-emerald)'}
+        strokeWidth={strokeWidth} strokeLinecap="round"
+        strokeDasharray={circumference} strokeDashoffset={offset}
+        transform={`rotate(-90 ${center} ${center})`}
+        style={{ transition: 'stroke-dashoffset 0.5s ease, stroke 0.3s ease' }}
+      />
+      <text
+        x={center} y={center + 1} textAnchor="middle" dominantBaseline="central"
+        fill={isLow ? 'var(--accent-rose)' : 'var(--text-primary)'}
+        fontSize={size * 0.26} fontWeight="700" fontFamily="system-ui, sans-serif"
+        style={{ fontVariantNumeric: 'tabular-nums' }}
+      >
+        {Math.round(percentage)}%
+      </text>
+    </svg>
+  );
 }
 
-function loadIsTelegramRegistered() {
-  const saved = localStorage.getItem('telegram_is_registered');
-  return saved === 'true';
+function MiniSegBar({ attended, missed, unmarked, total }) {
+  const aPct = total > 0 ? (attended / total) * 100 : 0;
+  const mPct = total > 0 ? (missed / total) * 100 : 0;
+  const uPct = total > 0 ? (unmarked / total) * 100 : 0;
+  return (
+    <div className="att-minibar">
+      <div className="att-minibar-seg" style={{ width: `${aPct}%`, background: 'var(--accent-emerald)' }} title="Attended" />
+      <div className="att-minibar-seg" style={{ width: `${mPct}%`, background: 'var(--accent-rose)' }} title="Missed" />
+      <div className="att-minibar-seg" style={{ width: `${uPct}%`, background: 'var(--text-tertiary)' }} title="Unmarked" />
+    </div>
+  );
 }
 
 export default function RoutineAttendanceTracker() {
@@ -46,109 +79,91 @@ export default function RoutineAttendanceTracker() {
   const [isTelegramRegistered] = useState(loadIsTelegramRegistered);
   const [telegramAttendance, setTelegramAttendance] = useState({});
   const [loadingTelegram, setLoadingTelegram] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   const loadTelegramAttendance = useCallback(async () => {
     if (!telegramChatId) return;
-    
     setLoadingTelegram(true);
     try {
       const response = await fetch(`/api/telegram/attendance?chatId=${encodeURIComponent(telegramChatId)}`);
       const result = await response.json();
-      
       if (result.success && result.records) {
-        // Process Telegram attendance records - count both attended and absent
         const telegramData = {};
         result.records.forEach(record => {
           const courseKey = record.course;
-          if (!telegramData[courseKey]) {
-            telegramData[courseKey] = { attended: 0, total: 0 };
-          }
-          telegramData[courseKey].total++; // Count all marked classes
-          if (record.attended) {
-            telegramData[courseKey].attended++;
-          }
+          if (!telegramData[courseKey]) telegramData[courseKey] = { attended: 0, total: 0 };
+          telegramData[courseKey].total++;
+          if (record.attended) telegramData[courseKey].attended++;
         });
         setTelegramAttendance(telegramData);
       }
     } catch (error) {
       console.error('Failed to load Telegram attendance:', error);
-    } finally {
-      setLoadingTelegram(false);
-    }
+    } finally { setLoadingTelegram(false); }
   }, [telegramChatId]);
 
-  // Load Telegram attendance data if registered (with polling for real-time updates)
   useEffect(() => {
     if (isTelegramRegistered && telegramChatId && isEnabled) {
       loadTelegramAttendance();
-      
-      // Poll for new attendance data every 3 seconds
-      const intervalId = setInterval(() => {
-        loadTelegramAttendance();
-      }, 3000);
-      
+      const intervalId = setInterval(loadTelegramAttendance, 3000);
       return () => clearInterval(intervalId);
     }
   }, [isTelegramRegistered, telegramChatId, isEnabled, loadTelegramAttendance]);
 
-  // Save state to user-specific localStorage
-  useEffect(() => {
-    setUserStorageItem(storageKeyTypes.enabled, isEnabled);
-  }, [isEnabled]);
+  useEffect(() => { setUserStorageItem(storageKeyTypes.enabled, isEnabled); }, [isEnabled]);
+  useEffect(() => { setUserStorageItem(storageKeyTypes.data, attendanceData); }, [attendanceData]);
 
-  useEffect(() => {
-    setUserStorageItem(storageKeyTypes.data, attendanceData);
-  }, [attendanceData]);
-
-  // Calculate classes per week for each course from routine
   const courseStats = useMemo(() => {
     const stats = {};
-    
     weekDays.forEach(day => {
       const classes = routine[day] || [];
       classes.forEach(cls => {
-        const courseKey = cls.course;
+        const courseKey = cls.part ? `${cls.course}-${cls.part}` : cls.course;
         if (!stats[courseKey]) {
           stats[courseKey] = {
             course: cls.course,
+            fullKey: courseKey,
             name: cls.name,
+            part: cls.part || null,
             color: cls.color,
             classesPerWeek: 0,
-            totalSemesterClasses: 0,
-            attended: 0
+            totalSemesterClasses: 0
           };
         }
-        stats[courseKey].classesPerWeek += 1;
+        stats[courseKey].classesPerWeek += cls.biWeekly ? 0.5 : 1;
       });
     });
-
-    // Calculate total semester classes
     Object.values(stats).forEach(stat => {
       stat.totalSemesterClasses = stat.classesPerWeek * SEMESTER_WEEKS;
     });
-
     return stats;
   }, [routine, weekDays]);
 
-  // Calculate overall attendance percentage (combining local + Telegram data)
   const overallStats = useMemo(() => {
     let totalAttended = 0;
     let totalClasses = 0;
     let warningCount = 0;
+    let totalCanMiss = 0;
 
     Object.values(courseStats).forEach(stat => {
-      const localAttended = attendanceData[stat.course]?.attended || 0;
-      const telegramAttended = telegramAttendance[stat.course] || 0;
-      const attended = Math.max(localAttended, telegramAttended); // Use the higher value to avoid double counting
+      const localAtt = attendanceData[stat.fullKey]?.attended || 0;
+      const telegramData = telegramAttendance[stat.fullKey] || telegramAttendance[stat.course];
+      const telegramAtt = typeof telegramData === 'object' ? (telegramData.attended || 0) : 0;
+      const telegramTot = typeof telegramData === 'object' ? (telegramData.total || 0) : 0;
+      const attended = Math.max(localAtt, telegramAtt);
+      const totalMarked = Math.max(localAtt, telegramTot);
+      const missed = totalMarked - attended;
       totalAttended += attended;
       totalClasses += stat.totalSemesterClasses;
-      
-      const percentage = stat.totalSemesterClasses > 0 
-        ? (attended / stat.totalSemesterClasses) * 100 
-        : 0;
-      if (percentage < MIN_ATTENDANCE && stat.totalSemesterClasses > 0) {
+
+      const needed = Math.ceil(stat.totalSemesterClasses * (MIN_ATTENDANCE / 100));
+      const canMiss = Math.max(0, stat.totalSemesterClasses - needed - missed);
+
+      if (stat.totalSemesterClasses > 0 &&
+        ((attended / stat.totalSemesterClasses) * 100) < MIN_ATTENDANCE) {
         warningCount++;
       }
+      totalCanMiss += canMiss;
     });
 
     const average = totalClasses > 0 ? (totalAttended / totalClasses) * 100 : 0;
@@ -156,197 +171,193 @@ export default function RoutineAttendanceTracker() {
       average: parseFloat(average.toFixed(1)),
       totalAttended,
       totalClasses,
-      warningCount
+      warningCount,
+      totalCanMiss
     };
   }, [courseStats, attendanceData, telegramAttendance]);
 
-  // eslint-disable-next-line no-unused-vars
-  const handleAttendanceChange = (course, delta) => {
-    setAttendanceData(prev => {
-      const currentAttended = prev[course]?.attended || 0;
-      const newAttended = Math.max(0, Math.min(
-        courseStats[course]?.totalSemesterClasses || 0,
-        currentAttended + delta
-      ));
-      return {
-        ...prev,
-        [course]: { attended: newAttended }
-      };
-    });
-  };
-
   const resetAttendance = (course) => {
-    setAttendanceData(prev => {
-      const newData = { ...prev };
-      delete newData[course];
-      return newData;
-    });
+    setAttendanceData(prev => { const n = { ...prev }; delete n[course]; return n; });
   };
 
-  if (Object.keys(courseStats).length === 0) {
-    return null;
-  }
+  if (Object.keys(courseStats).length === 0) return null;
 
   return (
-    <div className="glass-card-static routine-attendance-tracker animate-fadeInUp">
-      {/* Header with toggle */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div 
-            className="icon" 
-            style={{ 
-              backgroundColor: isEnabled ? 'var(--accent-emerald-glow)' : 'var(--accent-amber-glow)', 
-              color: isEnabled ? 'var(--accent-emerald)' : 'var(--accent-amber)', 
-              padding: '6px', 
-              borderRadius: '8px' 
-            }}
-          >
-            <TrendingUp size={18} />
+    <div className="att-tracker-wrap glass-card-static animate-fadeInUp">
+      <div className="att-header-row">
+        <div className="att-header-left">
+          <div className="att-header-icon" style={{ background: 'var(--accent-emerald-glow)', color: 'var(--accent-emerald)' }}>
+            <TrendingUp size={20} />
           </div>
           <div>
-            <h3 className="section-title" style={{ fontSize: 'var(--fs-md)', margin: 0 }}>
-              Semester Attendance
-            </h3>
-            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
-              Track progress across {SEMESTER_WEEKS} weeks
-            </p>
+            <div className="att-header-title">Attendance Tracker</div>
+            <div className="att-header-sub">
+              {isEnabled
+                ? `${SEMESTER_WEEKS}-week semester \u00b7 ${Object.keys(courseStats).length} courses`
+                : 'Track your attendance across the semester'}
+            </div>
           </div>
         </div>
-        <button
-          onClick={() => setIsEnabled(!isEnabled)}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '4px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px'
-          }}
-          aria-label={isEnabled ? 'Disable routine attendance tracking' : 'Enable routine attendance tracking'}
-        >
-          {isEnabled ? (
-            <ToggleRight size={28} style={{ color: 'var(--accent-emerald)' }} />
-          ) : (
-            <ToggleLeft size={28} style={{ color: 'var(--text-tertiary)' }} />
-          )}
-        </button>
+        <div className="att-header-actions">
+          <button className="att-guide-btn" onClick={() => setShowGuide(!showGuide)} title="Attendance guide">
+            <Info size={15} />
+          </button>
+          <button
+            className="att-toggle-btn"
+            onClick={() => setIsEnabled(!isEnabled)}
+            aria-label={isEnabled ? 'Disable tracking' : 'Enable tracking'}
+          >
+            <div className={`att-toggle-track${isEnabled ? ' active' : ''}`}>
+              <div className="att-toggle-thumb" />
+            </div>
+          </button>
+        </div>
       </div>
 
-          {isEnabled ? (
-            <>
+      {showGuide && (
+        <div className="att-guide-panel">
+          <div className="att-guide-title">
+            <AlertTriangle size={14} /> Why 75% Attendance?
+          </div>
+          <p>
+            AUST requires a <strong>minimum 75% attendance</strong> in each course to sit for semester exams.
+            Falling below means you may be <strong>restricted from appearing</strong>.
+          </p>
+          <div className="att-guide-stats">
+            <div className="att-guide-stat">
+              <span className="att-guide-stat-val">75%</span>
+              <span className="att-guide-stat-lbl">Minimum required</span>
+            </div>
+            <div className="att-guide-stat">
+              <span className="att-guide-stat-val">{overallStats.totalCanMiss}</span>
+              <span className="att-guide-stat-lbl">Classes you can still miss</span>
+            </div>
+            <div className="att-guide-stat">
+              <span className="att-guide-stat-val">{overallStats.warningCount}</span>
+              <span className="att-guide-stat-lbl">Course(s) at risk</span>
+            </div>
+          </div>
+          <p style={{ marginTop: '8px', fontSize: '10px', opacity: 0.8 }}>
+            Tip: Mark your absences honestly to get accurate can-miss calculations.
+            Attendance is synced from Telegram bot &mdash; reset per-course data with the button if needed.
+          </p>
+        </div>
+      )}
 
+      {isEnabled ? (
+        <>
+          <div className="att-hero-box">
+            <div className="att-hero-left">
+              <AttendanceRing percentage={overallStats.average} size={72} strokeWidth={5}
+                color={overallStats.average >= MIN_ATTENDANCE ? 'var(--accent-emerald)' : 'var(--accent-rose)'}
+              />
+            </div>
+            <div className="att-hero-body">
+              <div className="att-hero-label">Overall Attendance</div>
+              <div className="att-hero-value"
+                style={{
+                  color: overallStats.average >= MIN_ATTENDANCE ? 'var(--accent-emerald)' : 'var(--accent-rose)'
+                }}
+              >
+                {overallStats.average}%
+                {overallStats.average >= MIN_ATTENDANCE
+                  ? <ShieldCheck size={18} style={{ marginLeft: 6 }} />
+                  : <ShieldAlert size={18} style={{ marginLeft: 6 }} />
+                }
+              </div>
+              <div className="att-hero-meta">
+                <span><strong style={{ color: 'var(--accent-emerald)' }}>{overallStats.totalAttended}</strong> attended</span>
+                <span className="att-hero-meta-dot">&middot;</span>
+                <span><strong style={{ color: 'var(--accent-rose)' }}>{overallStats.warningCount}</strong> at risk</span>
+                <span className="att-hero-meta-dot">&middot;</span>
+                <span><strong style={{ color: 'var(--accent-blue)' }}>{overallStats.totalCanMiss}</strong> can miss</span>
+                <span className="att-hero-meta-dot">&middot;</span>
+                <span><strong style={{ color: 'var(--text-primary)' }}>{Object.keys(courseStats).length}</strong> courses</span>
+              </div>
+              <div className="att-hero-bar-wrap">
+                <div className="att-hero-bar-bg">
+                  <div className="att-hero-bar-fill"
+                    style={{
+                      width: `${Math.min(overallStats.average, 100)}%`,
+                      background: overallStats.average >= MIN_ATTENDANCE ? 'var(--accent-emerald)' : 'var(--accent-rose)'
+                    }}
+                  />
+                </div>
+                <span className="att-hero-bar-label">{MIN_ATTENDANCE}% minimum</span>
+              </div>
+            </div>
+          </div>
 
-          {/* Course progress list - Compact minimalist design */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="att-course-grid">
             {Object.values(courseStats).map((stat) => {
-              const localAttended = attendanceData[stat.course]?.attended || 0;
-              const telegramData = telegramAttendance[stat.course];
-              const telegramAttended = typeof telegramData === 'object' ? (telegramData.attended || 0) : 0;
-              const telegramTotalMarked = typeof telegramData === 'object' ? (telegramData.total || 0) : 0;
-              const attended = Math.max(localAttended, telegramAttended);
-              const totalMarked = Math.max(localAttended, telegramTotalMarked);
+              const localAtt = attendanceData[stat.fullKey]?.attended || 0;
+              const telegramData = telegramAttendance[stat.fullKey] || telegramAttendance[stat.course];
+              const telegramAtt = typeof telegramData === 'object' ? (telegramData.attended || 0) : 0;
+              const telegramTot = typeof telegramData === 'object' ? (telegramData.total || 0) : 0;
+              const attended = Math.max(localAtt, telegramAtt);
+              const totalMarked = Math.max(localAtt, telegramTot);
               const missed = totalMarked - attended;
               const unmarked = stat.totalSemesterClasses - totalMarked;
-              const percentage = stat.totalSemesterClasses > 0 
-                ? ((attended / stat.totalSemesterClasses) * 100).toFixed(0) 
-                : 0;
+              const percentage = stat.totalSemesterClasses > 0 ? ((attended / stat.totalSemesterClasses) * 100) : 0;
               const isDanger = percentage < MIN_ATTENDANCE;
               const accentColor = normalizeAccentColor(stat.color);
 
+              const neededTotal = Math.ceil(stat.totalSemesterClasses * (MIN_ATTENDANCE / 100));
+              const canMissThis = Math.max(0, stat.totalSemesterClasses - neededTotal - missed);
+
               return (
-                <div key={stat.course} style={{
-                  background: 'var(--bg-input)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '10px 14px',
-                  border: `1px solid ${isDanger ? 'var(--accent-rose)' : 'var(--border-primary)'}`
-                }}>
-                  {/* Top row: Course name, stats, percentage */}
-                  <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }}>
-                    <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: accentColor, minWidth: '80px' }}>
-                      {stat.course}
-                    </span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
-                      <span style={{ color: 'var(--accent-emerald)' }}>{attended}</span>
-                      {' / '}
-                      <span style={{ color: 'var(--accent-rose)' }}>{missed}</span>
-                      {' / '}
-                      <span style={{ color: 'var(--accent-amber)' }}>{unmarked}</span>
-                      {' / '}
-                      {stat.totalSemesterClasses}
-                    </span>
-                    <span style={{ 
-                      fontSize: 'var(--fs-md)', 
-                      fontWeight: 'var(--fw-bold)',
-                      color: isDanger ? 'var(--accent-rose)' : 'var(--accent-emerald)',
-                      marginLeft: 'auto'
-                    }}>
-                      {percentage}%
-                    </span>
-                    <button
-                      onClick={() => resetAttendance(stat.course)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: 'var(--text-tertiary)',
-                        fontSize: '14px',
-                        padding: '2px 6px'
-                      }}
-                      title="Reset"
-                    >
-                      ×
-                    </button>
-                  </div>
-
-                  {/* Progress bar */}
-                  <div style={{ position: 'relative', marginTop: '6px', marginBottom: '4px' }}>
-                    <div style={{ 
-                      height: '6px', 
-                      background: 'var(--bg-card)',
-                      borderRadius: '3px',
-                      overflow: 'hidden',
-                      display: 'flex'
-                    }}>
-                      <div style={{ 
-                        width: `${(attended / stat.totalSemesterClasses) * 100}%`,
-                        background: 'var(--accent-emerald)',
-                        transition: 'width 0.3s ease'
-                      }} />
-                      <div style={{ 
-                        width: `${(missed / stat.totalSemesterClasses) * 100}%`,
-                        background: 'var(--accent-rose)',
-                        transition: 'width 0.3s ease'
-                      }} />
+                <div key={stat.fullKey} className={`att-course-card${isDanger ? ' att-course-danger' : ''}`}>
+                  <div className="att-course-row">
+                    <AttendanceRing percentage={percentage} size={42} strokeWidth={3.5} color={accentColor} />
+                    <div className="att-course-info">
+                      <div className="att-course-code" style={{ color: accentColor }}>
+                        {stat.course}
+                        {stat.part && <span className="att-course-part">Part {stat.part}</span>}
+                      </div>
+                      <div className="att-course-sub">
+                        <span className="att-course-stat att-course-stat-att" title="Attended">{attended}</span>
+                        <span className="att-course-stat-sep">/</span>
+                        <span className="att-course-stat att-course-stat-mis" title="Missed">{missed}</span>
+                        <span className="att-course-stat-sep">/</span>
+                        <span className="att-course-stat att-course-stat-umr" title="Unmarked">{unmarked}</span>
+                        <span className="att-course-stat-hint">att/miss/unmk</span>
+                      </div>
                     </div>
-                    <div style={{
-                      position: 'absolute',
-                      left: `${MIN_ATTENDANCE}%`,
-                      top: '-2px',
-                      bottom: '-2px',
-                      width: '1.5px',
-                      background: 'var(--accent-amber)',
-                      opacity: 0.6
-                    }} />
+                    <button className="att-course-reset" onClick={() => resetAttendance(stat.fullKey)} title="Reset attendance">&times;</button>
                   </div>
 
-                  {/* Bottom row: Labels */}
-                  <div className="flex items-center gap-3" style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>
-                    <span>✅{attended}</span>
-                    <span>❌{missed}</span>
-                    <span>⏳{unmarked}</span>
+                  <div className="att-course-buffer">
+                    <span className="att-buffer-label">
+                      {isDanger ? (
+                        <><AlertTriangle size={10} style={{ marginRight: 3, color: 'var(--accent-rose)' }} /> Below 75% &mdash; attend every class!</>
+                      ) : (
+                        <>You can miss <strong>{canMissThis}</strong> more class{canMissThis !== 1 ? 'es' : ''}</>
+                      )}
+                    </span>
                   </div>
+
+                  <MiniSegBar attended={attended} missed={missed} unmarked={unmarked} total={stat.totalSemesterClasses} />
+
+
                 </div>
               );
             })}
           </div>
+
+          {loadingTelegram && (
+            <div className="att-telegram-syncing">Syncing with Telegram...</div>
+          )}
         </>
       ) : (
-        <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 'var(--fs-xs)' }}>
-          <p>Toggle on to track semester attendance based on your routine</p>
-          <p style={{ marginTop: '4px' }}>
-            Shows {Object.keys(courseStats).length} courses × {SEMESTER_WEEKS} weeks
-          </p>
+        <div className="att-disabled">
+          <div className="att-disabled-icon">
+            <BookOpen size={28} />
+          </div>
+          <div className="att-disabled-title">Attendance tracking is off</div>
+          <div className="att-disabled-desc">
+            Toggle the switch above to start tracking {Object.keys(courseStats).length} courses
+            across {SEMESTER_WEEKS} weeks and see how many classes you can miss.
+          </div>
         </div>
       )}
     </div>

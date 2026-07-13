@@ -7,10 +7,19 @@ import MentorRequests from './MentorRequests';
 import MarketplaceMasthead from './MarketplaceMasthead';
 import './MarketplacePage.css';
 
+const MARKETPLACE_TAB_KEY = 'aust-marketplace-active-tab';
+
 export default function MarketplacePage() {
   const { theme } = useTheme();
   const isNewsprint = theme === 'newsprint';
-  const [activeTab, setActiveTab] = useState('exchange');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem(MARKETPLACE_TAB_KEY) || 'exchange';
+  });
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem(MARKETPLACE_TAB_KEY, tab);
+  };
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -41,10 +50,10 @@ export default function MarketplacePage() {
       )}
 
       <div className="tabs marketplace-tabs">
-        <button type="button" className={`tab ${activeTab === 'exchange' ? 'active' : ''}`} onClick={() => setActiveTab('exchange')}>Exchange Kits</button>
-        <button type="button" className={`tab ${activeTab === 'tolet' ? 'active' : ''}`} onClick={() => setActiveTab('tolet')}>AUST To-Let</button>
-        <button type="button" className={`tab ${activeTab === 'lost' ? 'active' : ''}`} onClick={() => setActiveTab('lost')}>Lost & Found</button>
-        <button type="button" className={`tab ${activeTab === 'mentorRequests' ? 'active' : ''}`} onClick={() => setActiveTab('mentorRequests')}>Mentor Requests</button>
+        <button type="button" className={`tab ${activeTab === 'exchange' ? 'active' : ''}`} onClick={() => handleTabChange('exchange')}>Exchange Kits</button>
+        <button type="button" className={`tab ${activeTab === 'tolet' ? 'active' : ''}`} onClick={() => handleTabChange('tolet')}>AUST To-Let</button>
+        <button type="button" className={`tab ${activeTab === 'lost' ? 'active' : ''}`} onClick={() => handleTabChange('lost')}>Lost & Found</button>
+        <button type="button" className={`tab ${activeTab === 'mentorRequests' ? 'active' : ''}`} onClick={() => handleTabChange('mentorRequests')}>Mentor Requests</button>
       </div>
 
       <div className="marketplace-content-area">

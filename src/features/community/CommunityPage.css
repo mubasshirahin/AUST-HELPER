@@ -2430,6 +2430,7 @@
 
 .stu-th-name { min-width: 160px; }
 .stu-th-id { width: 130px; }
+.stu-th-awid { width: 100px; }
 .stu-th-email { min-width: 200px; }
 .stu-th-lab { width: 60px; }
 .stu-th-blood { width: 65px; }
@@ -2468,7 +2469,8 @@
   text-overflow: ellipsis;
 }
 
-.stu-td-id code {
+.stu-td-id code,
+.stu-td-awid code {
   font-size: 10px;
   color: var(--text-tertiary);
   background: var(--bg-input);
@@ -2545,12 +2547,14 @@
   }
 
   .stu-th-id,
+  .stu-th-awid,
   .stu-th-email,
   .stu-th-batch {
     display: none;
   }
 
   .stu-td-id,
+  .stu-td-awid,
   .stu-td-email,
   .stu-td-batch {
     display: none;
@@ -2772,7 +2776,8 @@
   font-family: 'Patrick Hand', cursive;
 }
 
-[data-theme="sketchbook"] .stu-td-id code {
+[data-theme="sketchbook"] .stu-td-id code,
+[data-theme="sketchbook"] .stu-td-awid code {
   background: #f5f2ed;
   border-color: #2d2d2d;
   font-family: 'Patrick Hand', cursive;

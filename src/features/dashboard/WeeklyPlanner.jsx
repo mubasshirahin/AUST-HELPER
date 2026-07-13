@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { CalendarDays, Trash2, X, Download, Eye, Check, RotateCcw, FileDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { CalendarDays, Trash2, X, Download, Eye, Check, RotateCcw, FileDown, ChevronDown } from 'lucide-react';
 import { useRoutine } from '../../context/RoutineContext';
 import { ocrImportedRoutine, ocrImportedWeekDays } from '../../context/RoutineContext';
 import { normalizeAccentColor, getCourseColor } from '../../utils/colorPalette';
@@ -9,12 +9,37 @@ import { getAutoColorForCourse } from '../../utils/autoColorPalette';
 import { loadTemplates } from '../../utils/routineTemplates';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import logoUrl from '../../assets/logo-silver.png';
+import { useAuth } from '../../context/AuthContext';
 
 export default function WeeklyPlanner() {
+  const { user } = useAuth();
   const { routine, weekDays, updateRoutineClass, addRoutineClass, deleteRoutineClass, replaceRoutine } = useRoutine();
   const [editing, setEditing] = useState(null);
   const [showLoadModal, setShowLoadModal] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [ramadanMode, setRamadanMode] = useState(() => {
+    const stored = localStorage.getItem('aust-ramadan-mode');
+    return stored === 'true';
+  });
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportRef = useRef(null);
+
+  useEffect(() => {
+    localStorage.setItem('aust-ramadan-mode', ramadanMode);
+  }, [ramadanMode]);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (exportRef.current && !exportRef.current.contains(e.target)) {
+        setShowExportMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
   const [availableTemplates, setAvailableTemplates] = useState([]);
 
   useEffect(() => {
@@ -26,7 +51,7 @@ export default function WeeklyPlanner() {
     return () => { document.body.style.overflow = ''; };
   }, [showLoadModal]);
 
-  // Time slot columns matching the AUST schedule exactly
+  // Time slot columns — same grid always, just the labels change for Ramadan
   const timeSlots = [
     { label: '08:00 AM - 08:50 AM', display: '08:00-08:50' },
     { label: '08:50 AM - 09:40 AM', display: '08:50-09:40' },
@@ -40,6 +65,13 @@ export default function WeeklyPlanner() {
     { label: '03:30 PM - 04:20 PM', display: '03:30-04:20' },
     { label: '04:20 PM - 05:10 PM', display: '04:20-05:10' },
     { label: '05:10 PM - 06:00 PM', display: '05:10-06:00' },
+  ];
+
+  // Ramadan display labels — same 12 columns, just 40-min names
+  const ramadanDisplays = [
+    '08:00-08:40', '08:40-09:20', '09:20-10:00', '10:00-10:40',
+    '10:40-11:20', '11:20-12:00', '12:00-12:40', '12:40-01:20',
+    '01:20-02:00', '02:00-02:40', '02:40-03:20', '03:20-04:00',
   ];
 
   const slotBoundaries = [
@@ -92,6 +124,8 @@ export default function WeeklyPlanner() {
     color: getAutoColorForCourse('', 'Theory'),
     biWeekly: false,
     weekGroup: 'first',
+    part: null,
+    splitParts: false,
   };
 
   const getSlotDetails = (timeStr) => {
@@ -138,7 +172,10 @@ export default function WeeklyPlanner() {
       mode: 'edit',
       originalDay: day,
       day,
-      form: { ...cls },
+      form: {
+        ...cls,
+        splitParts: cls.part ? true : false,
+      },
     });
   };
 
@@ -154,8 +191,10 @@ export default function WeeklyPlanner() {
 
   const saveEdit = (event) => {
     event.preventDefault();
+
     const cleanClass = {
       ...editing.form,
+      splitParts: undefined,
       course: editing.form.course.trim() || 'Untitled',
       name: editing.form.name.trim() || 'Class',
       room: editing.form.room.trim() || 'TBA',
@@ -196,107 +235,66 @@ export default function WeeklyPlanner() {
     const tableWrap = document.querySelector('.weekly-table-wrap');
     if (!tableWrap) return;
 
+    const root = document.documentElement;
+    const cs = (name) => getComputedStyle(root).getPropertyValue(name).trim();
+    const bg = cs('--bg-primary');
+    const textPri = cs('--text-primary');
+    const textSec = cs('--text-secondary');
+    const textTer = cs('--text-tertiary');
+
     const container = document.createElement('div');
     container.style.cssText = `
-      position: fixed; left: -9999px; top: 0;
-      padding: 32px 28px; background: #ffffff;
-      width: fit-content; max-width: 1200px;
+      position: fixed; left: -9999px; top: 0; width: fit-content; max-width: 1200px;
+      background: ${bg};
+      font-family: system-ui, -apple-system, sans-serif;
+      padding-bottom: 10px;
     `;
 
-    const titleRow = document.createElement('div');
-    titleRow.style.cssText = `
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 20px; padding-bottom: 12px;
-      border-bottom: 2px solid #e5e7eb;
-    `;
-    titleRow.innerHTML = `
-      <div>
-        <h1 style="font-size: 20px; font-weight: 700; color: #1a1a2e; margin: 0; letter-spacing: 0.02em;">
-          📚 Class Schedule
-        </h1>
-        <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">
-          AUST · Sunday – Thursday
-        </p>
-      </div>
-      <div style="text-align: right;">
-        <p style="font-size: 10px; color: #9ca3af; margin: 0;">Generated</p>
-        <p style="font-size: 11px; color: #6b7280; margin: 2px 0 0 0; font-weight: 500;">
-          ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-        </p>
-      </div>
-    `;
-    container.appendChild(titleRow);
+    // ─── Brand Header ───
+    const ord = (n) => n + ({1:'st',2:'nd',3:'rd'}[n]||'th');
+    const fmtSem = (s) => {
+      const m = (s||'').match(/Year\s*(\d+)\s*-\s*Semester\s*(\d+)/i);
+      return m ? `${ord(+m[1])} Year, ${+m[2]}${['th','st','nd','rd'][+m[2]]||'th'} Sem` : s;
+    };
+    const semStr = user?.yearSemester || user?.semester || '';
+    const deptStr = user?.department || '';
 
+    const brandBar = document.createElement('div');
+    brandBar.style.cssText = `
+      padding: 4px 8px;
+    `;
+    brandBar.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+          <img src="${logoUrl}" alt="AUSTWise" style="width: 28px; height: 28px; object-fit: contain; flex-shrink: 0;" />
+          <div style="display: flex; flex-direction: column; justify-content: center; margin-top: -14px;">
+            <div style="font-size: 16px; font-weight: 800; color: ${textPri}; letter-spacing: -0.01em; line-height: 1.1;">
+              AUSTWise
+            </div>
+            <div style="font-size: 8px; color: ${textTer}; letter-spacing: 0.06em; margin-top: 0; text-transform: uppercase;">
+              Your Academic Companion
+            </div>
+          </div>
+        </div>
+        ${(deptStr || semStr) ? `<div style="font-size: 12px; color: ${textSec}; font-weight: 600; text-align: center; line-height: 1.5;">
+          ${deptStr ? `<div>${deptStr}</div>` : ''}
+          ${semStr ? `<div>${fmtSem(semStr)}</div>` : ''}
+        </div>` : ''}
+        <div style="text-align: right;">
+          <div style="font-size: 8px; color: ${textTer}; text-transform: uppercase; letter-spacing: 0.06em;">Generated</div>
+          <div style="font-size: 11px; color: ${textPri}; font-weight: 700; margin-top: 1px;">
+            ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(brandBar);
+
+    // ─── Cloned Table ───
     const clone = tableWrap.cloneNode(true);
-    clone.style.cssText = `
-      overflow: visible; border-radius: 0; padding: 0;
-      border: 1px solid #d1d5db;
-    `;
+    clone.style.cssText = `overflow: visible; border-radius: 8px; padding: 0;`;
+    clone.style.margin = '6px 8px 0';
     container.appendChild(clone);
-
-    const styleEl = document.createElement('style');
-    styleEl.textContent = `
-      .weekly-table {
-        border-collapse: collapse !important;
-        width: 100% !important;
-        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
-      }
-      .weekly-table th,
-      .weekly-table td {
-        border: 1px solid #d1d5db !important;
-        padding: 8px 10px !important;
-        font-size: 11px !important;
-        background: #ffffff !important;
-      }
-      .weekly-table thead th {
-        background: #f3f4f6 !important;
-        font-weight: 600 !important;
-        color: #374151 !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.04em !important;
-      }
-      .weekly-day-head, .weekly-day-cell {
-        background: #f9fafb !important;
-        font-weight: 700 !important;
-        color: #111827 !important;
-        text-align: center !important;
-        white-space: nowrap !important;
-        position: static !important;
-      }
-      .weekly-class-block {
-        border-radius: 6px !important;
-        padding: 6px 8px !important;
-        min-height: auto !important;
-        background: #f9fafb !important;
-        border-left: 3px solid currentColor !important;
-      }
-      .weekly-course-code {
-        font-size: 12px !important;
-        font-weight: 700 !important;
-        line-height: 1.3 !important;
-      }
-      .weekly-course-name {
-        font-size: 10px !important;
-        color: #374151 !important;
-        line-height: 1.3 !important;
-      }
-      .weekly-room {
-        font-size: 10px !important;
-        color: #6b7280 !important;
-      }
-      .weekly-empty-cell div:after {
-        content: none !important;
-      }
-      .weekly-empty-cell {
-        background: #fafafa !important;
-      }
-      * {
-        box-shadow: none !important;
-        transform: none !important;
-        transition: none !important;
-      }
-    `;
-    container.appendChild(styleEl);
 
     document.body.appendChild(container);
 
@@ -304,26 +302,111 @@ export default function WeeklyPlanner() {
       const canvas = await html2canvas(container, {
         scale: 2.5,
         useCORS: true,
-        backgroundColor: '#ffffff',
+        backgroundColor: bg || '#ffffff',
         logging: false,
         width: container.scrollWidth,
         height: container.scrollHeight,
       });
 
       const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('l', 'mm', 'a4');
-      const pdfW = pdf.internal.pageSize.getWidth();
-      const pdfH = pdf.internal.pageSize.getHeight();
-      const imgW = pdfW - 16;
+      const maxW = 290;
+      const imgW = maxW;
       const imgH = (canvas.height * imgW) / canvas.width;
+      const pageW = imgW + 8;
+      const pageH = imgH + 4;
 
-      if (imgH <= pdfH - 16) {
-        pdf.addImage(imgData, 'PNG', 8, (pdfH - imgH) / 2, imgW, imgH);
-      } else {
-        pdf.addImage(imgData, 'PNG', 8, 8, imgW, imgH);
+      const pdf = new jsPDF({ orientation: 'l', unit: 'mm', format: [pageW, pageH] });
+
+      // Fill PDF page with theme background
+      const hex = bg.replace('#', '');
+      if (hex.length >= 6) {
+        pdf.setFillColor(
+          parseInt(hex.substring(0, 2), 16),
+          parseInt(hex.substring(2, 4), 16),
+          parseInt(hex.substring(4, 6), 16)
+        );
+        pdf.rect(0, 0, pageW, pageH, 'F');
       }
 
-      pdf.save('class-schedule.pdf');
+      pdf.addImage(imgData, 'PNG', 4, 2, imgW, imgH);
+
+      pdf.save('AUST-Student-Helper-Schedule.pdf');
+    } finally {
+      document.body.removeChild(container);
+    }
+  };
+
+  const downloadScheduleImage = async () => {
+    const tableWrap = document.querySelector('.weekly-table-wrap');
+    if (!tableWrap) return;
+
+    const root = document.documentElement;
+    const cs = (name) => getComputedStyle(root).getPropertyValue(name).trim();
+    const bg = cs('--bg-primary');
+
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position: fixed; left: -9999px; top: 0; width: fit-content; max-width: 1200px;
+      background: ${bg};
+      font-family: system-ui, -apple-system, sans-serif;
+      padding-bottom: 10px;
+    `;
+
+    const ord = (n) => n + ({1:'st',2:'nd',3:'rd'}[n]||'th');
+    const fmtSem = (s) => {
+      const m = (s||'').match(/Year\s*(\d+)\s*-\s*Semester\s*(\d+)/i);
+      return m ? `${ord(+m[1])} Year, ${+m[2]}${['th','st','nd','rd'][+m[2]]||'th'} Sem` : s;
+    };
+    const semStr = user?.yearSemester || user?.semester || '';
+    const deptStr = user?.department || '';
+    const textPri = cs('--text-primary');
+    const textSec = cs('--text-secondary');
+    const textTer = cs('--text-tertiary');
+
+    const brandBar = document.createElement('div');
+    brandBar.style.cssText = `padding: 4px 8px;`;
+    brandBar.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <img src="${logoUrl}" alt="AUSTWise" style="width: 28px; height: 28px; object-fit: contain; flex-shrink: 0;" />
+          <div style="display: flex; flex-direction: column; justify-content: center; margin-top: -14px;">
+            <div style="font-size: 16px; font-weight: 800; color: ${textPri}; letter-spacing: -0.01em; line-height: 1.1;">AUSTWise</div>
+            <div style="font-size: 8px; color: ${textTer}; letter-spacing: 0.06em; text-transform: uppercase;">Your Academic Companion</div>
+          </div>
+        </div>
+        ${(deptStr || semStr) ? `<div style="font-size: 12px; color: ${textSec}; font-weight: 600; text-align: center; line-height: 1.5;">
+          ${deptStr ? `<div>${deptStr}</div>` : ''}
+          ${semStr ? `<div>${fmtSem(semStr)}</div>` : ''}
+        </div>` : ''}
+        <div style="text-align: right;">
+          <div style="font-size: 8px; color: ${textTer}; text-transform: uppercase; letter-spacing: 0.06em;">Generated</div>
+          <div style="font-size: 11px; color: ${textPri}; font-weight: 700; margin-top: 1px;">
+            ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(brandBar);
+
+    const clone = tableWrap.cloneNode(true);
+    clone.style.cssText = `overflow: visible; border-radius: 8px; padding: 0;`;
+    clone.style.margin = '6px 8px 0';
+    container.appendChild(clone);
+
+    document.body.appendChild(container);
+
+    try {
+      const canvas = await html2canvas(container, {
+        scale: 2.5, useCORS: true, backgroundColor: bg || '#ffffff',
+        logging: false, width: container.scrollWidth, height: container.scrollHeight,
+      });
+
+      const link = document.createElement('a');
+      link.download = 'AUST-Student-Helper-Schedule.png';
+      link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } finally {
       document.body.removeChild(container);
     }
@@ -331,34 +414,60 @@ export default function WeeklyPlanner() {
 
   return (
     <div className="glass-card-static weekly-planner animate-fadeInUp">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+      <div className="dash-header-three mb-4">
+        <div className="dash-header-left">
           <div className="icon" style={{ backgroundColor: 'var(--accent-cyan-glow)', color: 'var(--accent-cyan)', padding: '6px', borderRadius: '8px' }}>
             <CalendarDays size={18} />
           </div>
           <div>
-            <h3 className="section-title" style={{ fontSize: 'var(--fs-md)', margin: 0 }}>Class Schedule Table</h3>
-            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>Traditional AUST timetable overview (SUN-THU)</p>
+            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>{ramadanMode ? 'Ramadan schedule — 40 min per slot (SUN-THU)' : 'Traditional AUST timetable — 50 min per slot (SUN-THU)'}</p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn btn-primary btn-sm" onClick={downloadSchedulePDF} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <FileDown size={14} /> PDF
+
+        {/* Middle: ⬇️ Export + 🌙 Toggle */}
+        <div className="dash-header-center">
+          {/* ⬇️ Export Dropdown */}
+          <div className="export-dropdown" ref={exportRef}>
+            <button className="btn btn-secondary btn-sm" onClick={() => setShowExportMenu(!showExportMenu)} aria-label="Export schedule" aria-haspopup="true">
+              <FileDown size={14} /> Export <ChevronDown size={12} />
+            </button>
+            {showExportMenu && (
+              <div className="export-menu">
+                <button className="export-menu-item" onClick={() => { downloadSchedulePDF(); setShowExportMenu(false); }}>
+                  <FileDown size={14} /> Export as PDF
+                </button>
+                <button className="export-menu-item" onClick={() => { downloadScheduleImage(); setShowExportMenu(false); }}>
+                  <FileDown size={14} /> Export as Image
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* 🌙 Ramadan Toggle Switch */}
+          <div
+            className="ramadan-toggle"
+            onClick={() => setRamadanMode(!ramadanMode)}
+            title={ramadanMode ? 'Switch to normal schedule' : 'Switch to Ramadan schedule'}
+          >
+            <div className={`ramadan-toggle-track${ramadanMode ? ' active' : ''}`}>
+              {ramadanMode ? (
+                <span className="ramadan-toggle-moon">🌙</span>
+              ) : (
+                <div className="ramadan-toggle-thumb" />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right: 🔄 Reset + Load Routine */}
+        <div className="dash-header-right">
+          {/* 🔄 Icon-only Reset */}
+          <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setConfirmReset(true)} title="Reset schedule">
+            <RotateCcw size={14} />
           </button>
-          <button className="btn btn-danger btn-sm" onClick={() => {
-            const emptyRoutine = {
-              Sunday: [],
-              Monday: [],
-              Tuesday: [],
-              Wednesday: [],
-              Thursday: [],
-            };
-            const emptyWeekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
-            replaceRoutine(emptyRoutine, emptyWeekDays);
-          }} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <RotateCcw size={14} /> Reset
-          </button>
-          <button className="btn btn-secondary btn-sm" onClick={openLoadModal} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+
+          {/* Load Routine — the primary action */}
+          <button className="btn btn-primary btn-sm" onClick={openLoadModal}>
             <Download size={14} /> Load Routine
           </button>
         </div>
@@ -369,9 +478,9 @@ export default function WeeklyPlanner() {
           <thead>
             <tr>
               <th className="weekly-day-head">Time/Day</th>
-              {timeSlots.map((slot) => (
+              {timeSlots.map((slot, i) => (
                 <th key={slot.label} className="weekly-time-head">
-                  {slot.display}
+                  {ramadanMode ? ramadanDisplays[i] : slot.display}
                 </th>
               ))}
             </tr>
@@ -423,45 +532,75 @@ export default function WeeklyPlanner() {
                                 display: 'flex',
                                 flexDirection: 'column',
                                 padding: 0,
-                                minHeight: 0,
                                 gap: 0,
                               }}
                             >
                               <div
                                 onClick={() => openEditModal(day, firstCls)}
                                 style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  padding: '4px 6px',
+                                  padding: '6px 6px',
                                   cursor: 'pointer',
-                                  borderBottom: '1px solid var(--border-secondary)',
                                 }}
                               >
-                                <span style={{ fontSize: '7px', fontWeight: 'var(--fw-bold)', color: 'var(--accent-amber)', whiteSpace: 'nowrap', flexShrink: 0, width: '32px' }}>Week 1</span>
-                                <div style={{ flex: 1, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
-                                  <span style={{ fontWeight: 'bold', color: baseColor, fontSize: '10px' }}>{firstCls.course}</span>
-                                  <span style={{ fontSize: '8px', color: 'var(--text-tertiary)' }}>{firstCls.room}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginBottom: '1px' }}>
+                                  <span style={{ color: baseColor, fontWeight: 'var(--fw-bold)', fontSize: '10px' }}>{firstCls.course}</span>
+                                  {firstCls.part && (
+                                    <span style={{
+                                      fontSize: '7px', fontWeight: 'bold',
+                                      color: firstCls.part === 'A' ? 'var(--accent-emerald)' : 'var(--accent-amber)',
+                                      background: firstCls.part === 'A' ? 'color-mix(in srgb, var(--accent-emerald) 25%, transparent)' : 'color-mix(in srgb, var(--accent-amber) 25%, transparent)',
+                                      padding: '1px 4px', borderRadius: '3px',
+                                    }}>
+                                      P{firstCls.part}
+                                    </span>
+                                  )}
+                                  <span style={{ fontSize: '7px', fontWeight: 'var(--fw-bold)', color: 'var(--accent-amber)', whiteSpace: 'nowrap' }}>Week 1</span>
                                 </div>
-                                <span style={{ width: '32px', flexShrink: 0 }} />
+                                <div style={{ fontWeight: 'var(--fw-medium)', color: 'var(--text-primary)', fontSize: '9px', lineHeight: 1.3, textAlign: 'center' }}>
+                                  {firstCls.name.split('(')[0].trim()}
+                                </div>
+                                <div style={{ color: 'var(--text-tertiary)', fontSize: '8px', textAlign: 'center' }}>
+                                  {firstCls.room}
+                                </div>
+                                <div style={{ color: 'var(--text-tertiary)', fontSize: '7px', textAlign: 'center' }}>
+                                  {firstCls.teacher}
+                                </div>
                               </div>
 
                               {secondCls ? (
-                                <div
-                                  onClick={() => openEditModal(day, secondCls)}
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    padding: '4px 6px',
-                                    cursor: 'pointer',
-                                  }}
-                                >
-                                  <span style={{ fontSize: '7px', fontWeight: 'var(--fw-bold)', color: 'var(--accent-amber)', whiteSpace: 'nowrap', flexShrink: 0, width: '32px' }}>Week 2</span>
-                                  <div style={{ flex: 1, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
-                                    <span style={{ fontWeight: 'bold', color: getCourseColor(secondCls.course), fontSize: '10px' }}>{secondCls.course}</span>
-                                    <span style={{ fontSize: '8px', color: 'var(--text-tertiary)' }}>{secondCls.room}</span>
+                                <div className="weekly-biweekly-divider" style={{ borderTop: '1px solid var(--border-secondary)' }}>
+                                  <div
+                                    onClick={() => openEditModal(day, secondCls)}
+                                    style={{
+                                      padding: '6px 6px',
+                                      cursor: 'pointer',
+                                    }}
+                                  >
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginBottom: '1px' }}>
+                                    <span style={{ color: getCourseColor(secondCls.course), fontWeight: 'var(--fw-bold)', fontSize: '10px' }}>{secondCls.course}</span>
+                                    {secondCls.part && (
+                                      <span style={{
+                                        fontSize: '7px', fontWeight: 'bold',
+                                        color: secondCls.part === 'A' ? 'var(--accent-emerald)' : 'var(--accent-amber)',
+                                        background: secondCls.part === 'A' ? 'color-mix(in srgb, var(--accent-emerald) 25%, transparent)' : 'color-mix(in srgb, var(--accent-amber) 25%, transparent)',
+                                        padding: '1px 4px', borderRadius: '3px',
+                                      }}>
+                                        P{secondCls.part}
+                                      </span>
+                                    )}
+                                    <span style={{ fontSize: '7px', fontWeight: 'var(--fw-bold)', color: 'var(--accent-amber)', whiteSpace: 'nowrap' }}>Week 2</span>
                                   </div>
-                                  <span style={{ width: '32px', flexShrink: 0 }} />
+                                  <div style={{ fontWeight: 'var(--fw-medium)', color: 'var(--text-primary)', fontSize: '9px', lineHeight: 1.3, textAlign: 'center' }}>
+                                    {secondCls.name.split('(')[0].trim()}
+                                  </div>
+                                  <div style={{ color: 'var(--text-tertiary)', fontSize: '8px', textAlign: 'center' }}>
+                                    {secondCls.room}
+                                  </div>
+                                  <div style={{ color: 'var(--text-tertiary)', fontSize: '7px', textAlign: 'center' }}>
+                                    {secondCls.teacher}
+                                  </div>
                                 </div>
+                              </div>
                               ) : (
                                 <div
                                   onClick={() => {
@@ -522,14 +661,28 @@ export default function WeeklyPlanner() {
                                 textAlign: 'center'
                               }}
                             >
-                              <div className="weekly-course-code" style={{ color: accentColor }}>
+                              <div className="weekly-course-code" style={{ color: accentColor, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                 {cls.course}
+                                {cls.part && (
+                                  <span style={{
+                                    fontSize: '7px', fontWeight: 'bold',
+                                    color: cls.part === 'A' ? 'var(--accent-emerald)' : 'var(--accent-amber)',
+                                    background: cls.part === 'A' ? 'color-mix(in srgb, var(--accent-emerald) 25%, transparent)' : 'color-mix(in srgb, var(--accent-amber) 25%, transparent)',
+                                    padding: '1px 4px', borderRadius: '3px',
+                                    whiteSpace: 'nowrap',
+                                  }}>
+                                    P{cls.part}
+                                  </span>
+                                )}
                               </div>
                               <div className="weekly-course-name" style={{ fontWeight: 'var(--fw-medium)', color: 'var(--text-primary)' }}>
                                 {cls.name.split('(')[0].trim()}
                               </div>
                               <div className="weekly-room" style={{ color: 'var(--text-tertiary)' }}>
                                 {cls.room}
+                              </div>
+                              <div style={{ color: 'var(--text-tertiary)', fontSize: '8px' }}>
+                                {cls.teacher}
                               </div>
                             </div>
                           </td>
@@ -559,9 +712,22 @@ export default function WeeklyPlanner() {
                                     textAlign: 'center',
                                   }}
                                 >
-                                  <span style={{ fontWeight: 'bold', color: clr, fontSize: '10px' }}>
+                                  <span style={{ fontWeight: 'bold', color: clr, fontSize: '10px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                                     {cls.course}
+                                    {cls.part && (
+                                      <span style={{
+                                        fontSize: '7px', fontWeight: 'bold',
+                                        color: cls.part === 'A' ? 'var(--accent-emerald)' : 'var(--accent-amber)',
+                                        background: cls.part === 'A' ? 'color-mix(in srgb, var(--accent-emerald) 25%, transparent)' : 'color-mix(in srgb, var(--accent-amber) 25%, transparent)',
+                                        padding: '1px 3px', borderRadius: '3px',
+                                      }}>
+                                        P{cls.part}
+                                      </span>
+                                    )}
                                   </span>
+                                  <div style={{ color: 'var(--text-tertiary)', fontSize: '8px' }}>
+                                    {cls.teacher}
+                                  </div>
                                 </div>
                               );
                             })}
@@ -661,8 +827,18 @@ export default function WeeklyPlanner() {
         <div className="modal-overlay" onClick={() => setEditing(null)}>
           <form className="modal routine-edit-modal" onSubmit={saveEdit} onClick={(event) => event.stopPropagation()}>
             <div className="routine-edit-header">
-              <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <h3>{editing.mode === 'add' ? 'Add Class' : 'Edit Class'}</h3>
+                {editing.form.part && (
+                  <span style={{
+                    fontSize: '9px', fontWeight: 'bold',
+                    color: editing.form.part === 'A' ? 'var(--accent-emerald)' : 'var(--accent-amber)',
+                    background: editing.form.part === 'A' ? 'color-mix(in srgb, var(--accent-emerald) 25%, transparent)' : 'color-mix(in srgb, var(--accent-amber) 25%, transparent)',
+                    padding: '2px 8px', borderRadius: '4px',
+                  }}>
+                    Part {editing.form.part}
+                  </span>
+                )}
               </div>
               <button type="button" className="btn btn-icon btn-ghost" onClick={() => setEditing(null)} aria-label="Close">
                 <X size={18} />
@@ -686,6 +862,9 @@ export default function WeeklyPlanner() {
                         updateForm('time', `${start} - ${newEnd}`);
                         updateForm('type', t);
                         updateForm('color', getAutoColorForCourse(editing.form.course, t));
+                        if (t !== 'Theory') {
+                          updateForm('part', null);
+                        }
                       }}
                     >
                       {t}
@@ -693,6 +872,7 @@ export default function WeeklyPlanner() {
                   ))}
                 </div>
               </div>
+
               <label>
                 Course Code
                 <CourseAutocomplete
@@ -738,6 +918,44 @@ export default function WeeklyPlanner() {
                 Teacher
                 <input className="input" value={editing.form.teacher} onChange={(event) => updateForm('teacher', event.target.value)} />
               </label>
+
+              {/* 🧩 Split into parts — at the bottom, same position as Lab's bi-weekly */}
+              {editing.form.type === 'Theory' && (
+                <>
+                  <div className="routine-edit-type-row">
+                    <label className="biweekly-label">
+                      <input
+                        type="checkbox"
+                        checked={editing.form.splitParts}
+                        onChange={(e) => {
+                          updateForm('splitParts', e.target.checked);
+                          if (!e.target.checked) updateForm('part', null);
+                        }}
+                      />
+                      <span>Split into Parts</span>
+                    </label>
+                  </div>
+                  {editing.form.splitParts && (
+                    <div className="routine-edit-type-row">
+                      <div className="week-split-box">
+                        <div
+                          className={`week-split-option${editing.form.part === 'A' ? ' active' : ''}`}
+                          onClick={() => updateForm('part', 'A')}
+                        >
+                          Part A
+                        </div>
+                        <div className="week-split-divider" />
+                        <div
+                          className={`week-split-option${editing.form.part === 'B' ? ' active' : ''}`}
+                          onClick={() => updateForm('part', 'B')}
+                        >
+                          Part B
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
               {editing.form.type === 'Lab' && (
                 <>
                   <div className="routine-edit-type-row">
@@ -783,6 +1001,32 @@ export default function WeeklyPlanner() {
               <div className="routine-edit-spacer" />
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditing(null)}>Cancel</button>
               <button type="submit" className="btn btn-primary btn-sm">Save</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {confirmReset && (
+        <div className="modal-overlay" onClick={() => setConfirmReset(false)}>
+          <form className="modal routine-edit-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-body">
+              <div className="flex items-center justify-between" style={{ marginBottom: '12px' }}>
+                <h3 style={{ margin: 0, fontSize: 'var(--fs-md)', fontWeight: 'var(--fw-bold)' }}>Reset Routine?</h3>
+                <button type="button" className="btn btn-icon btn-ghost" onClick={() => setConfirmReset(false)} aria-label="Close">
+                  <X size={18} />
+                </button>
+              </div>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 'var(--fs-sm)' }}>
+                This will remove all classes from your schedule. This action cannot be undone.
+              </p>
+            </div>
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setConfirmReset(false)}>Cancel</button>
+              <button type="button" className="btn btn-danger btn-sm" onClick={() => {
+                const emptyRoutine = { Sunday: [], Monday: [], Tuesday: [], Wednesday: [], Thursday: [] };
+                replaceRoutine(emptyRoutine, ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']);
+                setConfirmReset(false);
+              }}>Reset</button>
             </div>
           </form>
         </div>

@@ -16,8 +16,17 @@ const campusTabs = [
   { id: 'prereqs', label: 'Prerequisites',    icon: GitBranch,       color: 'purple',  desc: 'Course tree' },
 ];
 
+const CAMPUS_TAB_KEY = 'aust-campus-active-tab';
+
 export default function CampusPage() {
-  const [activeTab, setActiveTab] = useState('map');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem(CAMPUS_TAB_KEY) || 'map';
+  });
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem(CAMPUS_TAB_KEY, tab);
+  };
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -54,7 +63,7 @@ export default function CampusPage() {
       <GliderTabs
         tabs={campusTabs}
         activeTab={activeTab}
-        onChange={setActiveTab}
+        onChange={handleTabChange}
         variant="gradelab"
         compact
       />

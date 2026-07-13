@@ -19,10 +19,10 @@ export function normalizeAccentColor(color, fallback = '#b0975d') {
 }
 
 const tableColors = [
-  '#5b8af7', '#f97316', '#10b981', '#8b5cf6',
-  '#ec4899', '#06b6d4', '#eab308', '#ef4444',
-  '#14b8a6', '#a855f7', '#f59e0b', '#3b82f6',
-  '#84cc16', '#d946ef', '#0ea5e9', '#22c55e',
+  'var(--accent-blue)', 'var(--accent-orange)', 'var(--accent-emerald)', 'var(--accent-purple)',
+  'var(--accent-rose)', 'var(--accent-cyan)', 'var(--accent-amber)', 'var(--accent-rose)',
+  'var(--accent-emerald)', 'var(--accent-purple)', 'var(--accent-orange)', 'var(--accent-blue)',
+  'var(--accent-emerald)', 'var(--accent-rose)', 'var(--accent-cyan)', 'var(--accent-emerald)',
 ];
 
 function hashStr(str) {

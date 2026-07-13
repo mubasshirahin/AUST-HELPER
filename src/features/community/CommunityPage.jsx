@@ -1,18 +1,25 @@
 import React, { useState } from 'react';
 import StoryFeed from './StoryFeed';
-import SeniorSecrets from './SeniorSecrets';
 import AlumniDirectory from './AlumniDirectory';
 import ClubPortal from './ClubPortal';
 import StudentDirectory from './StudentDirectory';
 import './CommunityPage.css';
 
+const COMMUNITY_TAB_KEY = 'aust-community-active-tab';
+
 export default function CommunityPage() {
-  const [activeTab, setActiveTab] = useState('feed');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem(COMMUNITY_TAB_KEY) || 'feed';
+  });
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem(COMMUNITY_TAB_KEY, tab);
+  };
 
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'feed': return <StoryFeed />;
-      case 'secrets': return <SeniorSecrets />;
       case 'alumni': return <AlumniDirectory />;
       case 'clubs': return <ClubPortal />;
       case 'students': return <StudentDirectory />;
@@ -28,11 +35,10 @@ export default function CommunityPage() {
       </div>
 
       <div className="tabs community-tabs">
-        <button className={`tab ${activeTab === 'feed' ? 'active' : ''}`} onClick={() => setActiveTab('feed')}>Confessions Feed</button>
-        <button className={`tab ${activeTab === 'secrets' ? 'active' : ''}`} onClick={() => setActiveTab('secrets')}>Seniors' Secrets</button>
-        <button className={`tab ${activeTab === 'alumni' ? 'active' : ''}`} onClick={() => setActiveTab('alumni')}>Alumni Directory</button>
-        <button className={`tab ${activeTab === 'clubs' ? 'active' : ''}`} onClick={() => setActiveTab('clubs')}>Clubs Hub</button>
-        <button className={`tab ${activeTab === 'students' ? 'active' : ''}`} onClick={() => setActiveTab('students')}>Student Directory</button>
+        <button className={`tab ${activeTab === 'feed' ? 'active' : ''}`} onClick={() => handleTabChange('feed')}>Confessions Feed</button>
+        <button className={`tab ${activeTab === 'alumni' ? 'active' : ''}`} onClick={() => handleTabChange('alumni')}>Alumni Directory</button>
+        <button className={`tab ${activeTab === 'clubs' ? 'active' : ''}`} onClick={() => handleTabChange('clubs')}>Clubs Hub</button>
+        <button className={`tab ${activeTab === 'students' ? 'active' : ''}`} onClick={() => handleTabChange('students')}>Student Directory</button>
       </div>
 
       <div className="community-content-area">

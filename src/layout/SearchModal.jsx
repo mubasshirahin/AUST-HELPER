@@ -14,7 +14,6 @@ const searchItems = [
   { label: 'Career Roadmaps', path: '/career-roadmaps', icon: Map, keywords: 'career roadmaps skills paths' },
   { label: 'Cheatsheets', path: '/cheatsheets', icon: ScrollText, keywords: 'cheatsheets formulas quick reference' },
   { label: 'Settings', path: '/settings', icon: Settings, keywords: 'settings profile theme notifications' },
-  { label: 'Admin Panel', path: '/admin', icon: LayoutDashboard, keywords: 'admin panel users notice board' },
 ];
 
 export default function SearchModal({ isOpen, onClose }) {

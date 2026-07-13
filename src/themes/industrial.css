@@ -276,7 +276,7 @@
 /* ─── Inputs: recessed data slots, monospace entry, LED focus glow ─── */
 [data-theme="industrial"] .input,
 [data-theme="industrial"] .search-box input {
-  background: var(--bg-input);
+  background-color: var(--bg-input);
   border: none;
   border-radius: var(--radius-md);
   box-shadow: var(--ind-recessed);

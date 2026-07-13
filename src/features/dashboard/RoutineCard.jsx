@@ -184,7 +184,6 @@ export default function RoutineCard() {
             <Calendar size={20} />
           </div>
           <div>
-            <h3 className="section-title" style={{ fontSize: 'var(--fs-md)', margin: 0 }}>Class Routine</h3>
             <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>AUST Semester Schedule</p>
           </div>
         </div>
