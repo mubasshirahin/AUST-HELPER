@@ -266,25 +266,6 @@ export default function RoutineAttendanceTracker() {
                   : <ShieldAlert size={18} style={{ marginLeft: 6 }} />
                 }
               </div>
-              <div className="att-risk-indicator">
-                <span className={`att-risk-dot att-risk-${
-                  overallStats.average >= 85 ? 'safe' :
-                  overallStats.average >= MIN_ATTENDANCE ? 'warning' :
-                  overallStats.average >= 60 ? 'danger' : 'critical'
-                }`} />
-                <span className="att-risk-label">
-                  {overallStats.average >= 85 ? 'Excellent' :
-                   overallStats.average >= MIN_ATTENDANCE ? 'On Track' :
-                   overallStats.average >= 60 ? 'At Risk' : 'Critical'}
-                </span>
-              </div>
-              <div className="att-hero-meta">
-                <span><strong style={{ color: 'var(--accent-emerald)' }}>{overallStats.totalAttended}</strong> attended</span>
-                <span className="att-hero-meta-dot">&middot;</span>
-                <span><strong style={{ color: 'var(--accent-amber)' }}>{overallStats.warningCount}</strong> at risk</span>
-                <span className="att-hero-meta-dot">&middot;</span>
-                <span><strong style={{ color: 'var(--text-primary)' }}>{Object.keys(courseStats).length}</strong> courses</span>
-              </div>
               <div className="att-hero-bar-wrap">
                 <div className="att-hero-bar-bg">
                   <div className="att-hero-bar-fill"
