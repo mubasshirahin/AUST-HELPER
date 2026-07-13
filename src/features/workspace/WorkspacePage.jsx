@@ -204,6 +204,13 @@ function saveAccounts(accounts) {
   } catch {}
 }
 
+function mergeCourses(courseList, existingCourses) {
+  return courseList.map(c => ({
+    ...c,
+    lastViewTime: existingCourses?.find(ex => ex.id === c.id)?.lastViewTime || 0,
+  }));
+}
+
 export default function WorkspacePage() {
   const [accounts, setAccounts] = useState(loadAccounts);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -500,7 +507,7 @@ export default function WorkspacePage() {
             expiresAt,
             email: email || existing.email,
             googleId: googleId || existing.googleId,
-            courses: courseList,
+            courses: mergeCourses(courseList, existing.courses),
             selectedCourseIds: keptSelections.length > 0 ? keptSelections : [...courseIds],
             lastFetched: Date.now(),
           };
@@ -523,7 +530,7 @@ export default function WorkspacePage() {
           accessToken: token,
           grantedScopes: scopes,
           expiresAt,
-          courses: courseList,
+          courses: courseList.map(c => ({ ...c, lastViewTime: 0 })),
           selectedCourseIds: courseIds,
           lastFetched: Date.now(),
         }];
@@ -579,7 +586,7 @@ export default function WorkspacePage() {
         const kept = (a.selectedCourseIds || []).filter(id => courseIds.includes(id));
         return {
           ...a,
-          courses: courseList,
+          courses: mergeCourses(courseList, a.courses),
           selectedCourseIds: kept.length > 0 ? kept : [...courseIds],
           lastFetched: Date.now(),
         };
@@ -670,6 +677,15 @@ export default function WorkspacePage() {
     }
 
     setSelectedCourse(course);
+
+    // Mark this course as viewed
+    setAccounts(prev => prev.map(acc => ({
+      ...acc,
+      courses: (acc.courses || []).map(c =>
+        c.id === course.id ? { ...c, lastViewTime: Date.now() } : c
+      ),
+    })));
+
     setLoadingCoursework(true);
     setLoadingMaterials(true);
     setCoursework([]);
@@ -1247,12 +1263,16 @@ export default function WorkspacePage() {
                 (acc.courses || []).map(course => {
                   const isSelected = (acc.selectedCourseIds || []).includes(course.id);
                   const accKey = acc.accountId;
+                  const hasNew = course.updateTime && course.lastViewTime
+                    ? new Date(course.updateTime).getTime() > course.lastViewTime
+                    : false;
                   return (
                     <button
                       key={`${accKey}-${course.id}`}
-                      className={`workspace-course-card ${isSelected ? '' : 'workspace-course-card-hidden'}`}
+                      className={`workspace-course-card${hasNew ? ' has-new' : ''} ${isSelected ? '' : 'workspace-course-card-hidden'}`}
                       onClick={() => toggleCourseSelection(accKey, course.id)}
                     >
+                      {hasNew && <span className="workspace-course-card-dot" />}
                       <div className="workspace-course-card-color" style={{ background: isSelected ? 'var(--accent-blue)' : 'var(--border-primary)' }} />
                       <div className="workspace-course-card-body">
                         <div className="workspace-course-card-toggle">
@@ -1283,12 +1303,16 @@ export default function WorkspacePage() {
                   .filter(course => (acc.selectedCourseIds || []).includes(course.id))
                   .map(course => {
                     const accKey = acc.accountId;
+                    const hasNew = course.updateTime && course.lastViewTime
+                      ? new Date(course.updateTime).getTime() > course.lastViewTime
+                      : false;
                     return (
                     <button
                       key={`${accKey}-${course.id}`}
-                      className="workspace-course-card"
+                      className={`workspace-course-card${hasNew ? ' has-new' : ''}`}
                       onClick={() => handleCourseClick(course)}
                     >
+                      {hasNew && <span className="workspace-course-card-dot" />}
                       <div className="workspace-course-card-color" style={{ background: generateAvatarColor(acc.email || accKey) }} />
                       <div className="workspace-course-card-body">
                         <h3 className="workspace-course-card-title">{course.name}</h3>

@@ -667,6 +667,26 @@
 
 .workspace-course-card:hover .workspace-course-card-link { gap: var(--sp-2); }
 
+/* New update dot indicator */
+.workspace-course-card { position: relative; }
+.workspace-course-card-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-rose);
+  border: 2px solid var(--bg-primary, #fff);
+  z-index: 1;
+  pointer-events: none;
+  animation: workspacePulse 2s ease-in-out infinite;
+}
+@keyframes workspacePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    COURSE DETAIL — SPLIT PANE
    ═══════════════════════════════════════════════════════════════════════ */
