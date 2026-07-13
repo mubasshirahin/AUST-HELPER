@@ -3,8 +3,7 @@ import {
   AlertCircle, BookOpen, FlaskConical,
   Plus, X, Check, Settings2, ChevronRight, RotateCcw, Info, FileSpreadsheet
 } from 'lucide-react';
-import { useRoutine } from '../../context/RoutineContext';
-import { findCourseByCode, getCourseSemester } from '../../data/courses';
+
 import { getUserStorageItem, setUserStorageItem, getCurrentUserId } from '../../utils/authStorage';
 import { useAuth } from '../../context/AuthContext';
 import { formatSemesterLabel } from '../../utils/semester';
@@ -140,7 +139,6 @@ function expandLabColumns(config) {
    Main Component
 ═══════════════════════════════════════════ */
 export default function SemesterTracker() {
-  const { routine } = useRoutine();
   const { user } = useAuth();
   const getInitialSem = () => {
     const saved = localStorage.getItem(`aust-tracker-sem-${getCurrentUserId() || 'guest'}`);
@@ -160,14 +158,30 @@ export default function SemesterTracker() {
   }, [selectedSemester]);
 
   /* ── Load data for a semester ── */
-  const loadSemesterData = (sem) => ({
-    theoryCourses: getSemItem('courses', sem) || [],
-    theoryMarks:   getSemItem('marks', sem)   || {},
-    theoryConfig:  getSemItem('theoryConfig', sem) || {},
-    labCourses:    getSemItem('labCourses', sem) || [],
-    labConfig:     getSemItem('labConfig', sem)  || {},
-    labMarks:      getSemItem('labMarks', sem)   || {},
-  });
+  const loadTranscriptCourses = (sem) => {
+    const allResults = getUserStorageItem('semesterResults') || [];
+    const semData = allResults.find(r => r.semester === sem);
+    if (!semData?.courses?.length) return { theoryCourses: [], labCourses: [] };
+    const theoryCourses = semData.courses
+      .filter(c => c.code && !isLabCourse(c.code))
+      .map(c => ({ id: c.code, code: c.code, name: c.name || '' }));
+    const labCourses = semData.courses
+      .filter(c => c.code && isLabCourse(c.code))
+      .map(c => ({ id: c.code, code: c.code, name: c.name || '' }));
+    return { theoryCourses, labCourses };
+  };
+
+  const loadSemesterData = (sem) => {
+    const transcript = loadTranscriptCourses(sem);
+    return {
+      theoryCourses: transcript.theoryCourses,
+      theoryMarks:   getSemItem('marks', sem)   || {},
+      theoryConfig:  getSemItem('theoryConfig', sem) || {},
+      labCourses:    transcript.labCourses,
+      labConfig:     getSemItem('labConfig', sem)  || {},
+      labMarks:      getSemItem('labMarks', sem)   || {},
+    };
+  };
 
   const initData = loadSemesterData(getInitialSem());
 
@@ -230,60 +244,7 @@ export default function SemesterTracker() {
     setLabConfig(nd.labConfig);
     setLabMarks(nd.labMarks);
     setQuizDrafts({});
-
-    // Populate from Academic Transcript if tracker empty
-    const allResults = getUserStorageItem('semesterResults') || [];
-    const semData = allResults.find(r => r.semester === selectedSemester);
-    if (semData?.courses?.length) {
-      const hasTheory = nd.theoryCourses.length > 0;
-      const hasLab = nd.labCourses.length > 0;
-      if (!hasTheory) {
-        const theoryFromTrans = semData.courses
-          .filter(c => c.code && !isLabCourse(c.code))
-          .map(c => ({ id: c.code, code: c.code, name: c.name || '' }));
-        if (theoryFromTrans.length) setTheoryCourses(theoryFromTrans);
-      }
-      if (!hasLab) {
-        const labFromTrans = semData.courses
-          .filter(c => c.code && isLabCourse(c.code))
-          .map(c => ({ id: c.code, code: c.code, name: c.name || '' }));
-        if (labFromTrans.length) setLabCourses(labFromTrans);
-      }
-    }
   }, [selectedSemester]);
-
-  /* ── Auto-add courses from routine (filtered by semester) ── */
-  useEffect(() => {
-    const all = Object.values(routine || {}).flat();
-
-    const uniqueBy = (arr, key) =>
-      arr.filter((item, idx, self) => self.findIndex(i => i[key] === item[key]) === idx);
-
-    const theoryItems = uniqueBy(all.filter(c => c.type === 'Theory'), 'course');
-    const labItems    = uniqueBy(all.filter(c => c.type === 'Lab' || c.type === 'Sessional'), 'course');
-
-    const makeCourse = (rc) => {
-      const found = findCourseByCode(rc.course);
-      return { id: rc.course, code: rc.course, name: found ? found.name : rc.name || 'Unknown Course' };
-    };
-
-    const sem = selectedSemester;
-    setTheoryCourses(prev => {
-      const fresh = theoryItems
-        .filter(rc => getCourseSemester(rc.course) === sem)
-        .filter(rc => !prev.some(c => c.code === rc.course))
-        .map(makeCourse);
-      return fresh.length ? [...prev, ...fresh] : prev;
-    });
-
-    setLabCourses(prev => {
-      const fresh = labItems
-        .filter(rc => getCourseSemester(rc.course) === sem)
-        .filter(rc => !prev.some(c => c.code === rc.course))
-        .map(makeCourse);
-      return fresh.length ? [...prev, ...fresh] : prev;
-    });
-  }, [routine, selectedSemester]);
 
   /* ════════════════════
      THEORY LOGIC

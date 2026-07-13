@@ -164,9 +164,6 @@ export default function DeadlineTicker() {
               <div style={{ flex: 1, minWidth: 0, paddingRight: '12px' }}>
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <span style={{ fontSize: '10px', fontWeight: 'var(--fw-bold)', color: 'var(--text-tertiary)' }}>{dl.course}</span>
-                  <span className={`badge ${dl.priority === 'high' ? 'badge-rose' : dl.priority === 'medium' ? 'badge-amber' : 'badge-blue'}`} style={{ fontSize: '8px', padding: '1px 4px' }}>
-                    {dl.type}
-                  </span>
                   {dl.crGroup && (
                     <span className="badge badge-emerald" style={{ fontSize: '8px', padding: '1px 4px' }}>
                       {dl.crGroup}

@@ -25,7 +25,7 @@ export const ocrImportedWeekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 
   const [routine, setRoutine] = useState(() => {
     const saved = getUserStorageItem(storageKeyTypes.routine);
     // getUserStorageItem already parses JSON, so use directly
-    return saved || ocrImportedRoutine;
+    return saved || defaultRoutine;
   });
 
   const [weekDays, setWeekDays] = useState(() => {

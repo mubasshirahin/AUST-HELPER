@@ -19,11 +19,26 @@ export const currentUser = {
 export const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
 
 export const routineData = {
-  Sunday: [],
-  Monday: [],
-  Tuesday: [],
-  Wednesday: [],
-  Thursday: [],
+  Sunday: [
+    { id: 1, course: 'CSE1101', name: 'Computer Fundamentals', time: '08:00 - 08:50', room: 'Room 301', teacher: 'Dr. Smith', color: '#b0975d', type: 'Theory' },
+    { id: 2, course: 'CSE1103', name: 'Programming Fundamentals Lab', time: '09:40 - 11:20', room: 'Lab 201', teacher: 'Mr. Johnson', color: '#7c9aa3', type: 'Lab' },
+  ],
+  Monday: [
+    { id: 3, course: 'MATH1101', name: 'Calculus I', time: '08:00 - 08:50', room: 'Room 302', teacher: 'Dr. Ahmed', color: '#8f8675', type: 'Theory' },
+    { id: 4, course: 'ENG1101', name: 'English Language', time: '10:30 - 11:20', room: 'Room 205', teacher: 'Ms. Karim', color: '#6fa386', type: 'Theory' },
+  ],
+  Tuesday: [
+    { id: 5, course: 'CSE1105', name: 'Digital Logic Design', time: '08:00 - 08:50', room: 'Room 301', teacher: 'Dr. Rahman', color: '#b0975d', type: 'Theory' },
+    { id: 6, course: 'PHY1101', name: 'Physics I', time: '10:30 - 11:20', room: 'Room 401', teacher: 'Dr. Hasan', color: '#c9a66b', type: 'Theory' },
+  ],
+  Wednesday: [
+    { id: 7, course: 'CSE1101', name: 'Computer Fundamentals', time: '09:40 - 10:30', room: 'Room 301', teacher: 'Dr. Smith', color: '#b0975d', type: 'Theory' },
+    { id: 8, course: 'MATH1103', name: 'Linear Algebra', time: '11:20 - 12:10', room: 'Room 302', teacher: 'Dr. Ahmed', color: '#8f8675', type: 'Theory' },
+  ],
+  Thursday: [
+    { id: 9, course: 'CSE1103', name: 'Programming Fundamentals Lab', time: '08:00 - 09:40', room: 'Lab 201', teacher: 'Mr. Johnson', color: '#7c9aa3', type: 'Lab' },
+    { id: 10, course: 'ENG1103', name: 'Technical Writing', time: '10:30 - 11:20', room: 'Room 205', teacher: 'Ms. Karim', color: '#6fa386', type: 'Theory' },
+  ],
 };
 
 export const attendanceData = [];
@@ -1819,5 +1834,7 @@ export const clubsData = [
   },
 ];
 
+
+export const leaderboardData = [];
 
 export const feedbackItems = [];

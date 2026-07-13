@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import RoutineCard from './RoutineCard';
 import ExamTracker from './ExamTracker';
 import DeadlineTicker from './DeadlineTicker';
@@ -8,11 +9,11 @@ import WeekSchedule from './WeekSchedule';
 import NotificationBanner from './NotificationBanner';
 import RoutineAttendanceTracker from './RoutineAttendanceTracker';
 import GliderTabs from '../../components/GliderTabs';
-import { deadlines } from '../../data/mockData';
+import { deadlines, leaderboardData } from '../../data/mockData';
 import {
   TrendingUp, Percent, Clock, BookOpen,
   CalendarDays, Zap, AlertTriangle, Calendar,
-  Hourglass, BellRing, Flame,
+  Hourglass, BellRing, Flame, X, Trophy, Medal,
 } from 'lucide-react';
 import { getUserStorageItem, getCurrentUserId } from '../../utils/authStorage';
 import { useAuth } from '../../context/AuthContext';
@@ -31,32 +32,65 @@ const storageKeyType = 'semesterResults';
 /* ─── Study Streak Widget ─── */
 function StudyStreak() {
   const [streak, setStreak] = useState(0);
+  const [displayStreak, setDisplayStreak] = useState(0);
+  const [justUpdated, setJustUpdated] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem('aust-study-streak');
+      const today = new Date().toDateString();
+
       if (stored) {
         const data = JSON.parse(stored);
-        const today = new Date().toDateString();
         const lastActive = data.lastActive;
 
         if (lastActive === today) {
           setStreak(data.count || 0);
+          setDisplayStreak(data.count || 0);
         } else {
           const lastDate = new Date(lastActive);
           const todayDate = new Date();
           const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
 
           if (diffDays === 1) {
-            setStreak(data.count || 0);
+            const newCount = (data.count || 0) + 1;
+            setStreak(newCount);
+            setDisplayStreak(data.count || 0);
+            localStorage.setItem('aust-study-streak', JSON.stringify({ count: newCount, lastActive: today }));
+            setJustUpdated(true);
           } else if (diffDays > 1) {
-            setStreak(0);
-            localStorage.setItem('aust-study-streak', JSON.stringify({ count: 0, lastActive: today }));
+            setStreak(1);
+            setDisplayStreak(1);
+            localStorage.setItem('aust-study-streak', JSON.stringify({ count: 1, lastActive: today }));
+            setJustUpdated(true);
           }
         }
+      } else {
+        setStreak(1);
+        setDisplayStreak(1);
+        localStorage.setItem('aust-study-streak', JSON.stringify({ count: 1, lastActive: today }));
+        setJustUpdated(true);
       }
     } catch {}
   }, []);
+
+  /* Animate displayStreak → streak */
+  useEffect(() => {
+    if (displayStreak === streak) return;
+    const duration = 1200;
+    const start = performance.now();
+    const from = displayStreak;
+    const to = streak;
+    const raf = requestAnimationFrame(function tick(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - (1 - progress) ** 3;
+      setDisplayStreak(Math.round(from + (to - from) * eased));
+      if (progress < 1) requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [streak]);
 
   const getStreakMessage = () => {
     if (streak === 0) return 'Start your streak today!';
@@ -74,16 +108,125 @@ function StudyStreak() {
     return 'var(--accent-amber)';
   };
 
+  /* ─── Leaderboard modal ─── */
+  const { myRank, rankList } = useMemo(() => {
+    const joinedAt = user?.createdAt || new Date().toISOString();
+
+    const allEntries = [...leaderboardData, {
+      id: 'me', name: user?.name || 'You', dept: user?.department || '',
+      streak, joinedAt,
+    }];
+
+    allEntries.sort((a, b) => {
+      if (b.streak !== a.streak) return b.streak - a.streak;
+      return new Date(a.joinedAt || '2020-01-01') - new Date(b.joinedAt || '2020-01-01');
+    });
+
+    const myIdx = allEntries.findIndex(e => e.id === 'me');
+    const rank = myIdx !== -1 ? myIdx + 1 : null;
+    const top100 = allEntries.slice(0, 100);
+
+    return { myRank: rank, rankList: top100 };
+  }, [user, streak]);
+
+  const topThree = rankList.slice(0, 3);
+
   return (
-    <div className="study-streak-widget">
-      <div className="streak-flame" style={{ color: getStreakColor() }}>
-        <Flame size={18} />
+    <>
+      <div
+        className={`study-streak-widget${justUpdated ? ' streak-updated' : ''}`}
+        onClick={() => setShowLeaderboard(true)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter') setShowLeaderboard(true); }}
+        title="Click to see leaderboard"
+      >
+        <div className="streak-flame" style={{ color: getStreakColor() }}>
+          <Flame size={18} />
+        </div>
+        <div className="streak-info">
+          <span className="streak-count" style={{ color: getStreakColor() }}>{displayStreak}</span>
+          <span className="streak-label">{getStreakMessage()}</span>
+        </div>
       </div>
-      <div className="streak-info">
-        <span className="streak-count" style={{ color: getStreakColor() }}>{streak}</span>
-        <span className="streak-label">{getStreakMessage()}</span>
-      </div>
-    </div>
+
+      {showLeaderboard && createPortal(
+        <div className="modal-overlay leaderboard-overlay" onClick={() => setShowLeaderboard(false)}>
+          <div className="modal glass-card-static leaderboard-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="leaderboard-header">
+              <div className="leaderboard-header-left">
+                <div className="icon" style={{ background: 'var(--accent-amber-glow)', color: 'var(--accent-amber)' }}>
+                  <Trophy size={18} />
+                </div>
+                <div>
+                  <h3>Streak Leaderboard</h3>
+                  <p>Top 100 students by study streak</p>
+                </div>
+              </div>
+              <button className="btn btn-icon btn-ghost" onClick={() => setShowLeaderboard(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* ─── Top 3 Podium ─── */}
+            <div className="leaderboard-podium">
+              {topThree.map((entry, i) => {
+                const icons = [<Trophy size={16} />, <Medal size={16} />, <Medal size={16} />];
+                const colors = ['var(--accent-amber)', 'var(--text-secondary)', 'var(--accent-orange)'];
+                return (
+                  <div key={entry.id} className={`podium-item podium-${i + 1}`}>
+                    <div className="podium-icon" style={{ color: colors[i] }}>{icons[i]}</div>
+                    <div className="podium-name">{entry.name}</div>
+                    <div className="podium-dept">{entry.dept}</div>
+                    <div className="podium-streak" style={{ color: colors[i] }}>
+                      <Flame size={12} /> {entry.streak}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* ─── Rank List ─── */}
+            <div className="leaderboard-list">
+              {rankList.map((entry, i) => (
+                <div key={entry.id} className={`leaderboard-row${entry.name === user?.name ? ' leaderboard-row-me' : ''}`}>
+                  <span className="leaderboard-rank">#{i + 1}</span>
+                  <div className="leaderboard-row-info">
+                    <span className="leaderboard-row-name">{entry.name}</span>
+                    <span className="leaderboard-row-dept">{entry.dept}</span>
+                  </div>
+                  <span className="leaderboard-row-streak">
+                    <Flame size={11} /> {entry.streak}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* ─── My Position ─── */}
+            <div className="leaderboard-my-rank">
+              <div className="leaderboard-my-rank-content">
+                <Flame size={16} style={{ color: getStreakColor() }} />
+                <div>
+                  <span className="leaderboard-my-rank-label">My Streak</span>
+                  <span className="leaderboard-my-rank-value" style={{ color: getStreakColor() }}>{streak} days</span>
+                </div>
+              </div>
+              <div className="leaderboard-my-rank-divider" />
+              <div className="leaderboard-my-rank-content">
+                <Trophy size={16} style={{ color: 'var(--accent-amber)' }} />
+                <div>
+                  <span className="leaderboard-my-rank-label">My Rank</span>
+                  <span className="leaderboard-my-rank-value" style={{ color: 'var(--accent-amber)' }}>
+                    {myRank ? `#${myRank}` : 'Not ranked'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
   );
 }
 
