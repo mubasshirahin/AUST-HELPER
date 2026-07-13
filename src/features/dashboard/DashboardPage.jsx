@@ -245,8 +245,19 @@ function QuickStats() {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [focusMode, setFocusMode] = useState('stats');
+  const [focusMode, setFocusMode] = useState(() => {
+    try {
+      const stored = localStorage.getItem('aust-dashboard-focus');
+      if (stored && FOCUS_SECTIONS[stored]) return stored;
+    } catch {}
+    return 'stats';
+  });
   const firstName = user?.name?.split(' ')[0] || 'Student';
+
+  const handleFocusChange = (mode) => {
+    setFocusMode(mode);
+    try { localStorage.setItem('aust-dashboard-focus', mode); } catch {}
+  };
 
   const profileIncomplete = user && (!user.department || !user.batch || !user.section || !user.yearSemester);
 
@@ -289,7 +300,7 @@ export default function DashboardPage() {
       <GliderTabs
         tabs={focusModes}
         activeTab={focusMode}
-        onChange={setFocusMode}
+        onChange={handleFocusChange}
         variant="dashboard"
       />
 
