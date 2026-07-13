@@ -201,6 +201,17 @@ export default function AuthPage() {
   const googleGSIInitialized = useRef(false);
   const googleGSILoaded = useRef(false);
 
+  const fetchGooglePicture = useCallback(async (idToken) => {
+    try {
+      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.picture || null;
+    } catch { return null; }
+  }, []);
+
   const finalizeGoogleLogin = useCallback(async (payload, credential) => {
     // Try backend verification (optional — don't block login if server is down)
     try {
@@ -213,7 +224,13 @@ export default function AuthPage() {
       // Server might not be running — proceed with client-side login
     }
 
-    console.log('[Google Login] payload.picture:', payload.picture);
+    // Google JWT may omit the picture claim for some accounts.
+    // Fallback: fetch directly from the UserInfo API.
+    let pictureUrl = payload.picture;
+    if (!pictureUrl) {
+      pictureUrl = await fetchGooglePicture(credential);
+    }
+
     const accounts = getAllAccounts().filter((a) => a.id !== 'guest');
     const existing = accounts.find((a) => a.email === payload.email);
     if (existing) {
@@ -223,13 +240,13 @@ export default function AuthPage() {
         // avoiding a stale-closure issue with updateUser() seeing null user.
         const enrichedAccount = {
           ...existing,
-          avatar: payload.picture || existing.avatar,
+          avatar: pictureUrl || existing.avatar,
           linkedSocial: { ...(existing.linkedSocial || {}), gmail: payload.email },
         };
         loginDirect(enrichedAccount);
         // Persist Google data to the accounts list so it survives logout/login
         updateAccountProfile(existing.id, {
-          avatar: payload.picture || existing.avatar,
+          avatar: pictureUrl || existing.avatar,
           linkedSocial: { ...(existing.linkedSocial || {}), gmail: payload.email },
         });
       } catch { setSocialErr('Failed to log in'); }
@@ -240,7 +257,7 @@ export default function AuthPage() {
         const newAccount = signupWithGoogle({
           name: payload.name,
           email: payload.email,
-          picture: payload.picture,
+          picture: pictureUrl,
         });
         setPendingGoogleAccount(newAccount);
         setSignupForm((prev) => ({
