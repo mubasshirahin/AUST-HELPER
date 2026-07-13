@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Folder, Plus, ExternalLink, Loader2, AlertCircle, RefreshCw, Link, X, File, Download } from 'lucide-react';
+import { Folder, Plus, ExternalLink, Loader2, AlertCircle, RefreshCw, Link, X, Download, Eye, FileText, Image, Film } from 'lucide-react';
 import { normalizeAccentColor } from '../../utils/colorPalette';
 import {
   extractFolderId,
@@ -13,6 +13,15 @@ import {
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
+
+// Get preview/download URL for Google Drive files
+function getDriveFileUrl(fileId, type = 'view') {
+  // type: 'view' = preview, 'download' = download, 'direct' = direct link
+  if (type === 'download') {
+    return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+  }
+  return `https://drive.google.com/file/d/${fileId}/view`;
+}
 
 function FileIcon({ mimeType, size = 18 }) {
   const category = getFileCategory(mimeType);
@@ -45,6 +54,161 @@ function FileIcon({ mimeType, size = 18 }) {
   );
 }
 
+// Preview Modal Component
+function FilePreviewModal({ file, token, onClose }) {
+  const [downloadUrl, setDownloadUrl] = useState(null);
+  const category = getFileCategory(file.mimeType);
+
+  useEffect(() => {
+    // Get direct download URL with auth
+    if (token) {
+      setDownloadUrl(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`);
+    }
+  }, [file.id, token]);
+
+  const handleDownload = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download failed:', err);
+    }
+  };
+
+  const renderPreview = () => {
+    if (category === 'pdf') {
+      return (
+        <iframe
+          src={`https://drive.google.com/file/d/${file.id}/preview`}
+          style={{ width: '100%', height: '100%', border: 'none', borderRadius: 'var(--radius-md)' }}
+          title={file.name}
+        />
+      );
+    }
+    if (category === 'image') {
+      return (
+        <img
+          src={`https://drive.google.com/uc?id=${file.id}`}
+          alt={file.name}
+          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 'var(--radius-md)' }}
+        />
+      );
+    }
+    if (category === 'video') {
+      return (
+        <video
+          controls
+          style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 'var(--radius-md)' }}
+        >
+          <source src={`https://drive.google.com/uc?id=${file.id}`} type={file.mimeType} />
+          Your browser does not support video playback.
+        </video>
+      );
+    }
+    // For other files, show file info
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        gap: '16px',
+      }}>
+        <FileIcon mimeType={file.mimeType} size={48} />
+        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', textAlign: 'center', maxWidth: '300px' }}>
+          Preview not available for this file type.
+        </p>
+        <button className="btn btn-primary" onClick={handleDownload}>
+          <Download size={16} /> Download to View
+        </button>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      className="modal-overlay"
+      onClick={onClose}
+      style={{ zIndex: 500 }}
+    >
+      <div
+        className="modal glass-card-static"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: 'min(90vw, 900px)',
+          height: 'min(85vh, 700px)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          padding: 0,
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 16px',
+          borderBottom: '1px solid var(--border-primary)',
+          background: 'var(--bg-secondary)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
+            <FileIcon mimeType={file.mimeType} />
+            <div style={{ minWidth: 0 }}>
+              <p style={{
+                fontSize: '13px',
+                fontWeight: 'var(--fw-semibold)',
+                margin: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
+                {file.name}
+              </p>
+              <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', margin: 0 }}>
+                {formatFileSize(file.size)}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <button className="btn btn-primary btn-sm" onClick={handleDownload}>
+              <Download size={14} /> Download
+            </button>
+            <button className="btn btn-ghost btn-icon" onClick={onClose}>
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Preview Area */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--bg-primary)',
+          overflow: 'auto',
+          padding: '16px',
+        }}>
+          {renderPreview()}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MaterialFolders({ vaultContext }) {
   const { course, courseName, department, yearSem } = vaultContext;
 
@@ -54,7 +218,7 @@ export default function MaterialFolders({ vaultContext }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(null);
-  const [showLinkInput, setShowLinkInput] = useState(false);
+  const [previewFile, setPreviewFile] = useState(null);
 
   // Load saved folder URL when course changes
   useEffect(() => {
@@ -63,6 +227,7 @@ export default function MaterialFolders({ vaultContext }) {
     setIsEditing(!savedUrl);
     setFiles([]);
     setError(null);
+    setPreviewFile(null);
   }, [course, department, yearSem]);
 
   // Initialize Google OAuth for Drive access
@@ -82,7 +247,6 @@ export default function MaterialFolders({ vaultContext }) {
         });
         client.requestAccessToken();
       } else {
-        // Load GIS script first
         const script = document.createElement('script');
         script.src = 'https://accounts.google.com/gsi/client';
         script.onload = () => {
@@ -117,7 +281,6 @@ export default function MaterialFolders({ vaultContext }) {
     setError(null);
 
     try {
-      // Get or request access token
       let accessToken = token;
       if (!accessToken) {
         accessToken = await initGoogleAuth();
@@ -130,7 +293,6 @@ export default function MaterialFolders({ vaultContext }) {
     } catch (err) {
       console.error('Failed to fetch Drive files:', err);
       setError(err.message || 'Failed to load files from Google Drive');
-      // Reset token on auth errors
       if (err.message?.includes('401') || err.message?.includes('token')) {
         setToken(null);
       }
@@ -139,7 +301,6 @@ export default function MaterialFolders({ vaultContext }) {
     }
   }, [folderUrl, token, initGoogleAuth]);
 
-  // Auto-fetch when folder URL is set and not editing
   useEffect(() => {
     if (folderUrl && !isEditing && course) {
       fetchFiles();
@@ -161,10 +322,34 @@ export default function MaterialFolders({ vaultContext }) {
     saveCourseFolderUrl(course, department, yearSem, '');
   };
 
-  const handleOpenDrive = () => {
-    const folderId = extractFolderId(folderUrl);
-    if (folderId) {
-      window.open(`https://drive.google.com/drive/folders/${folderId}`, '_blank');
+  const handleDownload = async (file) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download failed:', err);
+    }
+  };
+
+  const handleFileClick = (file) => {
+    const category = getFileCategory(file.mimeType);
+    // Open preview modal for viewable files
+    if (['pdf', 'image', 'video'].includes(category)) {
+      setPreviewFile(file);
+    } else {
+      // Download other file types directly
+      handleDownload(file);
     }
   };
 
@@ -180,9 +365,6 @@ export default function MaterialFolders({ vaultContext }) {
         <div className="flex items-center gap-2">
           {folderUrl && !isEditing && (
             <>
-              <button className="btn btn-ghost btn-sm" onClick={handleOpenDrive} title="Open in Drive">
-                <ExternalLink size={14} />
-              </button>
               <button className="btn btn-ghost btn-sm" onClick={fetchFiles} disabled={loading} title="Refresh">
                 <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
               </button>
@@ -268,51 +450,75 @@ export default function MaterialFolders({ vaultContext }) {
       {/* Files List */}
       {!loading && !error && files.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {files.map((file) => (
-            <div
-              key={file.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '10px 14px',
-                background: 'var(--bg-input)',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-primary)',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-              onClick={() => file.webViewLink && window.open(file.webViewLink, '_blank')}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--bg-card-hover)';
-                e.currentTarget.style.borderColor = 'var(--border-focus)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'var(--bg-input)';
-                e.currentTarget.style.borderColor = 'var(--border-primary)';
-              }}
-            >
-              <FileIcon mimeType={file.mimeType} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                  fontSize: '13px',
-                  fontWeight: 'var(--fw-medium)',
-                  color: 'var(--text-primary)',
-                  margin: 0,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}>
-                  {file.name}
-                </p>
-                <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', margin: '2px 0 0' }}>
-                  {formatFileSize(file.size)}
-                  {file.modifiedTime && ` · ${new Date(file.modifiedTime).toLocaleDateString()}`}
-                </p>
+          {files.map((file) => {
+            const category = getFileCategory(file.mimeType);
+            const canPreview = ['pdf', 'image', 'video'].includes(category);
+
+            return (
+              <div
+                key={file.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '10px 14px',
+                  background: 'var(--bg-input)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-primary)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                onClick={() => handleFileClick(file)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--bg-card-hover)';
+                  e.currentTarget.style.borderColor = 'var(--border-focus)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--bg-input)';
+                  e.currentTarget.style.borderColor = 'var(--border-primary)';
+                }}
+              >
+                <FileIcon mimeType={file.mimeType} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{
+                    fontSize: '13px',
+                    fontWeight: 'var(--fw-medium)',
+                    color: 'var(--text-primary)',
+                    margin: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {file.name}
+                  </p>
+                  <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', margin: '2px 0 0' }}>
+                    {formatFileSize(file.size)}
+                    {file.modifiedTime && ` · ${new Date(file.modifiedTime).toLocaleDateString()}`}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                  {canPreview && (
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={(e) => { e.stopPropagation(); setPreviewFile(file); }}
+                      title="Preview"
+                      style={{ padding: '4px 8px' }}
+                    >
+                      <Eye size={14} />
+                    </button>
+                  )}
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={(e) => { e.stopPropagation(); handleDownload(file); }}
+                    title="Download"
+                    style={{ padding: '4px 8px' }}
+                  >
+                    <Download size={14} />
+                  </button>
+                </div>
               </div>
-              <ExternalLink size={14} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -340,6 +546,15 @@ export default function MaterialFolders({ vaultContext }) {
             <Plus size={14} /> Add Folder Link
           </button>
         </div>
+      )}
+
+      {/* File Preview Modal */}
+      {previewFile && (
+        <FilePreviewModal
+          file={previewFile}
+          token={token}
+          onClose={() => setPreviewFile(null)}
+        />
       )}
     </div>
   );
