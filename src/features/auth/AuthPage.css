@@ -820,6 +820,16 @@
   flex-shrink: 0;
 }
 
+.btn-google-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+.btn-google-wrapper > iframe,
+.btn-google-wrapper > div > iframe {
+  width: 100% !important;
+  min-width: 100% !important;
+}
+
 .auth-social-overlay {
   position: fixed;
   inset: 0;
