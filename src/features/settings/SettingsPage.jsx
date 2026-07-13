@@ -383,6 +383,51 @@ export default function SettingsPage() {
   const profileDetailsReady = Boolean(profileDetails.id.trim() && profileDetails.name.trim() && profileDetails.email.trim());
   const allChangesReady = profileDetailsReady && quickProfileReady;
 
+  const socialIcons = {
+    facebook: <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>,
+    whatsapp: <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>,
+    linkedin: <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>,
+    discord: <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M20.317 4.3698a19.7913 19.7913 0 0 0-4.8851-1.5152.0741.0741 0 0 0-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 0 0-.0785-.037 19.7363 19.7363 0 0 0-4.8852 1.515.0699.0699 0 0 0-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 0 0 .0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 0 0 .0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 0 0-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 0 1-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 0 1 .0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 0 1 .0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 0 1-.0066.1276 12.2986 12.2986 0 0 1-1.873.8914.0766.0766 0 0 0-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 0 0 .0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 0 0 .0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 0 0-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z"/></svg>,
+  };
+
+  const socialPlaceholders = {
+    facebook: 'fb username or URL',
+    whatsapp: '+8801XXXXXXXXX',
+    linkedin: 'linkedin.com/in/...',
+    discord: 'username#0000',
+  };
+
+  const renderSocialItem = (key, label, value, editing) => {
+    const icon = socialIcons[key];
+    const placeholder = socialPlaceholders[key];
+    if (editing) {
+      return (
+        <label className="profile-linked-social-item" style={{ cursor: 'default', flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-2)', flexShrink: 0 }}>
+            {icon}
+            <span style={{ fontSize: '10px', opacity: 0.6, textTransform: 'uppercase' }}>{label}</span>
+          </span>
+          <input
+            type="text" placeholder={placeholder}
+            value={value}
+            onChange={(e) => updateProfileDetailsField(key, e.target.value)}
+            style={{
+              flex: 1, minWidth: 120, border: 'none', background: 'var(--bg-surface)', borderRadius: 'var(--radius-sm)',
+              padding: '4px 8px', fontSize: 'var(--fs-sm)', color: 'var(--text-primary)',
+            }}
+          />
+        </label>
+      );
+    }
+    if (!value) return null;
+    return (
+      <span className="profile-linked-social-item">
+        {icon}
+        {value}
+      </span>
+    );
+  };
+
   const updateProfileDetailsField = (field, value) => {
     setProfileDetails((currentDetails) => {
       const next = { ...currentDetails, [field]: value };
@@ -756,45 +801,7 @@ export default function SettingsPage() {
                         <option value="O-">O-</option>
                       </select>
                     </label>
-                    <div className="profile-section-divider profile-section-full"><span>Social Links</span></div>
-                    <div className="profile-social-grid">
-                      <label>
-                        <span>Facebook</span>
-                        <input
-                          type="url" placeholder="https://facebook.com/..."
-                          value={profileDetails.facebook}
-                          onChange={(e) => updateProfileDetailsField('facebook', e.target.value)}
-                          className="input mt-1"
-                        />
-                      </label>
-                      <label>
-                        <span>WhatsApp</span>
-                        <input
-                          type="text" placeholder="+8801XXXXXXXXX"
-                          value={profileDetails.whatsapp}
-                          onChange={(e) => updateProfileDetailsField('whatsapp', e.target.value)}
-                          className="input mt-1"
-                        />
-                      </label>
-                      <label>
-                        <span>LinkedIn</span>
-                        <input
-                          type="url" placeholder="https://linkedin.com/in/..."
-                          value={profileDetails.linkedin}
-                          onChange={(e) => updateProfileDetailsField('linkedin', e.target.value)}
-                          className="input mt-1"
-                        />
-                      </label>
-                      <label>
-                        <span>Discord</span>
-                        <input
-                          type="text" placeholder="username#0000"
-                          value={profileDetails.discord}
-                          onChange={(e) => updateProfileDetailsField('discord', e.target.value)}
-                          className="input mt-1"
-                        />
-                      </label>
-                    </div>
+
                   </div>
                 ) : (
                   <div className="profile-read-grid">
@@ -807,14 +814,6 @@ export default function SettingsPage() {
                       <strong>{profileDetails.email || 'Not set'}</strong>
                       <span className="profile-read-sub-label">Blood Group</span>
                       <strong>{profileDetails.bloodGroup || 'Not set'}</strong>
-                      <span className="profile-read-sub-label">Facebook</span>
-                      <strong>{profileDetails.facebook || 'Not set'}</strong>
-                      <span className="profile-read-sub-label">WhatsApp</span>
-                      <strong>{profileDetails.whatsapp || 'Not set'}</strong>
-                      <span className="profile-read-sub-label">LinkedIn</span>
-                      <strong>{profileDetails.linkedin || 'Not set'}</strong>
-                      <span className="profile-read-sub-label">Discord</span>
-                      <strong>{profileDetails.discord || 'Not set'}</strong>
                     </div>
                     <div>
                       <span>Name</span>
@@ -846,22 +845,20 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                {(user.linkedSocial?.gmail || user.linkedSocial?.facebook) && (
+                {(user.linkedSocial?.gmail || user.linkedSocial?.facebook || profileDetails.facebook || profileDetails.whatsapp || profileDetails.linkedin || profileDetails.discord || isEditingProfile) && (
                   <div className="profile-linked-social">
                     <h4>Linked Accounts</h4>
                     <div className="profile-linked-social-list">
-                      {user.linkedSocial.gmail && (
+                      {user.linkedSocial?.gmail && (
                         <span className="profile-linked-social-item">
                           <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
                           {user.linkedSocial.gmail}
                         </span>
                       )}
-                      {user.linkedSocial.facebook && (
-                        <span className="profile-linked-social-item">
-                          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
-                          {user.linkedSocial.facebook}
-                        </span>
-                      )}
+                      {renderSocialItem('facebook', 'Facebook', profileDetails.facebook, isEditingProfile)}
+                      {renderSocialItem('whatsapp', 'WhatsApp', profileDetails.whatsapp, isEditingProfile)}
+                      {renderSocialItem('linkedin', 'LinkedIn', profileDetails.linkedin, isEditingProfile)}
+                      {renderSocialItem('discord', 'Discord', profileDetails.discord, isEditingProfile)}
                     </div>
                   </div>
                 )}
