@@ -285,9 +285,6 @@
 .sidebar-footer {
   padding: var(--sp-4) var(--sp-3);
   padding-top: var(--sp-5);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
 }
 
 .logout-btn {
@@ -322,71 +319,6 @@
 
 .logout-btn.collapsed:hover {
   transform: none;
-}
-
-/* ── Shadow CTA ── */
-
-.shadow-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  padding: 9px var(--sp-3);
-  border-radius: var(--radius-full);
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-bold);
-  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, padding 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-  text-decoration: none;
-  background: linear-gradient(135deg, rgba(88, 28, 135, 0.15), rgba(15, 15, 30, 0.25));
-  color: var(--accent-purple);
-  border: 1px solid rgba(88, 28, 135, 0.2) !important;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.shadow-btn:hover {
-  background: linear-gradient(135deg, rgba(88, 28, 135, 0.3), rgba(15, 15, 30, 0.4));
-  color: var(--accent-purple);
-  border-color: rgba(139, 92, 246, 0.4) !important;
-  box-shadow: 0 0 16px rgba(88, 28, 135, 0.25), inset 0 0 12px rgba(139, 92, 246, 0.05);
-  transform: translateX(3px);
-}
-
-.shadow-btn.collapsed {
-  justify-content: center;
-  padding: var(--sp-3);
-}
-
-.shadow-btn.collapsed:hover {
-  transform: none;
-}
-
-/* ── Shadow Modal ── */
-
-.shadow-modal {
-  width: min(380px, 90vw);
-  text-align: center;
-  padding: var(--sp-8) var(--sp-6);
-}
-
-.shadow-modal-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--sp-4);
-}
-
-.shadow-modal-body h3 {
-  margin: 0;
-  font-size: var(--fs-lg);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.shadow-modal-body p {
-  margin: 0;
-  font-size: var(--fs-xs);
-  color: var(--text-secondary);
-  line-height: 1.6;
 }
 
 /* ── Logo keyframes ── (kept from original, used in Sidebar.jsx) ── */
