@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Hourglass, AlertTriangle, CalendarRange } from 'lucide-react';
+import { Hourglass, AlertTriangle, CalendarRange, Zap } from 'lucide-react';
 import { deadlines } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
 
@@ -119,6 +119,8 @@ export default function DeadlineTicker() {
     return () => clearInterval(interval);
   }, [combinedDeadlines.length, calendarTasks.length, timers.length]);
 
+  const hasUrgent = displayDeadlines.some(dl => dl.urgent);
+
   return (
     <div className="glass-card-static deadline-ticker animate-fadeInUp">
       <div className="flex items-center justify-between mb-4">
@@ -130,7 +132,15 @@ export default function DeadlineTicker() {
             <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>Live countdown tracker</p>
           </div>
         </div>
-        <CalendarRange size={16} style={{ color: 'var(--text-tertiary)' }} />
+        <div className="flex items-center gap-2">
+          {hasUrgent && (
+            <div className="deadline-urgent-badge">
+              <Zap size={12} />
+              <span>URGENT</span>
+            </div>
+          )}
+          <CalendarRange size={16} style={{ color: 'var(--text-tertiary)' }} />
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

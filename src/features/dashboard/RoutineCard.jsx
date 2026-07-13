@@ -187,6 +187,10 @@ export default function RoutineCard() {
             <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>AUST Semester Schedule</p>
           </div>
         </div>
+        <div className="routine-live-indicator">
+          <span className="routine-live-dot" />
+          <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 'var(--fw-medium)' }}>Live</span>
+        </div>
       </div>
 
       <div className="tabs mb-4" style={{ display: 'flex', overflowX: 'auto', gap: '4px', padding: '4px' }}>

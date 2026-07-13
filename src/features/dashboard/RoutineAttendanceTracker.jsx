@@ -35,8 +35,20 @@ function AttendanceRing({ percentage, size = 52, strokeWidth = 4, color }) {
   const offset = circumference * (1 - Math.min(percentage, 100) / 100);
   const center = size / 2;
   const isLow = percentage < MIN_ATTENDANCE;
+  const isCritical = percentage < 60;
+  const glowColor = isCritical ? 'var(--accent-rose)' : isLow ? 'var(--accent-amber)' : color || 'var(--accent-emerald)';
+
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+      <defs>
+        <filter id={`glow-${size}-${Math.round(percentage)}`} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
       <circle cx={center} cy={center} r={radius} fill="none" stroke="var(--bg-card)" strokeWidth={strokeWidth} />
       <circle
         cx={center} cy={center} r={radius} fill="none"
@@ -45,6 +57,7 @@ function AttendanceRing({ percentage, size = 52, strokeWidth = 4, color }) {
         strokeDasharray={circumference} strokeDashoffset={offset}
         transform={`rotate(-90 ${center} ${center})`}
         style={{ transition: 'stroke-dashoffset 0.5s ease, stroke 0.3s ease' }}
+        filter={isLow ? `url(#glow-${size}-${Math.round(percentage)})` : undefined}
       />
       <text
         x={center} y={center + 1} textAnchor="middle" dominantBaseline="central"
@@ -264,6 +277,18 @@ export default function RoutineAttendanceTracker() {
                   ? <ShieldCheck size={18} style={{ marginLeft: 6 }} />
                   : <ShieldAlert size={18} style={{ marginLeft: 6 }} />
                 }
+              </div>
+              <div className="att-risk-indicator">
+                <span className={`att-risk-dot att-risk-${
+                  overallStats.average >= 85 ? 'safe' :
+                  overallStats.average >= MIN_ATTENDANCE ? 'warning' :
+                  overallStats.average >= 60 ? 'danger' : 'critical'
+                }`} />
+                <span className="att-risk-label">
+                  {overallStats.average >= 85 ? 'Excellent' :
+                   overallStats.average >= MIN_ATTENDANCE ? 'On Track' :
+                   overallStats.average >= 60 ? 'At Risk' : 'Critical'}
+                </span>
               </div>
               <div className="att-hero-meta">
                 <span><strong style={{ color: 'var(--accent-emerald)' }}>{overallStats.totalAttended}</strong> attended</span>

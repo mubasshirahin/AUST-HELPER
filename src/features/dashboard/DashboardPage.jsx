@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import RoutineCard from './RoutineCard';
 import ExamTracker from './ExamTracker';
 import DeadlineTicker from './DeadlineTicker';
@@ -12,7 +12,7 @@ import { deadlines } from '../../data/mockData';
 import {
   TrendingUp, Percent, Clock, BookOpen,
   CalendarDays, Zap, AlertTriangle, Calendar,
-  Hourglass, BellRing,
+  Hourglass, BellRing, Timer, Flame,
 } from 'lucide-react';
 import { getUserStorageItem, getCurrentUserId } from '../../utils/authStorage';
 import { useAuth } from '../../context/AuthContext';
@@ -27,6 +27,95 @@ const FOCUS_SECTIONS = {
 };
 
 const storageKeyType = 'semesterResults';
+
+/* ─── Live Clock Widget ─── */
+function LiveClock() {
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const hours = time.getHours().toString().padStart(2, '0');
+  const minutes = time.getMinutes().toString().padStart(2, '0');
+  const seconds = time.getSeconds().toString().padStart(2, '0');
+  const ampm = time.getHours() >= 12 ? 'PM' : 'AM';
+  const h12 = time.getHours() % 12 || 12;
+
+  return (
+    <div className="live-clock-widget">
+      <div className="live-clock-time">
+        <span className="live-clock-digit">{h12.toString().padStart(2, '0')}</span>
+        <span className="live-clock-separator">:</span>
+        <span className="live-clock-digit">{minutes}</span>
+        <span className="live-clock-ampm">{ampm}</span>
+      </div>
+      <div className="live-clock-seconds">
+        <span className="live-clock-sec-digit">{seconds}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Study Streak Widget ─── */
+function StudyStreak() {
+  const [streak, setStreak] = useState(0);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('aust-study-streak');
+      if (stored) {
+        const data = JSON.parse(stored);
+        const today = new Date().toDateString();
+        const lastActive = data.lastActive;
+
+        if (lastActive === today) {
+          setStreak(data.count || 0);
+        } else {
+          const lastDate = new Date(lastActive);
+          const todayDate = new Date();
+          const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+
+          if (diffDays === 1) {
+            setStreak(data.count || 0);
+          } else if (diffDays > 1) {
+            setStreak(0);
+            localStorage.setItem('aust-study-streak', JSON.stringify({ count: 0, lastActive: today }));
+          }
+        }
+      }
+    } catch {}
+  }, []);
+
+  const getStreakMessage = () => {
+    if (streak === 0) return 'Start your streak today!';
+    if (streak === 1) return '1 day streak — keep going!';
+    if (streak < 7) return `${streak} days — building momentum!`;
+    if (streak < 30) return `${streak} days — on fire!`;
+    return `${streak} days — legendary!`;
+  };
+
+  const getStreakColor = () => {
+    if (streak === 0) return 'var(--text-tertiary)';
+    if (streak < 3) return 'var(--accent-amber)';
+    if (streak < 7) return 'var(--accent-orange)';
+    if (streak < 30) return 'var(--accent-rose)';
+    return 'var(--accent-amber)';
+  };
+
+  return (
+    <div className="study-streak-widget">
+      <div className="streak-flame" style={{ color: getStreakColor() }}>
+        <Flame size={18} />
+      </div>
+      <div className="streak-info">
+        <span className="streak-count" style={{ color: getStreakColor() }}>{streak}</span>
+        <span className="streak-label">{getStreakMessage()}</span>
+      </div>
+    </div>
+  );
+}
 
 const focusModes = [
   { id: 'stats', label: 'Quick Stats', icon: TrendingUp, desc: 'CGPA & metrics', color: 'blue' },
@@ -121,6 +210,7 @@ function QuickStats() {
       color: 'var(--accent-blue)',
       bg: 'var(--accent-blue-glow)',
       accent: 'blue',
+      trend: hasCgpa ? (stats.currentCgpa >= 3.0 ? 'up' : stats.currentCgpa >= 2.5 ? 'stable' : 'down') : null,
     },
     {
       label: 'Avg. Attendance',
@@ -130,6 +220,7 @@ function QuickStats() {
       color: 'var(--accent-emerald)',
       bg: 'var(--accent-emerald-glow)',
       accent: 'emerald',
+      trend: null,
     },
     {
       label: 'Pending Deadlines',
@@ -138,6 +229,7 @@ function QuickStats() {
       color: stats.upcomingDeadlines > 3 ? 'var(--accent-rose)' : 'var(--accent-amber)',
       bg: stats.upcomingDeadlines > 3 ? 'var(--accent-rose-glow)' : 'var(--accent-amber-glow)',
       accent: stats.upcomingDeadlines > 3 ? 'rose' : 'amber',
+      trend: null,
     },
     {
       label: 'Credits Completed',
@@ -146,6 +238,7 @@ function QuickStats() {
       color: 'var(--accent-purple)',
       bg: 'var(--accent-purple-glow)',
       accent: 'purple',
+      trend: null,
     },
   ];
 
@@ -159,11 +252,18 @@ function QuickStats() {
             className={`quick-stat-card glass-card-static quick-stat-${item.accent} animate-fadeInUp`}
             style={{ animationDelay: `${i * 80}ms` }}
           >
-            <div className="quick-stat-icon" style={{ background: item.bg, color: item.color }}>
+            <div className="quick-stat-icon" style={{ background: item.bg, color: item.color, position: 'relative' }}>
               <Icon size={18} />
             </div>
             <div className="quick-stat-body">
-              <span className={`quick-stat-value${item.placeholder ? ' placeholder' : ''}`} style={{ color: item.color }}>{item.value}</span>
+              <div className="quick-stat-value-row">
+                <span className={`quick-stat-value${item.placeholder ? ' placeholder' : ''}`} style={{ color: item.color }}>{item.value}</span>
+                {item.trend && (
+                  <span className={`quick-stat-trend trend-${item.trend}`}>
+                    {item.trend === 'up' ? '↗' : item.trend === 'down' ? '↘' : '→'}
+                  </span>
+                )}
+              </div>
               <span className="quick-stat-label">{item.label}</span>
             </div>
           </div>
@@ -194,13 +294,17 @@ export default function DashboardPage() {
             <div className="dash-hero-icon">
               <Zap size={24} />
             </div>
-            <div>
+            <div style={{ flex: 1 }}>
               <h1 className="dash-hero-title">
                 {getGreeting()}, <span className="dash-hero-name">{firstName}</span>
               </h1>
               <p className="dash-hero-subtitle">
                 Your academic day at a glance — stay on track, stay focused.
               </p>
+            </div>
+            <div className="dash-hero-widgets">
+              <LiveClock />
+              <StudyStreak />
             </div>
           </div>
         </div>

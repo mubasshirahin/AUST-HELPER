@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BellRing, Pin, ChevronDown, ChevronUp } from 'lucide-react';
+import { BellRing, Pin, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { notices } from '../../data/mockData';
 
 export default function NoticeBoard() {
@@ -30,6 +30,14 @@ export default function NoticeBoard() {
       case 'IT': return 'badge-blue';
       default: return 'badge-blue';
     }
+  };
+
+  const isNewNotice = (dateStr) => {
+    if (!dateStr) return false;
+    const noticeDate = new Date(dateStr);
+    const now = new Date();
+    const diffDays = Math.floor((now - noticeDate) / (1000 * 60 * 60 * 24));
+    return diffDays <= 2;
   };
 
   return (
@@ -74,6 +82,11 @@ export default function NoticeBoard() {
                     {notice.pinned && (
                       <span className="badge badge-amber" style={{ fontSize: '8px', padding: '1px 4px', display: 'flex', alignItems: 'center', gap: '2px' }}>
                         <Pin size={8} /> PINNED
+                      </span>
+                    )}
+                    {isNewNotice(notice.date) && (
+                      <span className="badge badge-emerald notice-new-badge" style={{ fontSize: '8px', padding: '1px 4px', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                        <Sparkles size={8} /> NEW
                       </span>
                     )}
                     <span className={`badge ${getCategoryBadgeClass(notice.category)}`} style={{ fontSize: '8px', padding: '1px 4px' }}>
