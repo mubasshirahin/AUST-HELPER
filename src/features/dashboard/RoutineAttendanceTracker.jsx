@@ -19,9 +19,28 @@ function loadInitialAttendanceState() {
   try {
     const enabledKey = getUserStorageKey(storageKeyTypes.enabled);
     const dataKey = getUserStorageKey(storageKeyTypes.data);
+    const storedEnabled = enabledKey ? localStorage.getItem(enabledKey) : null;
+    const storedData = dataKey ? localStorage.getItem(dataKey) : null;
+
+    // If no data exists, add dummy data for demo (60% attendance)
+    if (!storedData || storedData === '{}') {
+      const dummyData = {
+        'CSE2101': { attended: 8, total: 14 },
+        'CSE2103': { attended: 5, total: 14 },
+        'CSE2105': { attended: 9, total: 14 },
+        'MATH2101': { attended: 8, total: 14 },
+        'CSE2107': { attended: 9, total: 14 },
+        'CSE2109': { attended: 8, total: 14 },
+        'HUM2101': { attended: 8, total: 14 },
+      };
+      if (dataKey) localStorage.setItem(dataKey, JSON.stringify(dummyData));
+      if (enabledKey && !storedEnabled) localStorage.setItem(enabledKey, 'true');
+      return { isEnabled: true, attendanceData: dummyData };
+    }
+
     return {
-      isEnabled: enabledKey ? localStorage.getItem(enabledKey) === 'true' : false,
-      attendanceData: dataKey ? JSON.parse(localStorage.getItem(dataKey) || '{}') : {}
+      isEnabled: storedEnabled ? storedEnabled === 'true' : false,
+      attendanceData: storedData ? JSON.parse(storedData) : {}
     };
   } catch { return { isEnabled: false, attendanceData: {} }; }
 }
