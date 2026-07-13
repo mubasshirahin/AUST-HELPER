@@ -163,6 +163,45 @@
   animation: fadeInUp 0.5s ease 0.2s both;
 }
 
+/* ─── Section header bars (used in WeeklyPlanner, WeekSchedule) ─── */
+.dash-header-three {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+.dash-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex: 1;
+  min-width: 0;
+}
+.dash-header-center {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.dash-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+}
+.mb-8 {
+  margin-bottom: var(--sp-8, 32px);
+}
+
+/* ─── Form labels ─── */
+.input-label {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
 /* ─── Focus mode section emphasis ─── */
 .dash-section {
   transition:
@@ -353,6 +392,272 @@
   max-width: 100%;
 }
 
+/* ─── Academic Calendar (WeekSchedule) ─── */
+.schedule-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+.schedule-nav-btn:hover {
+  border-color: var(--border-focus);
+  color: var(--text-primary);
+}
+.schedule-week-label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  min-width: 80px;
+  text-align: center;
+}
+
+.view-toggle {
+  display: flex;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.view-toggle-btn {
+  padding: 4px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+.view-toggle-btn.active {
+  background: var(--accent-blue-glow);
+  color: var(--accent-blue);
+}
+.view-toggle-btn:hover:not(.active) {
+  color: var(--text-primary);
+}
+
+.schedule-grid,
+.schedule-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.schedule-day-header,
+.schedule-month-header {
+  padding: 6px 4px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--text-tertiary);
+  text-align: center;
+  border-bottom: 1px solid var(--border-primary);
+}
+.schedule-day-card {
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  min-height: 80px;
+  background: var(--bg-card);
+  transition: border-color var(--transition-base);
+}
+.schedule-day-card.today {
+  border-color: var(--accent-blue);
+  background: var(--accent-blue-glow);
+}
+.schedule-day-card.before-semester {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.schedule-day-num {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.schedule-day-num.today {
+  color: var(--accent-blue);
+}
+.schedule-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.schedule-task-item {
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 9px;
+  line-height: 1.3;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  transition: background 0.15s;
+}
+.schedule-task-item:hover {
+  opacity: 0.85;
+}
+.schedule-task-batch {
+  font-size: 7px;
+  font-weight: var(--fw-bold);
+  color: var(--accent-amber);
+  text-transform: uppercase;
+}
+.schedule-task-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.schedule-task-code {
+  font-weight: var(--fw-semibold);
+  color: var(--accent-cyan);
+  font-size: 8px;
+}
+.schedule-task-title {
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.schedule-empty {
+  font-size: 8px;
+  color: var(--text-tertiary);
+  text-align: center;
+  padding: 4px 0;
+}
+
+.schedule-daily-view {
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-4);
+  background: var(--bg-card);
+}
+.schedule-daily-view.today {
+  border-color: var(--accent-blue);
+}
+.schedule-daily-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-3);
+}
+.schedule-daily-dayname {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  color: var(--text-primary);
+}
+.schedule-daily-dayname.today {
+  color: var(--accent-blue);
+}
+.schedule-daily-date {
+  font-size: var(--fs-sm);
+  color: var(--text-tertiary);
+}
+.schedule-daily-badge {
+  font-size: 10px;
+  font-weight: var(--fw-bold);
+  color: var(--accent-blue);
+  background: var(--accent-blue-glow);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+.schedule-daily-task {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.schedule-daily-task-title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.schedule-daily-task-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.schedule-daily-task-code {
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  color: var(--accent-cyan);
+}
+.schedule-daily-task-batch {
+  font-size: 9px;
+  font-weight: var(--fw-bold);
+  color: var(--accent-amber);
+}
+.schedule-daily-task-time {
+  font-size: 9px;
+  color: var(--text-tertiary);
+}
+.schedule-daily-empty {
+  text-align: center;
+  padding: 24px 0;
+  color: var(--text-tertiary);
+  font-size: var(--fs-sm);
+}
+.schedule-add-btn {
+  display: block;
+  width: 100%;
+  margin-top: var(--sp-3);
+  padding: 8px;
+  border: 1px dashed var(--border-primary);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+.schedule-add-btn:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background: var(--accent-blue-glow);
+}
+
+.schedule-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--sp-3);
+  flex-wrap: wrap;
+}
+.schedule-filter-label {
+  font-size: var(--fs-xs);
+  color: var(--text-tertiary);
+  font-weight: var(--fw-medium);
+}
+.schedule-filter-btn {
+  padding: 2px 8px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+.schedule-filter-btn.active-all,
+.schedule-filter-btn.active-batch {
+  background: var(--accent-blue-glow);
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
+}
+.schedule-filter-btn:hover:not(.active-all):not(.active-batch) {
+  border-color: var(--border-focus);
+}
+.schedule-filter-hint {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
 .side-row-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -367,6 +672,112 @@
 .side-row-2 > * {
   min-width: 0;
   max-width: 100%;
+}
+
+/* ─── Export Dropdown ─── */
+.export-dropdown {
+  position: relative;
+}
+.export-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popper);
+  z-index: 20;
+  overflow: hidden;
+}
+.export-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: background var(--transition-base);
+}
+.export-menu-item:hover {
+  background: var(--bg-input);
+}
+
+/* ─── Ramadan Toggle ─── */
+.ramadan-toggle {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+.ramadan-toggle-track {
+  width: 44px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+}
+.ramadan-toggle-track.active {
+  background: var(--accent-blue-glow);
+  border-color: var(--accent-blue);
+}
+.ramadan-toggle-moon {
+  font-size: 14px;
+  line-height: 1;
+}
+.ramadan-toggle-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  transition: transform var(--transition-base);
+}
+.ramadan-toggle-track.active .ramadan-toggle-thumb {
+  transform: translateX(10px);
+  background: var(--accent-blue);
+}
+
+/* ─── Attendance Widget ─── */
+.attendance-widget {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Deadline Ticker ─── */
+.deadline-ticker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+@keyframes countdownPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* ─── Notice Board ─── */
+.notice-board {
+  display: flex;
+  flex-direction: column;
+}
+.notice-details {
+  animation: fadeIn 0.25s ease both;
+}
+
+/* ─── Pomodoro Timer ─── */
+.pomodoro-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  text-align: center;
 }
 
 /* ─── Weekly Planner ─── */
