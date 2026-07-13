@@ -114,6 +114,15 @@ export default function RoutineAttendanceTracker() {
   useEffect(() => { setUserStorageItem(storageKeyTypes.enabled, isEnabled); }, [isEnabled]);
   useEffect(() => { setUserStorageItem(storageKeyTypes.data, attendanceData); }, [attendanceData]);
 
+  const clearAllData = () => {
+    const enabledKey = getUserStorageKey(storageKeyTypes.enabled);
+    const dataKey = getUserStorageKey(storageKeyTypes.data);
+    if (dataKey) localStorage.removeItem(dataKey);
+    if (enabledKey) localStorage.removeItem(enabledKey);
+    setAttendanceData({});
+    setIsEnabled(false);
+  };
+
   const courseStats = useMemo(() => {
     const stats = {};
     weekDays.forEach(day => {
@@ -205,12 +214,7 @@ export default function RoutineAttendanceTracker() {
           </button>
           <button
             className="att-guide-btn"
-            onClick={() => {
-              if (dataKey) localStorage.removeItem(dataKey);
-              if (enabledKey) localStorage.removeItem(enabledKey);
-              setAttendanceData({});
-              setIsEnabled(false);
-            }}
+            onClick={clearAllData}
             title="Reset all attendance data"
             style={{ color: 'var(--accent-rose)' }}
           >
@@ -353,16 +357,6 @@ export default function RoutineAttendanceTracker() {
             Toggle the switch above to start tracking {Object.keys(courseStats).length} courses
             across {SEMESTER_WEEKS} weeks and see how many classes you can miss.
           </div>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => {
-              if (dataKey) localStorage.removeItem(dataKey);
-              setAttendanceData({});
-            }}
-            style={{ marginTop: '12px', fontSize: '11px' }}
-          >
-            Clear All Data
-          </button>
         </div>
       )}
     </div>
