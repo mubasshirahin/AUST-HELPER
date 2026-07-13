@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { TrendingUp, Layers, Grid3x3, FlaskConical } from 'lucide-react';
+import { TrendingUp, Layers, Grid3x3, Trophy, FlaskConical } from 'lucide-react';
 import CGPAGraph from './CGPAGraph';
 import SemesterTracker from './SemesterTracker';
 import DeptHeatmap from './DeptHeatmap';
+import CoursePoll from './CoursePoll';
 import GliderTabs from '../../components/GliderTabs';
 import './AnalyticsPage.css';
 
@@ -12,6 +13,7 @@ const gradeLabTabs = [
   { id: 'cgpagraph', label: 'CGPA Tracker', icon: TrendingUp, color: 'blue', desc: 'Grade trends' },
   { id: 'semestertracker', label: 'Semester', icon: Layers, color: 'purple', desc: 'Per-semester' },
   { id: 'heatmap', label: 'Dept Heatmap', icon: Grid3x3, color: 'rose', desc: 'Topic density' },
+  { id: 'bestworst', label: 'Best & Worst', icon: Trophy, color: 'emerald', desc: 'Course poll' },
 ];
 
 export default function AnalyticsPage() {
@@ -29,6 +31,7 @@ export default function AnalyticsPage() {
       case 'cgpagraph': return <CGPAGraph />;
       case 'semestertracker': return <SemesterTracker />;
       case 'heatmap': return <DeptHeatmap />;
+      case 'bestworst': return <CoursePoll />;
       default: return <CGPAGraph />;
     }
   };

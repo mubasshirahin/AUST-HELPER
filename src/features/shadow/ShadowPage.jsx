@@ -1,18 +1,9 @@
-import React, { useState } from 'react';
-import { Star, Trophy, Moon } from 'lucide-react';
+import React from 'react';
+import { Moon } from 'lucide-react';
 import CourseReview from '../analytics/CourseReview';
-import CoursePoll from '../analytics/CoursePoll';
-import GliderTabs from '../../components/GliderTabs';
 import './ShadowPage.css';
 
-const shadowTabs = [
-  { id: 'reviews', label: 'Reviews', icon: Star, color: 'amber', desc: 'Course ratings' },
-  { id: 'bestworst', label: 'Best & Worst', icon: Trophy, color: 'emerald', desc: 'Course poll' },
-];
-
 export default function ShadowPage() {
-  const [activeTab, setActiveTab] = useState('reviews');
-
   return (
     <div className="shadow-page animate-fadeIn">
       <header className="shadow-hero">
@@ -27,22 +18,15 @@ export default function ShadowPage() {
             <div>
               <h1 className="shadow-hero-title">Shadow</h1>
               <p className="shadow-hero-subtitle">
-                Anonymous course reviews and polls — no login required.
+                Anonymous course reviews — no login required.
               </p>
             </div>
           </div>
         </div>
       </header>
 
-      <GliderTabs
-        tabs={shadowTabs}
-        activeTab={activeTab}
-        onChange={setActiveTab}
-        variant="gradelab"
-      />
-
-      <div className="shadow-content-area" key={activeTab}>
-        {activeTab === 'reviews' ? <CourseReview /> : <CoursePoll />}
+      <div className="shadow-content-area">
+        <CourseReview />
       </div>
     </div>
   );
