@@ -820,13 +820,24 @@
   flex-shrink: 0;
 }
 
-.btn-google-wrapper {
+.btn-google-overlay-wrap {
   flex: 1;
+  position: relative;
   min-width: 0;
 }
-.btn-google-wrapper > iframe,
-.btn-google-wrapper > div > iframe {
+.btn-google-overlay-wrap .btn-gmail {
+  width: 100%;
+  height: 40px;
+}
+.btn-google-overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0.005;
+}
+.btn-google-overlay > iframe,
+.btn-google-overlay > div > iframe {
   width: 100% !important;
+  height: 40px !important;
   min-width: 100% !important;
 }
 
