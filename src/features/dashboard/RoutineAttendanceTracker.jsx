@@ -22,17 +22,16 @@ function loadInitialAttendanceState() {
     const storedEnabled = enabledKey ? localStorage.getItem(enabledKey) : null;
     const storedData = dataKey ? localStorage.getItem(dataKey) : null;
 
-    // If no data exists, add dummy data for demo (60% attendance)
-    if (!storedData || storedData === '{}') {
-      const dummyData = {
-        'CSE2101': { attended: 8, total: 14 },
-        'CSE2103': { attended: 5, total: 14 },
-        'CSE2105': { attended: 9, total: 14 },
-        'MATH2101': { attended: 8, total: 14 },
-        'CSE2107': { attended: 9, total: 14 },
-        'CSE2109': { attended: 8, total: 14 },
-        'HUM2101': { attended: 8, total: 14 },
-      };
+    // If no data or empty data, add dummy data for demo
+    if (!storedData || storedData === '{}' || storedData === 'null') {
+      const dummyData = {};
+      // Generate dummy data for common AUST courses (~60% attendance)
+      const courses = ['CSE2101', 'CSE2103', 'CSE2105', 'MATH2101', 'CSE2107', 'CSE2109', 'HUM2101'];
+      courses.forEach(course => {
+        const total = 14;
+        const attended = Math.floor(total * 0.6) + (Math.random() > 0.5 ? 1 : 0); // 8-9 out of 14
+        dummyData[course] = { attended, total };
+      });
       if (dataKey) localStorage.setItem(dataKey, JSON.stringify(dummyData));
       if (enabledKey && !storedEnabled) localStorage.setItem(enabledKey, 'true');
       return { isEnabled: true, attendanceData: dummyData };
