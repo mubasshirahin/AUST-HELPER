@@ -341,11 +341,7 @@ export default function RoutineAttendanceTracker() {
 
                   <div className="att-course-buffer">
                     <span className="att-buffer-label">
-                      {isDanger ? (
-                        <><AlertTriangle size={10} style={{ marginRight: 3, color: 'var(--accent-amber)' }} /> Below 75% — more attendance needed</>
-                      ) : (
-                        <>You can miss <strong>{canMissThis}</strong> more class{canMissThis !== 1 ? 'es' : ''}</>
-                      )}
+                      You can miss <strong>{canMissThis}</strong> more class{canMissThis !== 1 ? 'es' : ''}
                     </span>
                   </div>
 
