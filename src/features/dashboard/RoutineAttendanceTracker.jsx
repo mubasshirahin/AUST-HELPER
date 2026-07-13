@@ -35,33 +35,21 @@ function AttendanceRing({ percentage, size = 52, strokeWidth = 4, color }) {
   const offset = circumference * (1 - Math.min(percentage, 100) / 100);
   const center = size / 2;
   const isLow = percentage < MIN_ATTENDANCE;
-  const isCritical = percentage < 60;
-  const glowColor = isCritical ? 'var(--accent-rose)' : isLow ? 'var(--accent-amber)' : color || 'var(--accent-emerald)';
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
-      <defs>
-        <filter id={`glow-${size}-${Math.round(percentage)}`} x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="2" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
       <circle cx={center} cy={center} r={radius} fill="none" stroke="var(--bg-card)" strokeWidth={strokeWidth} />
       <circle
         cx={center} cy={center} r={radius} fill="none"
-        stroke={isLow ? 'var(--accent-rose)' : color || 'var(--accent-emerald)'}
+        stroke={isLow ? 'var(--accent-amber)' : color || 'var(--accent-emerald)'}
         strokeWidth={strokeWidth} strokeLinecap="round"
         strokeDasharray={circumference} strokeDashoffset={offset}
         transform={`rotate(-90 ${center} ${center})`}
         style={{ transition: 'stroke-dashoffset 0.5s ease, stroke 0.3s ease' }}
-        filter={isLow ? `url(#glow-${size}-${Math.round(percentage)})` : undefined}
       />
       <text
         x={center} y={center + 1} textAnchor="middle" dominantBaseline="central"
-        fill={isLow ? 'var(--accent-rose)' : 'var(--text-primary)'}
+        fill={isLow ? 'var(--accent-amber)' : 'var(--text-primary)'}
         fontSize={size * 0.26} fontWeight="700" fontFamily="system-ui, sans-serif"
         style={{ fontVariantNumeric: 'tabular-nums' }}
       >
@@ -262,14 +250,14 @@ export default function RoutineAttendanceTracker() {
           <div className="att-hero-box">
             <div className="att-hero-left">
               <AttendanceRing percentage={overallStats.average} size={72} strokeWidth={5}
-                color={overallStats.average >= MIN_ATTENDANCE ? 'var(--accent-emerald)' : 'var(--accent-rose)'}
+                color={overallStats.average >= MIN_ATTENDANCE ? 'var(--accent-emerald)' : 'var(--accent-amber)'}
               />
             </div>
             <div className="att-hero-body">
               <div className="att-hero-label">Overall Attendance</div>
               <div className="att-hero-value"
                 style={{
-                  color: overallStats.average >= MIN_ATTENDANCE ? 'var(--accent-emerald)' : 'var(--accent-rose)'
+                  color: overallStats.average >= MIN_ATTENDANCE ? 'var(--accent-emerald)' : 'var(--accent-amber)'
                 }}
               >
                 {overallStats.average}%
@@ -293,7 +281,7 @@ export default function RoutineAttendanceTracker() {
               <div className="att-hero-meta">
                 <span><strong style={{ color: 'var(--accent-emerald)' }}>{overallStats.totalAttended}</strong> attended</span>
                 <span className="att-hero-meta-dot">&middot;</span>
-                <span><strong style={{ color: 'var(--accent-rose)' }}>{overallStats.warningCount}</strong> at risk</span>
+                <span><strong style={{ color: 'var(--accent-amber)' }}>{overallStats.warningCount}</strong> at risk</span>
                 <span className="att-hero-meta-dot">&middot;</span>
                 <span><strong style={{ color: 'var(--accent-blue)' }}>{overallStats.totalCanMiss}</strong> can miss</span>
                 <span className="att-hero-meta-dot">&middot;</span>
@@ -304,7 +292,7 @@ export default function RoutineAttendanceTracker() {
                   <div className="att-hero-bar-fill"
                     style={{
                       width: `${Math.min(overallStats.average, 100)}%`,
-                      background: overallStats.average >= MIN_ATTENDANCE ? 'var(--accent-emerald)' : 'var(--accent-rose)'
+                      background: overallStats.average >= MIN_ATTENDANCE ? 'var(--accent-emerald)' : 'var(--accent-amber)'
                     }}
                   />
                 </div>
@@ -354,7 +342,7 @@ export default function RoutineAttendanceTracker() {
                   <div className="att-course-buffer">
                     <span className="att-buffer-label">
                       {isDanger ? (
-                        <><AlertTriangle size={10} style={{ marginRight: 3, color: 'var(--accent-rose)' }} /> Below 75% &mdash; attend every class!</>
+                        <><AlertTriangle size={10} style={{ marginRight: 3, color: 'var(--accent-amber)' }} /> Below 75% — more attendance needed</>
                       ) : (
                         <>You can miss <strong>{canMissThis}</strong> more class{canMissThis !== 1 ? 'es' : ''}</>
                       )}

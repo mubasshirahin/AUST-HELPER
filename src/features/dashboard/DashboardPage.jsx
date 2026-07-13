@@ -12,7 +12,7 @@ import { deadlines } from '../../data/mockData';
 import {
   TrendingUp, Percent, Clock, BookOpen,
   CalendarDays, Zap, AlertTriangle, Calendar,
-  Hourglass, BellRing, Timer, Flame,
+  Hourglass, BellRing, Flame,
 } from 'lucide-react';
 import { getUserStorageItem, getCurrentUserId } from '../../utils/authStorage';
 import { useAuth } from '../../context/AuthContext';
@@ -27,36 +27,6 @@ const FOCUS_SECTIONS = {
 };
 
 const storageKeyType = 'semesterResults';
-
-/* ─── Live Clock Widget ─── */
-function LiveClock() {
-  const [time, setTime] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const hours = time.getHours().toString().padStart(2, '0');
-  const minutes = time.getMinutes().toString().padStart(2, '0');
-  const seconds = time.getSeconds().toString().padStart(2, '0');
-  const ampm = time.getHours() >= 12 ? 'PM' : 'AM';
-  const h12 = time.getHours() % 12 || 12;
-
-  return (
-    <div className="live-clock-widget">
-      <div className="live-clock-time">
-        <span className="live-clock-digit">{h12.toString().padStart(2, '0')}</span>
-        <span className="live-clock-separator">:</span>
-        <span className="live-clock-digit">{minutes}</span>
-        <span className="live-clock-ampm">{ampm}</span>
-      </div>
-      <div className="live-clock-seconds">
-        <span className="live-clock-sec-digit">{seconds}</span>
-      </div>
-    </div>
-  );
-}
 
 /* ─── Study Streak Widget ─── */
 function StudyStreak() {
@@ -303,7 +273,6 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="dash-hero-widgets">
-              <LiveClock />
               <StudyStreak />
             </div>
           </div>
