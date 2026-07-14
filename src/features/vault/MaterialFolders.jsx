@@ -409,16 +409,13 @@ function YTSidebar() {
 
 function PDFPreview({ fileId, annotMode }) {
   const [pdfDoc, setPdfDoc] = useState(null);
-  const [pageNum, setPageNum] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [scale, setScale] = useState(1.5);
-  const canvasRef = useRef(null);
-  const textRef = useRef(null);
-  const renderRef = useRef(null);
+  const [scale, setScale] = useState(1.2);
+  const containerRef = useRef(null);
+  const pagesContainerRef = useRef(null);
   const pdfIdRef = useRef(fileId);
-  const scrollTimeoutRef = useRef(null);
 
   // Load PDF document
   useEffect(() => {
@@ -426,7 +423,6 @@ function PDFPreview({ fileId, annotMode }) {
     pdfIdRef.current = fileId;
     setLoading(true);
     setError(null);
-    setPageNum(1);
     setPdfDoc(null);
 
     (async () => {
@@ -456,100 +452,68 @@ function PDFPreview({ fileId, annotMode }) {
     return () => { dead = true; };
   }, [fileId]);
 
-  // Render current page
+  // Render all pages continuously
   useEffect(() => {
-    if (!pdfDoc) return;
+    if (!pdfDoc || !pagesContainerRef.current) return;
     let dead = false;
 
-    (async () => {
-      try {
-        if (renderRef.current) {
-          try { await renderRef.current.cancel(); } catch {}
-        }
+    const renderAllPages = async () => {
+      const container = pagesContainerRef.current;
+      if (!container) return;
 
-        const page = await pdfDoc.getPage(pageNum);
+      container.innerHTML = '';
+
+      for (let i = 1; i <= totalPages; i++) {
         if (dead) return;
 
-        const viewport = page.getViewport({ scale });
-        const canvas = canvasRef.current;
-        const textDiv = textRef.current;
-        if (!canvas || !textDiv) return;
+        try {
+          const page = await pdfDoc.getPage(i);
+          if (dead) return;
 
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        textDiv.style.width = viewport.width + 'px';
-        textDiv.style.height = viewport.height + 'px';
-        textDiv.innerHTML = '';
+          const viewport = page.getViewport({ scale });
 
-        const ctx = canvas.getContext('2d');
-        const task = page.render({ canvasContext: ctx, viewport });
-        renderRef.current = task;
-        await task.promise;
-        if (dead) return;
+          // Create page wrapper
+          const pageWrapper = document.createElement('div');
+          pageWrapper.className = 'mf-pdf-page-item';
+          pageWrapper.style.width = viewport.width + 'px';
+          pageWrapper.style.height = viewport.height + 'px';
+          pageWrapper.style.position = 'relative';
+          pageWrapper.style.margin = '0 auto 8px';
+          pageWrapper.style.background = 'white';
+          pageWrapper.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+          pageWrapper.style.borderRadius = '4px';
+          pageWrapper.style.overflow = 'hidden';
 
-        // Transparent text layer for selection/copy
-        const txt = await page.getTextContent();
-        if (dead || !textDiv) return;
+          // Create canvas
+          const canvas = document.createElement('canvas');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          canvas.style.display = 'block';
+          pageWrapper.appendChild(canvas);
 
-        txt.items.forEach((item) => {
-          const span = document.createElement('span');
-          span.textContent = item.str;
-          span.style.left = (item.transform[4] * scale) + 'px';
-          span.style.bottom = (viewport.height - item.transform[5] * scale) + 'px';
-          span.style.fontSize = (item.height * scale) + 'px';
-          span.style.fontFamily = item.fontName || 'sans-serif';
-          span.style.position = 'absolute';
-          span.style.whiteSpace = 'pre';
-          span.style.color = 'transparent';
-          span.style.userSelect = 'text';
-          span.style.pointerEvents = annotMode ? 'none' : 'auto';
-          span.style.cursor = 'text';
-          textDiv.appendChild(span);
-        });
-      } catch (err) {
-        if (err.name !== 'RenderingCancelledException') {
-          console.error('PDF page render error:', err);
+          // Render page
+          const ctx = canvas.getContext('2d');
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          if (dead) return;
+
+          // Add page number label
+          const pageLabel = document.createElement('div');
+          pageLabel.className = 'mf-pdf-page-label';
+          pageLabel.textContent = `${i} / ${totalPages}`;
+          pageLabel.style.cssText = 'position:absolute;bottom:4px;right:8px;font-size:10px;color:rgba(0,0,0,0.4);background:rgba(255,255,255,0.8);padding:2px 6px;border-radius:3px;font-family:system-ui;';
+          pageWrapper.appendChild(pageLabel);
+
+          container.appendChild(pageWrapper);
+        } catch (err) {
+          console.error(`Failed to render page ${i}:`, err);
         }
-      }
-    })();
-
-    return () => { dead = true; };
-  }, [pdfDoc, pageNum, scale, annotMode]);
-
-  // Scroll to change page (with debounce to prevent rapid switching)
-  const handleWheel = useCallback((e) => {
-    if (!pdfDoc || totalPages <= 1) return;
-
-    // Clear any existing timeout
-    if (scrollTimeoutRef.current) return;
-
-    scrollTimeoutRef.current = setTimeout(() => {
-      scrollTimeoutRef.current = null;
-    }, 200); // 200ms cooldown between page changes
-
-    if (e.deltaY > 30 && pageNum < totalPages) {
-      setPageNum(p => Math.min(totalPages, p + 1));
-    } else if (e.deltaY < -30 && pageNum > 1) {
-      setPageNum(p => Math.max(1, p - 1));
-    }
-  }, [pdfDoc, pageNum, totalPages]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (!pdfDoc) return;
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        setPageNum(p => Math.max(1, p - 1));
-      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        setPageNum(p => Math.min(totalPages, p + 1));
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [pdfDoc, totalPages]);
+    renderAllPages();
+
+    return () => { dead = true; };
+  }, [pdfDoc, totalPages, scale]);
 
   if (loading) {
     return (
@@ -570,16 +534,10 @@ function PDFPreview({ fileId, annotMode }) {
   }
 
   return (
-    <div className="mf-pdf-viewer" onWheel={handleWheel}>
+    <div className="mf-pdf-viewer" ref={containerRef}>
       <div className="mf-pdf-topbar">
         <div className="mf-pdf-nav">
-          <button className="mf-pdf-btn" onClick={() => setPageNum(p => Math.max(1, p - 1))} disabled={pageNum <= 1}>
-            <ChevronLeft size={14} />
-          </button>
-          <span className="mf-pdf-pg">{pageNum} / {totalPages}</span>
-          <button className="mf-pdf-btn" onClick={() => setPageNum(p => Math.min(totalPages, p + 1))} disabled={pageNum >= totalPages}>
-            <ChevronRight size={14} />
-          </button>
+          <span className="mf-pdf-pg">{totalPages} pages</span>
         </div>
         <div className="mf-pdf-zoom">
           <button className="mf-pdf-btn" onClick={() => setScale(s => Math.max(0.5, +(s - 0.25).toFixed(2)))}>
@@ -591,12 +549,13 @@ function PDFPreview({ fileId, annotMode }) {
           </button>
         </div>
       </div>
-      <div className="mf-pdf-page-wrap">
-        <canvas ref={canvasRef} className="mf-pdf-canvas" />
-        <div ref={textRef} className="mf-pdf-textlayer" />
-      </div>
-      <div className="mf-pdf-scroll-hint">
-        <span>Scroll to change page</span>
+      <div className="mf-pdf-pages-scroll" ref={pagesContainerRef} style={{
+        flex: 1,
+        overflow: 'auto',
+        background: '#525659',
+        padding: '12px',
+      }}>
+        {/* Pages rendered here */}
       </div>
     </div>
   );
