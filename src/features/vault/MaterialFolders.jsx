@@ -462,7 +462,7 @@ function PDFPreview({ fileId, annotMode }) {
       if (!container) return;
 
       container.innerHTML = '';
-      container.scrollTop = 0; // Scroll to top
+      container.scrollTop = 0; // Force scroll to top
 
       for (let i = 1; i <= totalPages; i++) {
         if (dead) return;
@@ -509,6 +509,11 @@ function PDFPreview({ fileId, annotMode }) {
           console.error(`Failed to render page ${i}:`, err);
         }
       }
+
+      // Force scroll to top after all pages rendered
+      if (!dead) {
+        container.scrollTop = 0;
+      }
     };
 
     renderAllPages();
@@ -550,13 +555,7 @@ function PDFPreview({ fileId, annotMode }) {
           </button>
         </div>
       </div>
-      <div className="mf-pdf-pages-scroll" ref={pagesContainerRef} style={{
-        flex: 1,
-        overflow: 'auto',
-        background: '#525659',
-        padding: '12px',
-        scrollBehavior: 'smooth',
-      }}>
+      <div className="mf-pdf-pages-scroll" ref={pagesContainerRef}>
         {/* Pages rendered here */}
       </div>
     </div>

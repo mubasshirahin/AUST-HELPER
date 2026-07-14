@@ -916,7 +916,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--bg-primary);
+  background: #525659;
 }
 
 .mf-pdf-topbar {
@@ -928,6 +928,15 @@
   background: var(--bg-surface);
   flex-shrink: 0;
   gap: var(--sp-3);
+}
+
+.mf-pdf-pages-scroll {
+  flex: 1;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  background: #525659;
+  padding: 12px;
+  scroll-behavior: smooth;
 }
 
 .mf-pdf-nav,
