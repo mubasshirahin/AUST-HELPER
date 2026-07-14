@@ -462,6 +462,7 @@ function PDFPreview({ fileId, annotMode }) {
       if (!container) return;
 
       container.innerHTML = '';
+      container.scrollTop = 0; // Scroll to top
 
       for (let i = 1; i <= totalPages; i++) {
         if (dead) return;
@@ -554,6 +555,7 @@ function PDFPreview({ fileId, annotMode }) {
         overflow: 'auto',
         background: '#525659',
         padding: '12px',
+        scrollBehavior: 'smooth',
       }}>
         {/* Pages rendered here */}
       </div>
