@@ -1,0 +1,322 @@
+.nb-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  animation: fadeInUp 0.35s ease both;
+}
+
+/* ─── Toolbar ─── */
+.nb-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border-primary);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.nb-toolbar-left {
+  display: flex;
+  gap: 2px;
+}
+
+.nb-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.nb-mode-btn:hover {
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.nb-mode-btn.active {
+  background: var(--accent-blue);
+  color: #fff;
+}
+
+.nb-format-bar,
+.nb-canvas-tools {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: 6px;
+  padding-left: 6px;
+  border-left: 1px solid var(--border-primary);
+}
+
+.nb-fmt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  opacity: 0.75;
+}
+
+.nb-fmt-btn:hover {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  opacity: 1;
+}
+
+.nb-fmt-btn.active {
+  background: var(--accent-blue);
+  color: #fff;
+  opacity: 1;
+}
+
+.nb-fmt-sep {
+  width: 1px;
+  height: 14px;
+  background: var(--border-primary);
+  margin: 0 3px;
+  opacity: 0.5;
+}
+
+.nb-zoom-label {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  min-width: 28px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.nb-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.nb-export-group {
+  display: flex;
+  gap: 2px;
+}
+
+.nb-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 7px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 9px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.nb-export-btn:hover {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  opacity: 1;
+}
+
+.nb-save-status {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  opacity: 0.6;
+}
+
+/* ─── Editor Mode ─── */
+.nb-editor {
+  padding: var(--sp-5);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: var(--fs-md);
+  line-height: 1.7;
+  outline: none;
+  min-height: 400px;
+}
+
+.nb-editor:focus {
+  box-shadow: inset 0 0 0 1px var(--accent-blue-glow);
+}
+
+.nb-editor img {
+  max-width: 100%;
+  border-radius: 6px;
+  margin: 8px 0;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+}
+
+.nb-editor h1 { font-size: 1.8em; margin: 16px 0 8px; }
+.nb-editor h2 { font-size: 1.4em; margin: 14px 0 6px; }
+.nb-editor h3 { font-size: 1.2em; margin: 12px 0 4px; }
+.nb-editor ul, .nb-editor ol { padding-left: 24px; margin: 8px 0; }
+.nb-editor li { margin: 4px 0; }
+.nb-editor blockquote {
+  border-left: 3px solid var(--accent-blue);
+  padding-left: var(--sp-3);
+  margin: 8px 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* ─── Canvas Mode ─── */
+.nb-canvas {
+  position: relative;
+  overflow: visible;
+  min-height: 800px;
+  background: var(--bg-primary);
+}
+
+.nb-canvas-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--border-primary) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-primary) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.2;
+}
+
+.nb-canvas-item {
+  position: absolute;
+  cursor: grab;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  background: var(--bg-card);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+}
+
+.nb-canvas-item:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 1px var(--accent-blue);
+  z-index: 10;
+}
+
+.nb-canvas-item.connect-target:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 1px var(--accent-rose);
+}
+
+.nb-canvas-item:active {
+  cursor: grabbing;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 0 0 1px var(--accent-blue);
+}
+
+.nb-canvas-text {
+  width: 100%;
+  height: 100%;
+  padding: 10px 14px;
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+  outline: none;
+  overflow-y: auto;
+  word-wrap: break-word;
+}
+
+.nb-canvas-text:focus {
+  box-shadow: inset 0 0 0 1px var(--accent-blue);
+  border-radius: 6px;
+}
+
+.nb-canvas-text.editing {
+  cursor: text;
+}
+
+.nb-canvas-text:not(.editing) {
+  cursor: grab;
+  user-select: none;
+}
+
+.nb-canvas-del {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+  backdrop-filter: blur(4px);
+}
+
+.nb-canvas-item:hover .nb-canvas-del {
+  display: flex;
+}
+
+.nb-canvas-del:hover {
+  background: var(--accent-rose);
+}
+
+/* ─── Connections ─── */
+.nb-canvas-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+}
+
+.nb-connect-hint {
+  font-size: 9px;
+  color: var(--accent-blue);
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+.nb-canvas-item.connecting {
+  box-shadow: 0 0 0 2px var(--accent-blue), 0 0 16px var(--accent-blue-glow);
+}
+
+.nb-canvas-item.connect-target {
+  cursor: crosshair;
+  animation: nb-pulse 1s infinite;
+}
+
+@keyframes nb-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.25); }
+  50% { box-shadow: 0 0 0 6px rgba(59,130,246,0.08); }
+}
+
+/* ─── Draw mode ─── */
+.nb-canvas.draw-active {
+  cursor: crosshair;
+}
+
+.nb-canvas.draw-active .nb-canvas-item {
+  cursor: crosshair;
+  pointer-events: none;
+}

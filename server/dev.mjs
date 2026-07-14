@@ -1046,6 +1046,237 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // ========== PDF Proxy (bypass CORS for Google Drive) ==========
+  // Uses Google Drive API v3 (alt=media) with API key — no virus scan page issues
+  if (req.url.startsWith('/api/proxy/pdf') && req.method === 'GET') {
+    try {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const fileId = url.searchParams.get('id');
+      if (!fileId) {
+        sendJson(res, 400, { error: 'File ID is required.' });
+        return;
+      }
+
+      const apiKey = process.env.VITE_GOOGLE_API_KEY;
+      if (!apiKey) {
+        sendJson(res, 500, { error: 'Google API key not configured.' });
+        return;
+      }
+
+      const https = await import('node:https');
+      const apiUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`;
+
+      const pdfBuffer = await new Promise((resolve, reject) => {
+        https.default.get(apiUrl, { timeout: 30000 }, (resp) => {
+          const chunks = [];
+          resp.on('data', (chunk) => chunks.push(chunk));
+          resp.on('end', () => {
+            if (resp.statusCode === 200) {
+              resolve(Buffer.concat(chunks));
+            } else {
+              let msg = `Drive API error: ${resp.statusCode}`;
+              try {
+                const body = JSON.parse(Buffer.concat(chunks).toString());
+                msg = body.error?.message || msg;
+              } catch {}
+              reject(new Error(msg));
+            }
+          });
+        }).on('error', reject)
+         .on('timeout', function() { this.destroy(); reject(new Error('Drive API timeout')); });
+      });
+
+      res.writeHead(200, {
+        'Content-Type': 'application/pdf',
+        'Content-Length': pdfBuffer.length,
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=3600',
+      });
+      res.end(pdfBuffer);
+    } catch (error) {
+      console.error('PDF proxy error:', error.message);
+      sendJson(res, 500, { success: false, error: error.message || 'PDF proxy failed.' });
+    }
+    return;
+  }
+
+  // ========== YouTube Search Proxy ==========
+  // Calls YouTube Data API v3 from server-side to avoid browser API restrictions
+  // ========== YouTube Suggestions Proxy ==========
+  // Returns autocomplete suggestions as user types
+  if (req.url === '/api/youtube/suggestions' && req.method === 'POST') {
+    try {
+      const { query: searchQuery } = await readJsonBody(req);
+      if (!searchQuery || !searchQuery.trim()) {
+        sendJson(res, 200, { success: true, suggestions: [] });
+        return;
+      }
+
+      const https = await import('node:https');
+      const sugUrl = `https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(searchQuery.trim())}`;
+      
+      const data = await new Promise((resolve, reject) => {
+        https.default.get(sugUrl, (resp) => {
+          let body = '';
+          resp.on('data', (chunk) => body += chunk);
+          resp.on('end', () => {
+            try {
+              // google returns: ["query",["sug1","sug2",...],...]
+              const parsed = JSON.parse(body);
+              const suggestions = Array.isArray(parsed[1]) ? parsed[1] : [];
+              resolve(suggestions);
+            } catch {
+              resolve([]);
+            }
+          });
+        }).on('error', () => resolve([]));
+      });
+      
+      sendJson(res, 200, { success: true, suggestions: data });
+    } catch {
+      sendJson(res, 200, { success: true, suggestions: [] });
+    }
+    return;
+  }
+
+  if (req.url === '/api/youtube/search' && req.method === 'POST') {
+    try {
+      const { query: searchQuery } = await readJsonBody(req);
+      
+      if (!searchQuery || !searchQuery.trim()) {
+        sendJson(res, 400, { error: 'Search query is required.' });
+        return;
+      }
+
+      const apiKey = process.env.VITE_GOOGLE_API_KEY;
+      if (!apiKey) {
+        sendJson(res, 500, { error: 'Google API key not configured.' });
+        return;
+      }
+
+      const https = await import('node:https');
+      const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery.trim())}&maxResults=12&type=video&key=${apiKey}`;
+      
+      const data = await new Promise((resolve, reject) => {
+        https.default.get(ytUrl, (resp) => {
+          let body = '';
+          resp.on('data', (chunk) => body += chunk);
+          resp.on('end', () => {
+            if (resp.statusCode === 200) {
+              try { resolve(JSON.parse(body)); }
+              catch { reject(new Error('Invalid YouTube API response')); }
+            } else {
+              let errMsg = `YouTube API error: ${resp.statusCode}`;
+              try {
+                const errBody = JSON.parse(body);
+                errMsg = errBody.error?.message || errMsg;
+              } catch {}
+              reject(new Error(errMsg));
+            }
+          });
+        }).on('error', reject);
+      });
+      
+      sendJson(res, 200, { success: true, items: data.items || [], error: null });
+    } catch (error) {
+      sendJson(res, 500, { success: false, error: error.message || 'YouTube search failed.' });
+    }
+    return;
+  }
+
+  // ========== Gemini AI Chat Proxy ==========
+  // Proxies requests to Google's Gemini API from server-side to avoid CORS & model issues
+  if (req.url === '/api/gemini/chat' && req.method === 'POST') {
+    try {
+      const { messages } = await readJsonBody(req);
+      
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        sendJson(res, 200, { success: false, error: 'GEMINI_API_KEY not set in .env file. Get a free key at https://aistudio.google.com/apikey and add it to your .env file.' });
+        return;
+      }
+      
+      if (!messages || !Array.isArray(messages) || messages.length === 0) {
+        sendJson(res, 400, { success: false, error: 'Messages array is required.' });
+        return;
+      }
+
+      const https = await import('node:https');
+      const model = 'gemini-2.0-flash';
+
+      // Add a system-style first message as context (system_instruction not supported in some API versions)
+      const systemMsg = {
+        role: 'user',
+        parts: [{ text: '[System context: You are a knowledgeable academic tutor for university students in Bangladesh. ' +
+          'You help with study-related questions. Answer clearly in English or Bengali as needed. ' +
+          'Keep answers educational and focused on helping the student understand the topic better.]'
+        }]
+      };
+      const contents = [systemMsg, ...messages];
+
+      // Build the request payload
+      const payload = JSON.stringify({
+        contents,
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 2048,
+        },
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+        ],
+      });
+
+      const geminiResponse = await new Promise((resolve, reject) => {
+        const options = {
+          hostname: 'generativelanguage.googleapis.com',
+          port: 443,
+          path: `/v1/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(payload),
+          },
+          timeout: 30000,
+        };
+
+        const req2 = https.default.request(options, (resp) => {
+          let data = '';
+          resp.on('data', (chunk) => { data += chunk; });
+          resp.on('end', () => {
+            try {
+              resolve({ status: resp.statusCode, body: JSON.parse(data) });
+            } catch {
+              resolve({ status: resp.statusCode, body: { raw: data } });
+            }
+          });
+        });
+
+        req2.on('error', (err) => reject(new Error(err.message)));
+        req2.on('timeout', () => { req2.destroy(); reject(new Error('Gemini API timeout')); });
+        req2.write(payload);
+        req2.end();
+      });
+
+      if (geminiResponse.status === 200) {
+        const reply = geminiResponse.body?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        sendJson(res, 200, { success: true, reply });
+      } else {
+        const errMsg = geminiResponse.body?.error?.message || `Gemini API error: ${geminiResponse.status}`;
+        console.error('Gemini API error:', errMsg);
+        sendJson(res, 200, { success: false, error: errMsg });
+      }
+    } catch (error) {
+      console.error('Gemini proxy error:', error.message);
+      sendJson(res, 500, { success: false, error: error.message || 'Gemini proxy failed.' });
+    }
+    return;
+  }
+
   // ========== Google Auth Endpoint ==========
 
   if (req.url === '/api/auth/google' && req.method === 'POST') {

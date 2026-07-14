@@ -1,0 +1,222 @@
+.vb-selector {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--sp-5);
+  animation: fadeInUp 0.35s ease both;
+}
+
+.vb-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--sp-4);
+}
+
+.vb-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.vb-card {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background: var(--bg-card);
+}
+
+.vb-card:hover {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px var(--accent-blue-glow);
+}
+
+.vb-card-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-4);
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+
+.vb-card-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.vb-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--accent-blue-glow);
+  color: var(--accent-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.vb-card-info {
+  min-width: 0;
+}
+
+.vb-card-name {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vb-card-meta {
+  font-size: var(--fs-xs);
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+
+.vb-card-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+}
+
+.vb-card-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.vb-card-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: var(--fw-medium);
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+}
+
+.vb-card-status.connected {
+  background: var(--accent-emerald-glow);
+  color: var(--accent-emerald);
+}
+
+.vb-card-status.no-drive {
+  background: var(--bg-input);
+  color: var(--text-tertiary);
+}
+
+.vb-card-disconnect {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.vb-card-disconnect:hover {
+  border-color: var(--accent-rose);
+  color: var(--accent-rose);
+  background: var(--accent-rose-glow);
+}
+
+.vb-drive-input {
+  display: flex;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-4) var(--sp-3);
+  align-items: center;
+}
+
+.vb-drive-input .vb-input {
+  flex: 1;
+}
+
+.vb-form {
+  border: 1px dashed var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  animation: fadeInUp 0.3s ease both;
+}
+
+.vb-form-row {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.vb-form-row:first-child .vb-input {
+  flex: 1;
+}
+
+.vb-form-actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.vb-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: var(--fs-sm);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.vb-input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px var(--accent-blue-glow);
+}
+
+.vb-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.vb-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 8px 16px;
+  border: 1px dashed var(--border-primary);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: var(--fs-sm);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  justify-content: center;
+}
+
+.vb-add-btn:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background: var(--accent-blue-glow);
+}

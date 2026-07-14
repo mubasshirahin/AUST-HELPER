@@ -716,6 +716,67 @@
   color: var(--text-tertiary);
 }
 
+/* ─── Semester Context Bar (no course selection) ─── */
+.vault-sem-context-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  animation: fadeInDown 0.3s ease;
+}
+
+.vault-sem-context-info {
+  flex: 1;
+}
+
+.vault-sem-context-title {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-primary);
+}
+
+.vault-sem-context-sub {
+  margin: 2px 0 0;
+  font-size: var(--fs-xs);
+  color: var(--text-secondary);
+}
+
+.vault-change-sem-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-full);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.vault-change-sem-btn:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background: var(--accent-blue-glow);
+}
+
+@media (max-width: 768px) {
+  .vault-sem-context-bar {
+    flex-wrap: wrap;
+  }
+  .vault-sem-context-title {
+    font-size: var(--fs-sm);
+  }
+}
+
 /* ─── Context Bar (active course) ─── */
 .vault-workspace {
   display: flex;
@@ -893,6 +954,40 @@
 
 .vault-content-area {
   animation: vaultContentSwap 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.vault-inner-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: var(--sp-3);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.vault-inner-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.vault-inner-tab:hover {
+  background: var(--bg-input);
+  color: var(--text-secondary);
+}
+
+.vault-inner-tab.active {
+  background: var(--accent-blue-glow);
+  color: var(--accent-blue);
 }
 
 @keyframes vaultContentSwap {
@@ -1208,8 +1303,10 @@
 .qb-paper-viewer-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 140;
-  background: rgba(0, 0, 0, 0.6);
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
-  Folder, Plus, Loader2, AlertCircle, RefreshCw, Link, X, Download, Eye,
+  Folder, Plus, Loader2, AlertCircle, RefreshCw, Link, X, Download, Eye, EyeOff,
   ChevronRight, Home, Search, Grid3X3, List, File,
   ExternalLink, Maximize2, Minimize2, ChevronLeft,
   ChevronsLeft, BookOpen, Clock, HardDrive, FileType,
   ZoomIn, ZoomOut, StickyNote, Trash2, Edit3, Save,
   Square, Circle, Pencil, Minus,
-  Music, Play, Pause, PlayCircle, Bot, Send, PanelRightOpen, PanelRightClose, Sparkles,
+  Music, Play, Pause, PlayCircle, Bot, Send, PanelRightOpen, PanelRightClose,
 } from 'lucide-react';
 import {
   extractFolderId,
@@ -15,6 +16,8 @@ import {
   formatFileSize,
   getCourseFolderUrl,
   saveCourseFolderUrl,
+  getSemesterFolderUrl,
+  saveSemesterFolderUrl,
 } from '../../utils/googleDrive';
 import {
   getAnnotations,
@@ -23,6 +26,7 @@ import {
   updateAnnotationData,
   removeAnnotation,
 } from '../../utils/annotationsStorage';
+import { updateBatchDriveUrl } from '../../utils/vaultBatchStorage';
 import './MaterialFolders.css';
 
 // Use the Google API credential from env to access public Drive folders
@@ -94,8 +98,6 @@ function FileSkeleton() {
 /* ═══════════════════════════════════════════════════════════════════════
    SIDE PANEL — Music · YouTube · Gemini
    ═══════════════════════════════════════════════════════════════════════ */
-
-const GEMINI_API_KEY = 'GEMINI_API_KEY'; // user sets this
 
 // ─── Free lofi study tracks ───
 const LOFI_TRACKS = [
@@ -562,73 +564,109 @@ function PDFPreview({ fileId, annotMode }) {
   );
 }
 
-// ─── Gemini AI Chat ───
+// ─── Gemini AI Chat — server key, no user API key needed ───
 function GeminiChat() {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
-  const [configured, setConfigured] = useState(() => !!localStorage.getItem('gemini_api_key'));
-  const [messages, setMessages] = useState([
-    { role: 'model', text: "Hi! I'm Gemini. Ask me anything about your studies!" }
-  ]);
+  const STORAGE_KEY = 'gemini_chat_history';
+
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [{ role: 'model', text: "Hi! I'm Gemini. Ask me anything about your studies! 😊" }];
+  });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [serverError, setServerError] = useState(false);
   const chatRef = useRef(null);
 
-  useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [messages]);
+  // Persist messages to localStorage
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch {}
+  }, [messages]);
 
-  const saveKey = () => {
-    if (apiKey.trim()) {
-      localStorage.setItem('gemini_api_key', apiKey.trim());
-      setConfigured(true);
+  // Auto-scroll on new messages
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
-  };
+  }, [messages, loading]);
 
-  const clearKey = () => {
-    localStorage.removeItem('gemini_api_key');
-    setConfigured(false);
-    setApiKey('');
+  const clearChat = () => {
+    const welcome = [{ role: 'model', text: "Hi! I'm Gemini. Ask me anything about your studies! 😊" }];
+    setMessages(welcome);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(welcome)); } catch {}
   };
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
     const userMsg = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setError('');
+
+    const updatedMessages = [...messages, { role: 'user', text: userMsg }];
+    setMessages(updatedMessages);
     setLoading(true);
 
     try {
-      const key = localStorage.getItem('gemini_api_key');
-      if (!key) throw new Error('No API key');
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${key}`, {
+      // Convert our message format to Gemini API format
+      const geminiContents = updatedMessages.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.text }],
+      }));
+
+      const res = await fetch('/api/gemini/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: userMsg }] }] }),
+        body: JSON.stringify({ messages: geminiContents }),
       });
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
+
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
       const data = await res.json();
-      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response.';
-      setMessages(prev => [...prev, { role: 'model', text: reply }]);
+
+      if (data.success && data.reply) {
+        setMessages(prev => [...prev, { role: 'model', text: data.reply }]);
+      } else {
+        const errMsg = data.error || 'No response from Gemini.';
+        if (errMsg.includes('not configured') || errMsg.includes('GEMINI_API_KEY')) {
+          setServerError(true);
+          setError('Gemini AI is not configured on the server yet.');
+        } else {
+          setError(errMsg);
+          setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${errMsg}` }]);
+        }
+      }
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${err.message}. Check your API key.` }]);
+      const errMsg = err.message || 'Failed to send message.';
+      setError(errMsg);
+      setMessages(prev => [...prev, { role: 'model', text: `⚠️ Connection error: ${errMsg}.` }]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleKey = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
+  const handleKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
 
-  if (!configured) {
+  if (serverError) {
     return (
       <div className="mf-gemini-api-setup">
-        <Bot size={28} />
+        <Bot size={32} />
         <p><strong>Gemini AI Assistant</strong></p>
-        <p style={{fontSize:'9px',color:'var(--text-tertiary)'}}>Enter your Google Gemini API key to get started.</p>
-        <input type="password" placeholder="Paste your Gemini API key..." value={apiKey}
-          onChange={e => setApiKey(e.target.value)} onKeyDown={e => { if (e.key==='Enter') saveKey(); }} />
-        <button className="btn btn-primary btn-sm" onClick={saveKey} disabled={!apiKey.trim()}>
-          <Sparkles size={12} /> Connect
-        </button>
-        <p style={{fontSize:'8px',color:'var(--text-tertiary)'}}>
-          Get your free key at <strong>aistudio.google.com</strong>
+        <p style={{fontSize:'10px',color:'var(--accent-rose)',lineHeight:1.5}}>
+          ⚠️ Gemini AI is not configured yet.
+        </p>
+        <p style={{fontSize:'9px',color:'var(--text-tertiary)',lineHeight:1.5}}>
+          Server e GEMINI_API_KEY set kora hoyni. Admin ke janaben.
         </p>
       </div>
     );
@@ -637,32 +675,60 @@ function GeminiChat() {
   return (
     <div className="mf-gemini-chat">
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-        <span style={{fontSize:'var(--fs-xs)',fontWeight:'var(--fw-semibold)',display:'flex',alignItems:'center',gap:'4px',color:'var(--text-secondary)'}}>
-          <Bot size={12} /> Gemini
+        <span style={{fontSize:'var(--fs-xs)',fontWeight:'var(--fw-semibold)',display:'flex',alignItems:'center',gap:'4px',color:'var(--accent-purple)'}}>
+          <Bot size={12} /> Gemini Study Assistant
         </span>
-        <button className="btn btn-ghost btn-sm" onClick={clearKey} title="Reset API key"
-          style={{fontSize:'9px',padding:'2px 6px'}}>Change Key</button>
+        <button className="btn btn-ghost btn-sm" onClick={clearChat} title="Clear conversation"
+          style={{fontSize:'9px',padding:'2px 6px'}}>
+          Clear
+        </button>
       </div>
+
       <div className="mf-gemini-messages" ref={chatRef}>
         {messages.map((msg, i) => (
           <div key={i} className={`mf-gemini-msg ${msg.role === 'user' ? 'user' : ''}`}>
-            <div className="mf-gemini-msg-avatar">{msg.role === 'user' ? '\u{1F464}' : '\u{1F916}'}</div>
-            <div className="mf-gemini-msg-bubble">{msg.text}</div>
+            <div className="mf-gemini-msg-avatar">
+              {msg.role === 'user' ? '\u{1F464}' : '\u{1F916}'}
+            </div>
+            <div className="mf-gemini-msg-bubble">
+              {msg.text.split('\n').map((line, j) => (
+                <span key={j}>{line}<br /></span>
+              ))}
+            </div>
           </div>
         ))}
         {loading && (
           <div className="mf-gemini-msg">
             <div className="mf-gemini-msg-avatar">🤖</div>
-            <div className="mf-gemini-msg-bubble" style={{color:'var(--text-tertiary)'}}>Thinking...</div>
+            <div className="mf-gemini-msg-bubble" style={{color:'var(--text-tertiary)',display:'flex',alignItems:'center',gap:'8px'}}>
+              <Loader2 size={12} className="animate-spin" />
+              Thinking...
+            </div>
           </div>
         )}
       </div>
+
+      {error && !loading && (
+        <div style={{fontSize:'9px',color:'var(--accent-rose)',padding:'4px 0'}}>⚠️ {error}</div>
+      )}
+
       <div className="mf-gemini-input-wrap">
-        <textarea className="mf-gemini-input" rows="2" placeholder="Ask anything..."
-          value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey} />
-        <button className="btn btn-primary btn-sm" onClick={sendMessage} disabled={loading || !input.trim()}
-          style={{alignSelf:'flex-end'}}>
-          <Send size={12} />
+        <textarea
+          className="mf-gemini-input"
+          rows="2"
+          placeholder="Ask any study question..."
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={handleKey}
+          disabled={loading}
+        />
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={sendMessage}
+          disabled={loading || !input.trim()}
+          style={{alignSelf:'flex-end'}}
+        >
+          {loading ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
         </button>
       </div>
     </div>
@@ -713,6 +779,9 @@ function FilePreviewModal({ files, currentIndex, setCurrentIndex, onClose }) {
   const [panelTab, setPanelTab] = useState('music');
   const [showYT, setShowYT] = useState(false); // left-side YouTube panel
 
+  // ─── View mode state ───
+  const [showAnnotations, setShowAnnotations] = useState(true);
+
   // ─── Drawing state ───
   const [isDrawing, setIsDrawing] = useState(false);
   const drawStart = useRef(null);
@@ -726,11 +795,35 @@ function FilePreviewModal({ files, currentIndex, setCurrentIndex, onClose }) {
     setTool('marker');
     setActiveNote(null);
     setEditContent('');
+    setShowAnnotations(true);
   }, [fileId]);
 
   const annotCount = annotations.length;
   const supportsAnnot = ['pdf', 'image', 'document', 'spreadsheet', 'presentation'].includes(category);
   const isImage = category === 'image';
+
+  // ─── Lock body scroll when modal is open ───
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const originalOverflow = body.style.overflow;
+    const originalPosition = body.style.position;
+    const originalTop = body.style.top;
+    const originalWidth = body.style.width;
+
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
+
+    return () => {
+      body.style.overflow = originalOverflow;
+      body.style.position = originalPosition;
+      body.style.top = originalTop;
+      body.style.width = originalWidth;
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
 
   // ─── Keyboard ───
   useEffect(() => {
@@ -951,9 +1044,11 @@ function FilePreviewModal({ files, currentIndex, setCurrentIndex, onClose }) {
         </div>
       )}
       {category === 'video' && (
-        <video controls className="mf-preview-video" autoPlay playsInline>
-          <source src={`https://drive.google.com/uc?id=${file.id}`} type={file.mimeType} />
-        </video>
+        <div className="mf-preview-video-wrap">
+          <video controls className="mf-preview-video" autoPlay playsInline>
+            <source src={`https://drive.google.com/uc?id=${file.id}`} type={file.mimeType} />
+          </video>
+        </div>
       )}
       {(category && !['pdf','image','video','document','spreadsheet','presentation'].includes(category)) && (
         <div className="mf-preview-unsupported">
@@ -1011,40 +1106,42 @@ function FilePreviewModal({ files, currentIndex, setCurrentIndex, onClose }) {
             </div>
           )}
 
-          <svg className="mf-annot-svg-layer"
-            ref={svgRef} width="100%" height="100%" style={{position:'absolute',inset:0,overflow:'visible',pointerEvents:'none'}}>
-            {annotations.map((anno, idx) => {
-              const s = renderShape(anno, idx);
-              return s ? (
-                <g key={anno.id} className="mf-annot-shape" onClick={(e) => handleShapeClick(e, anno)}>{s}</g>
-              ) : null;
-            })}
-            {liveShape && liveShape.type && (() => {
-              if (liveShape.type === 'circle') {
-                const cx = (liveShape.start.x + liveShape.end.x)/2;
-                const cy = (liveShape.start.y + liveShape.end.y)/2;
-                const rx = Math.abs(liveShape.end.x - liveShape.start.x)/2;
-                const ry = Math.abs(liveShape.end.y - liveShape.start.y)/2;
-                return <ellipse cx={`${cx*100}%`} cy={`${cy*100}%`} rx={`${rx*100}%`} ry={`${ry*100}%`}
-                  fill={liveShape.color} fillOpacity="0.2" stroke={liveShape.color} strokeWidth={liveShape.strokeWidth||2} />;
-              }
-              if (liveShape.type === 'rect') {
-                const x = Math.min(liveShape.start.x, liveShape.end.x);
-                const y = Math.min(liveShape.start.y, liveShape.end.y);
-                const w = Math.abs(liveShape.end.x - liveShape.start.x);
-                const h = Math.abs(liveShape.end.y - liveShape.start.y);
-                return <rect x={`${x*100}%`} y={`${y*100}%`} width={`${w*100}%`} height={`${h*100}%`}
-                  fill={liveShape.color} fillOpacity="0.2" stroke={liveShape.color} strokeWidth={liveShape.strokeWidth||2} rx="4" />;
-              }
-              return null;
-            })()}
-            {liveShape && liveShape.points && liveShape.points.length > 1 && (
-              <path d={liveShape.points.map((p,i)=>`${i===0?'M':'L'}${p.x*100}% ${p.y*100}%`).join(' ')}
-                fill="none" stroke={color} strokeWidth={strokeW} strokeLinecap="round" strokeLinejoin="round" />
-            )}
-          </svg>
+          {showAnnotations && (
+            <svg className="mf-annot-svg-layer"
+              ref={svgRef} width="100%" height="100%" style={{position:'absolute',inset:0,overflow:'visible',pointerEvents:'none'}}>
+              {annotations.map((anno, idx) => {
+                const s = renderShape(anno, idx);
+                return s ? (
+                  <g key={anno.id} className="mf-annot-shape" onClick={(e) => handleShapeClick(e, anno)}>{s}</g>
+                ) : null;
+              })}
+              {liveShape && liveShape.type && (() => {
+                if (liveShape.type === 'circle') {
+                  const cx = (liveShape.start.x + liveShape.end.x)/2;
+                  const cy = (liveShape.start.y + liveShape.end.y)/2;
+                  const rx = Math.abs(liveShape.end.x - liveShape.start.x)/2;
+                  const ry = Math.abs(liveShape.end.y - liveShape.start.y)/2;
+                  return <ellipse cx={`${cx*100}%`} cy={`${cy*100}%`} rx={`${rx*100}%`} ry={`${ry*100}%`}
+                    fill={liveShape.color} fillOpacity="0.2" stroke={liveShape.color} strokeWidth={liveShape.strokeWidth||2} />;
+                }
+                if (liveShape.type === 'rect') {
+                  const x = Math.min(liveShape.start.x, liveShape.end.x);
+                  const y = Math.min(liveShape.start.y, liveShape.end.y);
+                  const w = Math.abs(liveShape.end.x - liveShape.start.x);
+                  const h = Math.abs(liveShape.end.y - liveShape.start.y);
+                  return <rect x={`${x*100}%`} y={`${y*100}%`} width={`${w*100}%`} height={`${h*100}%`}
+                    fill={liveShape.color} fillOpacity="0.2" stroke={liveShape.color} strokeWidth={liveShape.strokeWidth||2} rx="4" />;
+                }
+                return null;
+              })()}
+              {liveShape && liveShape.points && liveShape.points.length > 1 && (
+                <path d={liveShape.points.map((p,i)=>`${i===0?'M':'L'}${p.x*100}% ${p.y*100}%`).join(' ')}
+                  fill="none" stroke={color} strokeWidth={strokeW} strokeLinecap="round" strokeLinejoin="round" />
+              )}
+            </svg>
+          )}
 
-          {annotations.filter(a => !a.type || a.type === 'marker').map((anno, idx) => (
+          {showAnnotations && annotations.filter(a => !a.type || a.type === 'marker').map((anno, idx) => (
             <div key={anno.id} className="mf-annotation-marker"
               style={{ left: `${anno.x*100}%`, top: `${anno.y*100}%` }}
               onClick={(e) => handleShapeClick(e, anno)}>
@@ -1060,7 +1157,7 @@ function FilePreviewModal({ files, currentIndex, setCurrentIndex, onClose }) {
             </div>
           ))}
 
-          {annotations.filter(a => a.type && ['rect','circle','freehand'].includes(a.type)).map((anno) => {
+          {showAnnotations && annotations.filter(a => a.type && ['rect','circle','freehand'].includes(a.type)).map((anno) => {
             let cx = 0.5, cy = 0.5;
             if (anno.type === 'circle') { cx = anno.cx; cy = anno.cy; }
             else if (anno.type === 'freehand' && anno.points?.length) {
@@ -1121,61 +1218,77 @@ function FilePreviewModal({ files, currentIndex, setCurrentIndex, onClose }) {
     </div>
   );
 
-  return (
+  return createPortal(
     <div className="mf-preview-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="mf-preview-modal" ref={modalRef} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="mf-preview-header">
-          <FileTypeIcon category={category} size={40} variant="list" />
+          <FileTypeIcon category={category} size={24} variant="list" />
           <div className="mf-preview-header-info">
             <div className="mf-preview-header-name">{file.name}</div>
             <div className="mf-preview-header-meta">
               <span>{formatFileSize(file.size)}</span>
-              {file.modifiedTime && <><span>·</span><Clock size={11} /><span>{new Date(file.modifiedTime).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</span></>}
-              <span>·</span><FileType size={11} /><span>{meta.label}</span>
-              {annotCount > 0 && <><span>·</span><span style={{color:'var(--accent-amber)',fontWeight:'var(--fw-bold)',display:'inline-flex',alignItems:'center',gap:'3px'}}><StickyNote size={11} /> {annotCount} note{annotCount>1?'s':''}</span></>}
+              {file.modifiedTime && <><span>·</span><Clock size={10} /><span>{new Date(file.modifiedTime).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</span></>}
+              <span>·</span><span>{meta.label}</span>
             </div>
           </div>
 
           <div className="mf-preview-header-actions">
             {supportsAnnot && (
               <button className={`mf-annotate-btn ${annotMode?'active':''}`} onClick={() => { setAnnotMode(v=>!v); if(!annotMode) setTool('marker'); }} title="Toggle annotation mode">
-                <StickyNote size={14} /> {annotMode?'Done':'Annotate'}
+                <StickyNote size={13} /> {annotMode?'Done':'Annotate'}
                 {annotCount>0 && <span className="mf-annotate-count">{annotCount}</span>}
               </button>
             )}
+            {annotCount > 0 && (
+              <button className="mf-preview-nav-btn"
+                onClick={() => setShowAnnotations(v=>!v)}
+                title={showAnnotations ? 'Hide annotations' : 'Show annotations'}>
+                {showAnnotations ? <Eye size={13} /> : <EyeOff size={13} />}
+              </button>
+            )}
+
+            <div className="mf-preview-divider" />
+
+            <button className={`mf-preview-nav-btn ${showYT?'active':''}`}
+              onClick={() => setShowYT(v=>!v)} title={showYT?'Close YouTube':'Open YouTube'}>
+              <PlayCircle size={14} />
+            </button>
+            <button className={`mf-preview-nav-btn ${showPanel?'active':''}`}
+              onClick={() => setShowPanel(v=>!v)} title={showPanel?'Close panel':'Open panel'}>
+              {showPanel ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
+            </button>
+
+            <div className="mf-preview-divider" />
+
+            <button className="mf-preview-nav-btn" onClick={toggleFullscreen} title={fullscreen?'Exit fullscreen':'Fullscreen'}>
+              {fullscreen?<Minimize2 size={14}/>:<Maximize2 size={14}/>}
+            </button>
             {isImage && !annotMode && (
               <button className="mf-preview-nav-btn" onClick={()=>setZoomed(z=>!z)} title={zoomed?'Zoom out':'Zoom in'}>
                 {zoomed?<ZoomOut size={14}/>:<ZoomIn size={14}/>}
               </button>
             )}
-            {/* YouTube toggle (left side) */}
-            <button className={`mf-yt-toggle ${showYT?'active':''}`}
-              onClick={() => setShowYT(v=>!v)} title={showYT?'Close YouTube':'Open YouTube'}>
-              <PlayCircle size={14} />
-              <span style={{fontSize:'10px'}}>YouTube</span>
+            <button className="mf-preview-nav-btn" onClick={openInDrive} title="Open in Drive">
+              <ExternalLink size={14} />
+            </button>
+            <button className="mf-preview-nav-btn" onClick={handleDownload} title="Download">
+              <Download size={14} />
             </button>
 
-            {/* Panel toggle (right side - music/gemini) */}
-            <button className={`mf-panel-toggle ${showPanel?'active':''}`}
-              onClick={() => setShowPanel(v=>!v)} title={showPanel?'Close panel':'Open panel'}>
-              {showPanel ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
-              <span style={{fontSize:'10px'}}>Panel</span>
-            </button>
+            <div className="mf-preview-divider" />
 
-            <button className="mf-preview-nav-btn" onClick={toggleFullscreen} title={fullscreen?'Exit fullscreen':'Fullscreen'}>
-              {fullscreen?<Minimize2 size={14}/>:<Maximize2 size={14}/>}
-            </button>
-            <button className="btn btn-ghost btn-sm" onClick={openInDrive}><ExternalLink size={14} /> Open</button>
-            <button className="btn btn-primary btn-sm" onClick={handleDownload}><Download size={14} /> Download</button>
-            {currentIndex>0 && !annotMode && (
-              <button className="mf-preview-nav-btn" onClick={prevFile}><ChevronLeft size={14} /></button>
-            )}
+            {currentIndex>0 && !annotMode ? (
+              <button className="mf-preview-nav-btn" onClick={prevFile} title="Previous"><ChevronLeft size={14} /></button>
+            ) : <div className="mf-preview-nav-placeholder" />}
             <span className="mf-preview-counter">{currentIndex+1}/{files.length}</span>
-            {currentIndex<files.length-1 && !annotMode && (
-              <button className="mf-preview-nav-btn" onClick={nextFile}><ChevronRight size={14} /></button>
-            )}
-            <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={18} /></button>
+            {currentIndex<files.length-1 && !annotMode ? (
+              <button className="mf-preview-nav-btn" onClick={nextFile} title="Next"><ChevronRight size={14} /></button>
+            ) : <div className="mf-preview-nav-placeholder" />}
+
+            <div className="mf-preview-divider" />
+
+            <button className="mf-preview-nav-btn" onClick={onClose} title="Close"><X size={16} /></button>
           </div>
         </div>
 
@@ -1188,7 +1301,8 @@ function FilePreviewModal({ files, currentIndex, setCurrentIndex, onClose }) {
           {showPanel && renderSidePanel()}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -1243,18 +1357,25 @@ function AnnotPopup({ note, editing, editContent, setEditContent, onSave, onEdit
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════════════════════ */
 export default function MaterialFolders({ vaultContext }) {
-  const { course, courseName, department, yearSem } = vaultContext;
+  const { course, courseName, department, yearSem, batch } = vaultContext;
+  const isSemesterMode = !course; // No course selected — use semester-level folder
 
   /* ─── State ─── */
-  const [folderUrl, setFolderUrl] = useState(() => getCourseFolderUrl(course, department, yearSem) || '');
+  const initialUrl = batch?.driveUrl
+    ? batch.driveUrl
+    : isSemesterMode
+      ? (getSemesterFolderUrl(department, yearSem) || '')
+      : (getCourseFolderUrl(course, department, yearSem) || '');
+  const initialFolderId = batch?.folderId || null;
+  const [folderUrl, setFolderUrl] = useState(initialUrl);
   const [imgErrors, setImgErrors] = useState({});
-  const [isEditing, setIsEditing] = useState(!folderUrl);
+  const [isEditing, setIsEditing] = useState(!initialUrl);
   const [allFiles, setAllFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Folder nav
-  const [currentFolderId, setCurrentFolderId] = useState(null);
+  const [currentFolderId, setCurrentFolderId] = useState(initialFolderId);
   const [currentFolderName, setCurrentFolderName] = useState('');
   const [breadcrumbs, setBreadcrumbs] = useState([]);
 
@@ -1267,12 +1388,18 @@ export default function MaterialFolders({ vaultContext }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('name');
 
-  /* ─── Reset on course change ─── */
+  /* ─── Reset on context change (dept/sem/course) ─── */
   useEffect(() => {
-    const savedUrl = getCourseFolderUrl(course, department, yearSem) || '';
+    const savedUrl = batch?.driveUrl
+      ? batch.driveUrl
+      : isSemesterMode
+        ? (getSemesterFolderUrl(department, yearSem) || '')
+        : (getCourseFolderUrl(course, department, yearSem) || '');
+    const savedFolderId = batch?.folderId || null;
     setFolderUrl(savedUrl);
     setIsEditing(!savedUrl);
     setAllFiles([]);
+    setCurrentFolderId(savedFolderId);
     setError(null);
     setCurrentFolderId(null);
     setCurrentFolderName('');
@@ -1280,7 +1407,7 @@ export default function MaterialFolders({ vaultContext }) {
     setPreviewIndex(-1);
     setPreviewFiles([]);
     setImgErrors({});
-  }, [course, department, yearSem]);
+  }, [course, department, yearSem, isSemesterMode]);
 
   /* ─── Persist view mode ─── */
   useEffect(() => {
@@ -1352,16 +1479,26 @@ export default function MaterialFolders({ vaultContext }) {
 
   /* ─── Auto-fetch on mount ─── */
   useEffect(() => {
-    if (folderUrl && !isEditing && course && !currentFolderId) {
-      const rootId = extractFolderId(folderUrl);
-      if (rootId) fetchFiles(rootId);
+    if (folderUrl && !isEditing) {
+      if (currentFolderId) {
+        fetchFiles(currentFolderId);
+      } else {
+        const rootId = extractFolderId(folderUrl);
+        if (rootId) fetchFiles(rootId);
+      }
     }
-  }, [folderUrl, isEditing, course]);
+  }, [folderUrl, isEditing, currentFolderId]);
 
   /* ─── Save / remove folder URL ─── */
   const handleSaveUrl = () => {
     if (folderUrl.trim()) {
-      saveCourseFolderUrl(course, department, yearSem, folderUrl.trim());
+      if (batch) {
+        updateBatchDriveUrl(department, yearSem, batch.id, folderUrl.trim());
+      } else if (isSemesterMode) {
+        saveSemesterFolderUrl(department, yearSem, folderUrl.trim());
+      } else {
+        saveCourseFolderUrl(course, department, yearSem, folderUrl.trim());
+      }
       setIsEditing(false);
       setCurrentFolderId(null);
       setCurrentFolderName('');
@@ -1378,7 +1515,13 @@ export default function MaterialFolders({ vaultContext }) {
     setCurrentFolderId(null);
     setCurrentFolderName('');
     setBreadcrumbs([]);
-    saveCourseFolderUrl(course, department, yearSem, '');
+    if (batch) {
+      updateBatchDriveUrl(department, yearSem, batch.id, '');
+    } else if (isSemesterMode) {
+      saveSemesterFolderUrl(department, yearSem, '');
+    } else {
+      saveCourseFolderUrl(course, department, yearSem, '');
+    }
   };
 
   const handleRefresh = () => {
@@ -1599,7 +1742,7 @@ export default function MaterialFolders({ vaultContext }) {
           </div>
           <div className="mf-header-info">
             <h2>Lecture Notes</h2>
-            <p>{courseName} — Google Drive materials</p>
+            <p>{isSemesterMode ? `Semester ${yearSem}` : courseName} — Google Drive materials</p>
           </div>
         </div>
         <div className="mf-header-right">
@@ -1790,7 +1933,7 @@ export default function MaterialFolders({ vaultContext }) {
         <div className="mf-empty">
           <div className="mf-empty-icon"><Link size={32} /></div>
           <h3>No folder connected</h3>
-          <p>Connect a Google Drive folder to see lecture notes for {courseName}.</p>
+          <p>Connect a Google Drive folder to see lecture notes for {isSemesterMode ? `Semester ${yearSem}` : courseName}.</p>
           <button className="btn btn-primary btn-sm" onClick={() => setIsEditing(true)}>
             <Plus size={14} /> Connect Folder
           </button>

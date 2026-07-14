@@ -1,10 +1,11 @@
 import React from 'react';
-import { Building2, GraduationCap, Library, Check } from 'lucide-react';
+import { Building2, GraduationCap, Users, Library, Check } from 'lucide-react';
 
 const steps = [
   { id: 'dept', label: 'Department', icon: Building2 },
   { id: 'sem', label: 'Semester', icon: GraduationCap },
-  { id: 'course', label: 'Course', icon: Library },
+  { id: 'batch', label: 'Batch', icon: Users },
+  { id: 'ready', label: 'Materials', icon: Library },
 ];
 
 export default function VaultStepProgress({ currentStep }) {

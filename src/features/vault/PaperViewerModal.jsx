@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { getPaperForViewing } from '../../utils/questionBankStorage';
 import { formatPaperLabel, getPaperNo } from './vaultExamTypes';
@@ -38,7 +39,7 @@ export default function PaperViewerModal({ paperId, onClose }) {
     paper?.fileType === 'pdf' || String(paper?.fileName || '').toLowerCase().endsWith('.pdf');
   const pdfSrc = paper?.fileData ? `${paper.fileData}#toolbar=0&navpanes=0` : '';
 
-  return (
+  return createPortal(
     <div className="qb-paper-viewer-backdrop" onClick={onClose}>
       <div
         className="qb-paper-viewer glass-card-static"
@@ -83,6 +84,7 @@ export default function PaperViewerModal({ paperId, onClose }) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
