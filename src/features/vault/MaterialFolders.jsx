@@ -1,260 +1,1365 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Folder, Plus, Loader2, AlertCircle, RefreshCw, Link, X, Download, Eye, ChevronRight, Home } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import {
+  Folder, Plus, Loader2, AlertCircle, RefreshCw, Link, X, Download, Eye,
+  ChevronRight, Home, Search, Grid3X3, List, File,
+  ExternalLink, Maximize2, Minimize2, ChevronLeft,
+  ChevronsLeft, BookOpen, Clock, HardDrive, FileType,
+  ZoomIn, ZoomOut, StickyNote, Trash2, Edit3, Save,
+  Square, Circle, Pencil, Minus,
+  Music, Play, Pause, PlayCircle, Bot, Send, PanelRightOpen, PanelRightClose, Sparkles,
+} from 'lucide-react';
 import {
   extractFolderId,
   fetchDriveFolderFiles,
   getFileCategory,
-  getFileIcon,
   formatFileSize,
   getCourseFolderUrl,
   saveCourseFolderUrl,
 } from '../../utils/googleDrive';
+import {
+  getAnnotations,
+  addAnnotation,
+  updateAnnotation,
+  updateAnnotationData,
+  removeAnnotation,
+} from '../../utils/annotationsStorage';
+import './MaterialFolders.css';
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
+// Use the Google API credential from env to access public Drive folders
+// No OAuth login needed — works for folders shared with "Anyone with the link"
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
 
-function FileIcon({ mimeType, size = 18 }) {
-  const category = getFileCategory(mimeType);
-  const colors = {
-    pdf: 'var(--accent-rose)',
-    image: 'var(--accent-purple)',
-    video: 'var(--accent-amber)',
-    spreadsheet: 'var(--accent-emerald)',
-    document: 'var(--accent-blue)',
-    presentation: 'var(--accent-orange)',
-    folder: 'var(--accent-blue)',
-    archive: 'var(--text-tertiary)',
-    other: 'var(--text-tertiary)',
-  };
+/* ─── Colour palette for each file category ─── */
+const CATEGORY_META = {
+  folder:      { color: 'var(--accent-blue)',    glow: 'var(--accent-blue-glow)',     icon: '\u{1F4C1}',   label: 'Folder' },
+  pdf:         { color: 'var(--accent-rose)',     glow: 'var(--accent-rose-glow)',     icon: '\u{1F4C4}',   label: 'PDF' },
+  image:       { color: 'var(--accent-purple)',   glow: 'var(--accent-purple-glow)',   icon: '\u{1F5BC}\uFE0F',   label: 'Image' },
+  video:       { color: 'var(--accent-amber)',    glow: 'var(--accent-amber-glow)',    icon: '\u{1F3AC}',   label: 'Video' },
+  spreadsheet: { color: 'var(--accent-emerald)',  glow: 'var(--accent-emerald-glow)',  icon: '\u{1F4CA}',   label: 'Sheet' },
+  document:    { color: 'var(--accent-blue)',     glow: 'var(--accent-blue-glow)',     icon: '\u{1F4DD}',   label: 'Doc' },
+  presentation:{ color: '#f97316',                glow: 'rgba(249,115,22,0.15)',       icon: '\u{1F4FD}\uFE0F',   label: 'Slides' },
+  archive:     { color: 'var(--text-tertiary)',   glow: 'var(--bg-secondary)',         icon: '\u{1F4E6}',   label: 'Archive' },
+  other:       { color: 'var(--text-tertiary)',   glow: 'var(--bg-secondary)',         icon: '\u{1F4CE}',   label: 'Other' },
+};
+
+// ─── Single file-type icon component ───
+function FileTypeIcon({ category, size = 40, variant = 'grid' }) {
+  const meta = CATEGORY_META[category] || CATEGORY_META.other;
 
   return (
-    <div style={{
-      width: size + 12,
-      height: size + 12,
-      borderRadius: 'var(--radius-sm)',
-      background: `${colors[category]}15`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: size - 2,
-      flexShrink: 0,
-    }}>
-      {getFileIcon(mimeType)}
+    <div
+      className={`mf-file-list-icon mf-file-list-icon-${category}`}
+      style={{
+        width: size,
+        height: size,
+        fontSize: size * 0.45,
+      }}
+    >
+      {variant === 'grid' ? (
+        <span style={{ fontSize: size * 0.55, lineHeight: 1 }}>{meta.icon}</span>
+      ) : (
+        <span style={{ fontSize: size * 0.45, lineHeight: 1 }}>{meta.icon}</span>
+      )}
     </div>
   );
 }
 
-// File Preview Modal
-function FilePreviewModal({ file, token, onClose }) {
-  const category = getFileCategory(file.mimeType);
+// ─── File type badge ───
+function FileTypeBadge({ category, small }) {
+  const meta = CATEGORY_META[category] || CATEGORY_META.other;
+  return (
+    <span className={`mf-file-grid-badge mf-file-grid-badge-${category}`}>
+      {meta.label}
+    </span>
+  );
+}
 
-  const handleDownload = async () => {
-    if (!token) return;
-    try {
-      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = file.name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Download failed:', err);
-    }
-  };
+// ─── Loading skeleton ───
+function FileSkeleton() {
+  return (
+    <div className="mf-skeleton-grid">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="mf-skeleton-card">
+          <div className="mf-skeleton-thumb" />
+          <div className="mf-skeleton-body">
+            <div className="mf-skeleton-line" style={{ width: '80%' }} />
+            <div className="mf-skeleton-line-sm" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
-  const renderPreview = () => {
-    if (category === 'pdf') {
-      return (
-        <iframe
-          src={`https://drive.google.com/file/d/${file.id}/preview`}
-          style={{ width: '100%', height: '100%', border: 'none', borderRadius: 'var(--radius-md)' }}
-          title={file.name}
-        />
-      );
-    }
-    if (category === 'image') {
-      return (
-        <img
-          src={`https://drive.google.com/uc?id=${file.id}`}
-          alt={file.name}
-          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 'var(--radius-md)' }}
-        />
-      );
-    }
-    if (category === 'video') {
-      return (
-        <video controls style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 'var(--radius-md)' }}>
-          <source src={`https://drive.google.com/uc?id=${file.id}`} type={file.mimeType} />
-        </video>
-      );
-    }
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-        <FileIcon mimeType={file.mimeType} size={48} />
-        <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Preview not available</p>
-        <button className="btn btn-primary" onClick={handleDownload}><Download size={16} /> Download to View</button>
-      </div>
-    );
-  };
+/* ═══════════════════════════════════════════════════════════════════════
+   SIDE PANEL — Music · YouTube · Gemini
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const GEMINI_API_KEY = 'GEMINI_API_KEY'; // user sets this
+
+// ─── Free lofi study tracks ───
+const LOFI_TRACKS = [
+  { name: 'lofi beats',        artist: 'lofi girl',        url: 'https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&enablejsapi=1' },
+  { name: 'lofi hip hop radio', artist: 'ChilledCow',     url: 'https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1&enablejsapi=1' },
+  { name: 'calm piano',        artist: 'Music for study', url: 'https://www.youtube.com/embed/BHa6TOMAf_k?autoplay=1&enablejsapi=1' },
+  { name: 'rain sounds',       artist: 'Nature Sounds',   url: 'https://www.youtube.com/embed/mPZkdNFkNps?autoplay=1&enablejsapi=1' },
+  { name: 'deep focus',        artist: 'ADHD Relief',     url: 'https://www.youtube.com/embed/TN6WSSVnQvo?autoplay=1&enablejsapi=1' },
+];
+
+// ─── Mini Music Player ───
+function MusicPlayer() {
+  const [playing, setPlaying] = useState(null);
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 500 }}>
-      <div className="modal glass-card-static" onClick={(e) => e.stopPropagation()} style={{ width: 'min(90vw, 900px)', height: 'min(85vh, 700px)', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--border-primary)', background: 'var(--bg-secondary)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
-            <FileIcon mimeType={file.mimeType} />
-            <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: '13px', fontWeight: 'var(--fw-semibold)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</p>
-              <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', margin: 0 }}>{formatFileSize(file.size)}</p>
+    <div className="mf-music-player">
+      <div className="mf-music-header">
+        <Music size={14} />
+        <span>Background Music</span>
+      </div>
+      <div className="mf-music-track-list">
+        {LOFI_TRACKS.map((track, idx) => (
+          <div key={idx} className={`mf-music-track ${playing === idx ? 'playing' : ''}`}
+            onClick={() => setPlaying(playing === idx ? null : idx)}>
+            <div className="mf-music-track-play">
+              {playing === idx ? <Pause size={12} /> : <Play size={12} />}
+            </div>
+            <div className="mf-music-track-info">
+              <div className="mf-music-track-name">{track.name}</div>
+              <div className="mf-music-track-artist">{track.artist}</div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-            <button className="btn btn-primary btn-sm" onClick={handleDownload}><Download size={14} /> Download</button>
-            <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={18} /></button>
-          </div>
-        </div>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)', overflow: 'auto', padding: '16px' }}>
-          {renderPreview()}
-        </div>
+        ))}
       </div>
+      {playing !== null && (
+        <div style={{width:'100%',height:'120px',borderRadius:'var(--radius-md)',overflow:'hidden',background:'#000'}}>
+          <iframe src={LOFI_TRACKS[playing].url.replace('autoplay=1','autoplay=1&mute=1')}
+            width="100%" height="100%" title="music" allow="autoplay;encrypted-media" />
+        </div>
+      )}
     </div>
   );
 }
 
-export default function MaterialFolders({ vaultContext }) {
-  const { course, courseName, department, yearSem } = vaultContext;
-
-  const [folderUrl, setFolderUrl] = useState(() => getCourseFolderUrl(course, department, yearSem) || '');
-  const [isEditing, setIsEditing] = useState(!folderUrl);
-  const [files, setFiles] = useState([]);
+// ─── YouTube Player — Full Search + Player App ───
+function YouTubeSearch() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [token, setToken] = useState(() => localStorage.getItem('google_drive_token') || null);
-  const [tokenExpiry, setTokenExpiry] = useState(() => {
-    const expiry = localStorage.getItem('google_drive_token_expiry');
-    return expiry ? parseInt(expiry) : 0;
-  });
-  const [previewFile, setPreviewFile] = useState(null);
-  const [authLoading, setAuthLoading] = useState(false);
+  const [playingVideo, setPlayingVideo] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestTimer = useRef(null);
+  const suggestRef = useRef(null);
+  const inputRef = useRef(null);
 
-  // Folder navigation state
-  const [currentFolderId, setCurrentFolderId] = useState(null);
-  const [currentFolderName, setCurrentFolderName] = useState('');
-  const [breadcrumbs, setBreadcrumbs] = useState([]);
-
-  const isTokenValid = () => token && Date.now() < tokenExpiry;
-
-  useEffect(() => {
-    const savedUrl = getCourseFolderUrl(course, department, yearSem) || '';
-    setFolderUrl(savedUrl);
-    setIsEditing(!savedUrl);
-    setFiles([]);
-    setError(null);
-    setPreviewFile(null);
-    setCurrentFolderId(null);
-    setCurrentFolderName('');
-    setBreadcrumbs([]);
-  }, [course, department, yearSem]);
-
-  const loadGIS = () => {
-    return new Promise((resolve, reject) => {
-      if (window.google?.accounts?.oauth2) { resolve(); return; }
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load Google script'));
-      document.head.appendChild(script);
-    });
+  // Fetch suggestions with debounce
+  const fetchSuggestions = (val) => {
+    if (suggestTimer.current) clearTimeout(suggestTimer.current);
+    if (!val.trim() || val.trim().length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    suggestTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/youtube/suggestions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: val.trim() }),
+        });
+        const data = await res.json();
+        if (data.success && data.suggestions?.length > 0) {
+          setSuggestions(data.suggestions);
+          setShowSuggestions(true);
+        } else {
+          setSuggestions([]);
+          setShowSuggestions(false);
+        }
+      } catch {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300);
   };
 
-  const signInWithGoogle = async () => {
-    setAuthLoading(true);
-    setError(null);
-    try {
-      await loadGIS();
-      const accessToken = await new Promise((resolve, reject) => {
-        const client = window.google.accounts.oauth2.initTokenClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: DRIVE_SCOPES,
-          callback: (response) => {
-            if (response.error) reject(new Error(response.error));
-            else resolve(response.access_token);
-          },
-          error_callback: (err) => reject(new Error(err.type || 'Auth failed')),
-        });
-        client.requestAccessToken();
-      });
-      setToken(accessToken);
-      setTokenExpiry(Date.now() + 3600 * 1000);
-      localStorage.setItem('google_drive_token', accessToken);
-      localStorage.setItem('google_drive_token_expiry', String(Date.now() + 3600 * 1000));
-    } catch (err) {
-      console.error('Google auth failed:', err);
-      setError('Google sign-in failed. Please try again.');
-      setToken(null);
-      localStorage.removeItem('google_drive_token');
-      localStorage.removeItem('google_drive_token_expiry');
-    } finally {
-      setAuthLoading(false);
+  // Handle input change
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setQuery(val);
+    if (!playingVideo) {
+      fetchSuggestions(val);
     }
   };
 
-  const signOut = () => {
-    setToken(null);
-    setTokenExpiry(0);
-    setFiles([]);
-    setCurrentFolderId(null);
-    setCurrentFolderName('');
-    setBreadcrumbs([]);
-    localStorage.removeItem('google_drive_token');
-    localStorage.removeItem('google_drive_token_expiry');
+  // Handle suggestion click
+  const handleSuggestionClick = (suggestion) => {
+    setQuery(suggestion);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    // Auto-search on suggestion click
+    doSearch(suggestion);
   };
 
-  // Fetch files from a folder
-  const fetchFiles = async (folderId) => {
-    if (!isTokenValid()) { setError('Please sign in with Google first.'); return; }
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (suggestRef.current && !suggestRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
+  const doSearch = async (searchTerm) => {
+    const term = searchTerm || query.trim();
+    if (!term) return;
     setLoading(true);
     setError(null);
+    setPlayingVideo(null);
+    setShowSuggestions(false);
+    setSuggestions([]);
     try {
-      const items = await fetchDriveFolderFiles(folderId, token);
-      setFiles(items);
-      setIsEditing(false);
-    } catch (err) {
-      console.error('Failed to fetch:', err);
-      if (err.message?.includes('401') || err.message?.includes('token')) {
-        setError('Session expired. Please sign in again.');
-        signOut();
-      } else {
-        setError(err.message || 'Failed to load files');
+      const res = await fetch('/api/youtube/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: term }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || `Search failed: ${res.status}`);
       }
+      setResults(data.items || []);
+      if (data.items?.length === 0) {
+        setError('No videos found for "' + term + '"');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to search YouTube');
     } finally {
       setLoading(false);
     }
   };
 
-  // Navigate into a folder
+  const searchVideos = (e) => {
+    e?.preventDefault();
+    doSearch();
+  };
+
+  const playVideo = (video) => {
+    setPlayingVideo(video);
+    setShowSuggestions(false);
+  };
+
+  const goBack = () => {
+    setPlayingVideo(null);
+  };
+
+  return (
+    <div className="mf-yt-panel">
+      {/* Search Bar with Suggestions */}
+      <div className="mf-yt-search-wrapper" ref={suggestRef}>
+        <form className="mf-yt-search-bar" onSubmit={searchVideos}>
+          <Search size={16} className="mf-yt-search-bar-icon" />
+          <input
+            ref={inputRef}
+            type="text"
+            className="mf-yt-search-bar-input"
+            placeholder="Search YouTube for lectures, tutorials..."
+            value={query}
+            onChange={handleInputChange}
+            onFocus={() => { if (suggestions.length > 0 && !playingVideo) setShowSuggestions(true); }}
+            onKeyDown={(e) => { if (e.key === 'Escape') setShowSuggestions(false); }}
+            autoComplete="off"
+          />
+          <button type="submit" className="btn btn-primary btn-sm" disabled={loading || !query.trim()}>
+            {loading ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
+          </button>
+        </form>
+        {/* Suggestions Dropdown */}
+        {showSuggestions && suggestions.length > 0 && !playingVideo && (
+          <div className="mf-yt-suggestions">
+            {suggestions.map((s, i) => (
+              <div key={i} className="mf-yt-suggestion" onClick={() => handleSuggestionClick(s)}>
+                <Search size={12} />
+                <span>{s}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Error Banner */}
+      {error && !loading && (
+        <div className="mf-yt-error">
+          <AlertCircle size={14} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="mf-yt-loading">
+          <Loader2 size={28} className="animate-spin" />
+          <span>Searching YouTube...</span>
+        </div>
+      )}
+
+      {/* Currently Playing View */}
+      {playingVideo ? (
+        <div className="mf-yt-playing">
+          <div className="mf-yt-player-embed">
+            <iframe
+              src={`https://www.youtube.com/embed/${playingVideo.id.videoId}?autoplay=1&rel=0&modestbranding=1`}
+              title={playingVideo.snippet.title}
+              allow="accelerometer;autoplay;encrypted-media;gyroscope"
+              allowFullScreen
+            />
+          </div>
+          <div className="mf-yt-player-info">
+            <div className="mf-yt-player-title">{playingVideo.snippet.title}</div>
+            <div className="mf-yt-player-channel">
+              <PlayCircle size={12} />
+              {playingVideo.snippet.channelTitle}
+            </div>
+          </div>
+          <div className="mf-yt-player-actions">
+            <button className="btn btn-ghost btn-sm" onClick={goBack}>
+              <ChevronsLeft size={14} /> Back to results
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={() => { setQuery(''); setResults([]); setError(null); }}>
+              <X size={14} /> Clear
+            </button>
+          </div>
+        </div>
+      ) : !loading && results.length > 0 ? (
+        /* Results Grid */
+        <div className="mf-yt-results">
+          <div className="mf-yt-results-count">{results.length} result{results.length !== 1 ? 's' : ''}</div>
+          <div className="mf-yt-results-grid">
+            {results.map(video => (
+              <div key={video.id.videoId} className="mf-yt-result" onClick={() => playVideo(video)}>
+                <div className="mf-yt-result-thumb">
+                  <img
+                    src={video.snippet.thumbnails?.medium?.url || video.snippet.thumbnails?.default?.url}
+                    alt={video.snippet.title}
+                    loading="lazy"
+                  />
+                  <div className="mf-yt-result-play-overlay">
+                    <Play size={28} />
+                  </div>
+                </div>
+                <div className="mf-yt-result-info">
+                  <div className="mf-yt-result-title">{video.snippet.title}</div>
+                  <div className="mf-yt-result-channel">{video.snippet.channelTitle}</div>
+                  <div className="mf-yt-result-date">
+                    {new Date(video.snippet.publishTime).toLocaleDateString('en-US', {
+                      month: 'short', day: 'numeric', year: 'numeric'
+                    })}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : !loading && !error ? (
+        /* Welcome State */
+        <div className="mf-yt-welcome">
+          <div className="mf-yt-welcome-icon">
+            <PlayCircle size={56} />
+          </div>
+          <h3 className="mf-yt-welcome-title">YouTube Search</h3>
+          <p className="mf-yt-welcome-desc">
+            Search for study videos, lectures, tutorials and watch them directly right here!
+          </p>
+          <div className="mf-yt-welcome-tips">
+            <div className="mf-yt-welcome-tip">
+              <Search size={12} />
+              <span>Type a topic above to search</span>
+            </div>
+            <div className="mf-yt-welcome-tip">
+              <Play size={12} />
+              <span>Click any video to play instantly</span>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// ─── Left-side YouTube Sidebar wrapper ───
+function YTSidebar() {
+  return (
+    <div className="mf-yt-sidebar">
+      <div className="mf-yt-sidebar-header">
+        <PlayCircle size={16} />
+        <span>YouTube</span>
+      </div>
+      <div className="mf-yt-sidebar-content">
+        <YouTubeSearch />
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PDF.js LOCAL VIEWER — inline copy/paste support, no iframe/CSP issues
+   ═══════════════════════════════════════════════════════════════════════ */
+
+function PDFPreview({ fileId, annotMode }) {
+  const [pdfDoc, setPdfDoc] = useState(null);
+  const [pageNum, setPageNum] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [scale, setScale] = useState(1.5);
+  const canvasRef = useRef(null);
+  const textRef = useRef(null);
+  const renderRef = useRef(null);
+  const pdfIdRef = useRef(fileId);
+  const scrollTimeoutRef = useRef(null);
+
+  // Load PDF document
+  useEffect(() => {
+    let dead = false;
+    pdfIdRef.current = fileId;
+    setLoading(true);
+    setError(null);
+    setPageNum(1);
+    setPdfDoc(null);
+
+    (async () => {
+      try {
+        const pdfjs = await import('pdfjs-dist');
+        pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+
+        const res = await fetch(`/api/proxy/pdf?id=${fileId}`);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Failed to fetch PDF (${res.status})`);
+        }
+        const buf = await res.arrayBuffer();
+        if (dead) return;
+
+        const doc = await pdfjs.getDocument({ data: buf }).promise;
+        if (dead) return;
+        setPdfDoc(doc);
+        setTotalPages(doc.numPages);
+      } catch (err) {
+        if (!dead) setError(err.message || 'Failed to load PDF');
+      } finally {
+        if (!dead) setLoading(false);
+      }
+    })();
+
+    return () => { dead = true; };
+  }, [fileId]);
+
+  // Render current page
+  useEffect(() => {
+    if (!pdfDoc) return;
+    let dead = false;
+
+    (async () => {
+      try {
+        if (renderRef.current) {
+          try { await renderRef.current.cancel(); } catch {}
+        }
+
+        const page = await pdfDoc.getPage(pageNum);
+        if (dead) return;
+
+        const viewport = page.getViewport({ scale });
+        const canvas = canvasRef.current;
+        const textDiv = textRef.current;
+        if (!canvas || !textDiv) return;
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        textDiv.style.width = viewport.width + 'px';
+        textDiv.style.height = viewport.height + 'px';
+        textDiv.innerHTML = '';
+
+        const ctx = canvas.getContext('2d');
+        const task = page.render({ canvasContext: ctx, viewport });
+        renderRef.current = task;
+        await task.promise;
+        if (dead) return;
+
+        // Transparent text layer for selection/copy
+        const txt = await page.getTextContent();
+        if (dead || !textDiv) return;
+
+        txt.items.forEach((item) => {
+          const span = document.createElement('span');
+          span.textContent = item.str;
+          span.style.left = (item.transform[4] * scale) + 'px';
+          span.style.bottom = (viewport.height - item.transform[5] * scale) + 'px';
+          span.style.fontSize = (item.height * scale) + 'px';
+          span.style.fontFamily = item.fontName || 'sans-serif';
+          span.style.position = 'absolute';
+          span.style.whiteSpace = 'pre';
+          span.style.color = 'transparent';
+          span.style.userSelect = 'text';
+          span.style.pointerEvents = annotMode ? 'none' : 'auto';
+          span.style.cursor = 'text';
+          textDiv.appendChild(span);
+        });
+      } catch (err) {
+        if (err.name !== 'RenderingCancelledException') {
+          console.error('PDF page render error:', err);
+        }
+      }
+    })();
+
+    return () => { dead = true; };
+  }, [pdfDoc, pageNum, scale, annotMode]);
+
+  // Scroll to change page (with debounce to prevent rapid switching)
+  const handleWheel = useCallback((e) => {
+    if (!pdfDoc || totalPages <= 1) return;
+
+    // Clear any existing timeout
+    if (scrollTimeoutRef.current) return;
+
+    scrollTimeoutRef.current = setTimeout(() => {
+      scrollTimeoutRef.current = null;
+    }, 200); // 200ms cooldown between page changes
+
+    if (e.deltaY > 30 && pageNum < totalPages) {
+      setPageNum(p => Math.min(totalPages, p + 1));
+    } else if (e.deltaY < -30 && pageNum > 1) {
+      setPageNum(p => Math.max(1, p - 1));
+    }
+  }, [pdfDoc, pageNum, totalPages]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!pdfDoc) return;
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        setPageNum(p => Math.max(1, p - 1));
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        setPageNum(p => Math.min(totalPages, p + 1));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [pdfDoc, totalPages]);
+
+  if (loading) {
+    return (
+      <div className="mf-pdf-status">
+        <Loader2 size={28} className="animate-spin" />
+        <span>Loading PDF...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mf-pdf-status mf-pdf-status-error">
+        <AlertCircle size={24} />
+        <span>{error}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mf-pdf-viewer" onWheel={handleWheel}>
+      <div className="mf-pdf-topbar">
+        <div className="mf-pdf-nav">
+          <button className="mf-pdf-btn" onClick={() => setPageNum(p => Math.max(1, p - 1))} disabled={pageNum <= 1}>
+            <ChevronLeft size={14} />
+          </button>
+          <span className="mf-pdf-pg">{pageNum} / {totalPages}</span>
+          <button className="mf-pdf-btn" onClick={() => setPageNum(p => Math.min(totalPages, p + 1))} disabled={pageNum >= totalPages}>
+            <ChevronRight size={14} />
+          </button>
+        </div>
+        <div className="mf-pdf-zoom">
+          <button className="mf-pdf-btn" onClick={() => setScale(s => Math.max(0.5, +(s - 0.25).toFixed(2)))}>
+            <ZoomOut size={14} />
+          </button>
+          <span className="mf-pdf-pg">{Math.round(scale * 100)}%</span>
+          <button className="mf-pdf-btn" onClick={() => setScale(s => Math.min(4, +(s + 0.25).toFixed(2)))}>
+            <ZoomIn size={14} />
+          </button>
+        </div>
+      </div>
+      <div className="mf-pdf-page-wrap">
+        <canvas ref={canvasRef} className="mf-pdf-canvas" />
+        <div ref={textRef} className="mf-pdf-textlayer" />
+      </div>
+      <div className="mf-pdf-scroll-hint">
+        <span>Scroll to change page</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Gemini AI Chat ───
+function GeminiChat() {
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+  const [configured, setConfigured] = useState(() => !!localStorage.getItem('gemini_api_key'));
+  const [messages, setMessages] = useState([
+    { role: 'model', text: "Hi! I'm Gemini. Ask me anything about your studies!" }
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const chatRef = useRef(null);
+
+  useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [messages]);
+
+  const saveKey = () => {
+    if (apiKey.trim()) {
+      localStorage.setItem('gemini_api_key', apiKey.trim());
+      setConfigured(true);
+    }
+  };
+
+  const clearKey = () => {
+    localStorage.removeItem('gemini_api_key');
+    setConfigured(false);
+    setApiKey('');
+  };
+
+  const sendMessage = async () => {
+    if (!input.trim() || loading) return;
+    const userMsg = input.trim();
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setLoading(true);
+
+    try {
+      const key = localStorage.getItem('gemini_api_key');
+      if (!key) throw new Error('No API key');
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: userMsg }] }] }),
+      });
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const data = await res.json();
+      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response.';
+      setMessages(prev => [...prev, { role: 'model', text: reply }]);
+    } catch (err) {
+      setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${err.message}. Check your API key.` }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKey = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
+
+  if (!configured) {
+    return (
+      <div className="mf-gemini-api-setup">
+        <Bot size={28} />
+        <p><strong>Gemini AI Assistant</strong></p>
+        <p style={{fontSize:'9px',color:'var(--text-tertiary)'}}>Enter your Google Gemini API key to get started.</p>
+        <input type="password" placeholder="Paste your Gemini API key..." value={apiKey}
+          onChange={e => setApiKey(e.target.value)} onKeyDown={e => { if (e.key==='Enter') saveKey(); }} />
+        <button className="btn btn-primary btn-sm" onClick={saveKey} disabled={!apiKey.trim()}>
+          <Sparkles size={12} /> Connect
+        </button>
+        <p style={{fontSize:'8px',color:'var(--text-tertiary)'}}>
+          Get your free key at <strong>aistudio.google.com</strong>
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mf-gemini-chat">
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <span style={{fontSize:'var(--fs-xs)',fontWeight:'var(--fw-semibold)',display:'flex',alignItems:'center',gap:'4px',color:'var(--text-secondary)'}}>
+          <Bot size={12} /> Gemini
+        </span>
+        <button className="btn btn-ghost btn-sm" onClick={clearKey} title="Reset API key"
+          style={{fontSize:'9px',padding:'2px 6px'}}>Change Key</button>
+      </div>
+      <div className="mf-gemini-messages" ref={chatRef}>
+        {messages.map((msg, i) => (
+          <div key={i} className={`mf-gemini-msg ${msg.role === 'user' ? 'user' : ''}`}>
+            <div className="mf-gemini-msg-avatar">{msg.role === 'user' ? '\u{1F464}' : '\u{1F916}'}</div>
+            <div className="mf-gemini-msg-bubble">{msg.text}</div>
+          </div>
+        ))}
+        {loading && (
+          <div className="mf-gemini-msg">
+            <div className="mf-gemini-msg-avatar">🤖</div>
+            <div className="mf-gemini-msg-bubble" style={{color:'var(--text-tertiary)'}}>Thinking...</div>
+          </div>
+        )}
+      </div>
+      <div className="mf-gemini-input-wrap">
+        <textarea className="mf-gemini-input" rows="2" placeholder="Ask anything..."
+          value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey} />
+        <button className="btn btn-primary btn-sm" onClick={sendMessage} disabled={loading || !input.trim()}
+          style={{alignSelf:'flex-end'}}>
+          <Send size={12} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Layout toggles (right side panel) ───
+const PANEL_TABS = [
+  { id: 'music',   icon: Music,     label: 'Music' },
+  { id: 'gemini',  icon: Bot,       label: 'Gemini' },
+];
+
+/* ═══════════════════════════════════════════════════════════════════════
+   FILE PREVIEW MODAL — with full annotation toolbox
+   Tools: marker, rectangle, circle, pencil
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const ANNOT_COLORS = ['#fde68a','#fecaca','#bfdbfe','#bbf7d0','#e9d5ff','#fed7aa','#a5f3fc','#fbcfe8','#fef08a','#fdba74'];
+const ANNOT_TOOLS = [
+  { id: 'marker',    icon: StickyNote,    label: 'Marker' },
+  { id: 'rect',      icon: Square,        label: 'Rectangle' },
+  { id: 'circle',    icon: Circle,        label: 'Circle' },
+  { id: 'pencil',    icon: Pencil,        label: 'Freehand' },
+];
+
+function FilePreviewModal({ files, currentIndex, setCurrentIndex, onClose }) {
+  const file = files[currentIndex];
+  const category = getFileCategory(file.mimeType);
+  const meta = CATEGORY_META[category] || CATEGORY_META.other;
+  const fileId = file.id;
+
+  const [zoomed, setZoomed] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const modalRef = useRef(null);
+  const bodyRef = useRef(null);
+
+  // ─── Annotation state ───
+  const [annotMode, setAnnotMode] = useState(false);
+  const [tool, setTool] = useState('marker');
+  const [color, setColor] = useState(ANNOT_COLORS[0]);
+  const [strokeW, setStrokeW] = useState(2);
+  const [annotations, setAnnotations] = useState(() => getAnnotations(fileId));
+  const [activeNote, setActiveNote] = useState(null); // { id, editing }
+  const [editContent, setEditContent] = useState('');
+
+  // ─── Side panel state ───
+  const [showPanel, setShowPanel] = useState(false);
+  const [panelTab, setPanelTab] = useState('music');
+  const [showYT, setShowYT] = useState(false); // left-side YouTube panel
+
+  // ─── Drawing state ───
+  const [isDrawing, setIsDrawing] = useState(false);
+  const drawStart = useRef(null);
+  const [liveShape, setLiveShape] = useState(null); // for live preview while dragging
+  const svgRef = useRef(null);
+
+  // Reload annotations when file changes
+  useEffect(() => {
+    setAnnotations(getAnnotations(fileId));
+    setAnnotMode(false);
+    setTool('marker');
+    setActiveNote(null);
+    setEditContent('');
+  }, [fileId]);
+
+  const annotCount = annotations.length;
+  const supportsAnnot = ['pdf', 'image', 'document', 'spreadsheet', 'presentation'].includes(category);
+  const isImage = category === 'image';
+
+  // ─── Keyboard ───
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+          return;
+        }
+        if (activeNote) { setActiveNote(null); setEditContent(''); return; }
+        if (isDrawing) { setIsDrawing(false); setLiveShape(null); return; }
+        if (annotMode) { setAnnotMode(false); return; }
+        onClose();
+        return;
+      }
+      if (e.key === 'ArrowLeft' && !activeNote && !annotMode) { e.preventDefault(); prevFile(); }
+      if (e.key === 'ArrowRight' && !activeNote && !annotMode) { e.preventDefault(); nextFile(); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [currentIndex, files.length, activeNote, annotMode, isDrawing]);
+
+  const prevFile = () => setCurrentIndex(i => Math.max(0, i - 1));
+  const nextFile = () => setCurrentIndex(i => Math.min(files.length - 1, i + 1));
+
+  // Download public file — no auth needed
+  const handleDownload = () => {
+    window.open('https://drive.google.com/uc?export=download&id=' + file.id, '_blank', 'noopener');
+  };
+
+  const openInDrive = () => {
+    window.open('https://drive.google.com/file/d/' + file.id + '/view', '_blank', 'noopener');
+  };
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement && modalRef.current) {
+      modalRef.current.requestFullscreen().catch(() => {});
+      setFullscreen(true);
+    } else if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+      setFullscreen(false);
+    }
+  };
+
+  // Listen to fullscreen change events to stay in sync
+  useEffect(() => {
+    const handler = () => {
+      setFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  // ─── Coordinate helpers ───
+  const getPct = (e) => {
+    const rect = bodyRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0.5, y: 0.5 };
+    return {
+      x: Math.max(0.005, Math.min(0.995, (e.clientX - rect.left) / rect.width)),
+      y: Math.max(0.005, Math.min(0.995, (e.clientY - rect.top) / rect.height)),
+    };
+  };
+
+  // ─── Mouse drawing handlers ───
+  const handleMouseDown = (e) => {
+    if (!annotMode || !bodyRef.current) return;
+    const pos = getPct(e);
+    drawStart.current = pos;
+    setIsDrawing(true);
+
+    if (tool === 'marker') {
+      const anno = addAnnotation(fileId, { type: 'marker', x: pos.x, y: pos.y, color });
+      setAnnotations(getAnnotations(fileId));
+      setActiveNote({ id: anno.id, editing: true });
+      setEditContent('');
+      setIsDrawing(false);
+      return;
+    }
+
+    if (tool === 'pencil') {
+      const anno = addAnnotation(fileId, { type: 'freehand', points: [pos], color, strokeWidth: strokeW });
+      setLiveShape({ id: anno.id, points: [pos] });
+      setAnnotations(getAnnotations(fileId));
+      return;
+    }
+
+    // rect, circle
+    setLiveShape({ type: tool, start: pos, end: pos, color, strokeWidth: strokeW });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDrawing || !annotMode || !bodyRef.current) return;
+    const pos = getPct(e);
+
+    if (tool === 'pencil' && liveShape) {
+      const newPts = [...liveShape.points, pos];
+      setLiveShape({ ...liveShape, points: newPts });
+      return;
+    }
+
+    if (liveShape) {
+      setLiveShape({ ...liveShape, end: pos });
+    }
+  };
+
+  const handleMouseUp = (e) => {
+    if (!isDrawing || !annotMode || !bodyRef.current) return;
+    setIsDrawing(false);
+
+    if (tool === 'pencil' && liveShape) {
+      updateAnnotationData(fileId, liveShape.id, { points: liveShape.points });
+      setAnnotations(getAnnotations(fileId));
+      setLiveShape(null);
+      return;
+    }
+
+    if (liveShape && liveShape.type) {
+      const rect = bodyRef.current.getBoundingClientRect();
+      const sx = liveShape.start.x;
+      const sy = liveShape.start.y;
+      const ex = liveShape.end.x;
+      const ey = liveShape.end.y;
+      const x = Math.min(sx, ex);
+      const y = Math.min(sy, ey);
+      const w = Math.abs(ex - sx);
+      const h = Math.abs(ey - sy);
+
+      if (w < 0.005 && h < 0.005) { setLiveShape(null); return; }
+
+      if (liveShape.type === 'circle') {
+        const cx = (sx + ex) / 2;
+        const cy = (sy + ey) / 2;
+        const rx = Math.abs(ex - sx) / 2;
+        const ry = Math.abs(ey - sy) / 2;
+        const anno = addAnnotation(fileId, { type: 'circle', cx, cy, rx, ry, color, strokeWidth: strokeW });
+        setAnnotations(getAnnotations(fileId));
+        setActiveNote({ id: anno.id, editing: true });
+        setEditContent('');
+      } else { // rect
+        const anno = addAnnotation(fileId, { type: 'rect', x, y, w, h, color, strokeWidth: strokeW });
+        setAnnotations(getAnnotations(fileId));
+        setActiveNote({ id: anno.id, editing: true });
+        setEditContent('');
+      }
+      setLiveShape(null);
+    }
+  };
+
+  // ─── Note handlers ───
+  const handleShapeClick = (e, anno) => {
+    if (!annotMode) {
+      e.stopPropagation();
+      if (activeNote?.id === anno.id) {
+        setActiveNote(null); setEditContent('');
+      } else {
+        setActiveNote({ id: anno.id, editing: false });
+        setEditContent(anno.note || '');
+      }
+    }
+  };
+
+  const handleSaveNote = () => {
+    if (!activeNote) return;
+    updateAnnotation(fileId, activeNote.id, editContent);
+    setAnnotations(getAnnotations(fileId));
+    setActiveNote(null);
+    setEditContent('');
+  };
+
+  const handleDeleteAnno = (annoId) => {
+    removeAnnotation(fileId, annoId);
+    setAnnotations(getAnnotations(fileId));
+    setActiveNote(null);
+    setEditContent('');
+  };
+
+  // ─── Render SVG shapes ───
+  const renderShape = (anno, idx) => {
+    let el = null;
+    switch (anno.type) {
+      case 'rect':
+        el = <rect x={`${anno.x*100}%`} y={`${anno.y*100}%`} width={`${anno.w*100}%`} height={`${anno.h*100}%`}
+              fill={anno.color} fillOpacity="0.25" stroke={anno.color} strokeWidth={anno.strokeWidth||2} rx="4" />;
+        break;
+      case 'circle':
+        el = <ellipse cx={`${anno.cx*100}%`} cy={`${anno.cy*100}%`} rx={`${anno.rx*100}%`} ry={`${anno.ry*100}%`}
+              fill={anno.color} fillOpacity="0.25" stroke={anno.color} strokeWidth={anno.strokeWidth||2} />;
+        break;
+      case 'freehand':
+        if (anno.points && anno.points.length > 1) {
+          const d = anno.points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x*100}% ${p.y*100}%`).join(' ');
+          el = <path d={d} fill="none" stroke={anno.color} strokeWidth={anno.strokeWidth||2} strokeLinecap="round" strokeLinejoin="round" />;
+        }
+        break;
+      default:
+        break;
+    }
+    return el;
+  };
+
+  // ─── Render preview content ───
+  const renderPreviewContent = () => (
+    <>
+      {category === 'pdf' && (
+        <PDFPreview fileId={file.id} annotMode={annotMode} />
+      )}
+      {['document', 'spreadsheet', 'presentation'].includes(category) && (
+        <iframe src={`https://docs.google.com/viewer?url=https://drive.google.com/uc?id=${file.id}&embedded=true`}
+          className="mf-preview-iframe" title={file.name}
+          style={{ pointerEvents: annotMode ? 'none' : 'auto' }} />
+      )}
+      {category === 'image' && (
+        <div className={`mf-preview-image-wrap ${zoomed ? 'zoomed' : ''}`}
+          onClick={() => { if (!annotMode) setZoomed(z => !z); }}>
+          <img src={`https://drive.google.com/uc?id=${file.id}`} alt={file.name}
+            className={`mf-preview-image ${zoomed ? 'zoomed' : ''}`} draggable={false}
+            style={{ pointerEvents: annotMode ? 'none' : 'auto' }} />
+        </div>
+      )}
+      {category === 'video' && (
+        <video controls className="mf-preview-video" autoPlay playsInline>
+          <source src={`https://drive.google.com/uc?id=${file.id}`} type={file.mimeType} />
+        </video>
+      )}
+      {(category && !['pdf','image','video','document','spreadsheet','presentation'].includes(category)) && (
+        <div className="mf-preview-unsupported">
+          <div className="mf-preview-unsupported-icon">{meta.icon}</div>
+          <p>This file type cannot be previewed.</p>
+          <button className="btn btn-primary" onClick={handleDownload}><Download size={16} /> Download</button>
+        </div>
+      )}
+
+      {/* Annotation Overlay */}
+      {['pdf','image','document','spreadsheet','presentation'].includes(category) && (
+        <div ref={bodyRef} className={`mf-annotation-overlay ${!annotMode ? 'view-mode' : ''}`}
+          onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}
+          onMouseLeave={() => { if (isDrawing) { setIsDrawing(false); setLiveShape(null); } }}>
+
+          {annotMode && (
+            <div className="mf-annot-toolbar" onMouseDown={e => e.stopPropagation()}>
+              <div className="mf-annot-tool-group">
+                {ANNOT_TOOLS.map(t => {
+                  const Icon = t.icon;
+                  return (
+                    <button key={t.id} className={`mf-annot-tool-btn ${tool === t.id ? 'active' : ''}`}
+                      onClick={() => { setTool(t.id); setLiveShape(null); setIsDrawing(false); }} title={t.label}>
+                      <Icon size={16} />
+                      <span className="mf-annot-tool-tip">{t.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mf-annot-tool-group">
+                <div className="mf-annot-color-row">
+                  <span className="mf-annot-color-label">Color</span>
+                  <div className="mf-annot-colors">
+                    {ANNOT_COLORS.map(c => (
+                      <button key={c} className={`mf-annot-color-swatch ${color === c ? 'active' : ''}`}
+                        style={{ background: c, borderColor: c === '#fef08a' || c === '#fde68a' ? '#d4d4d8' : c }}
+                        onClick={() => setColor(c)} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {['rect','circle','pencil'].includes(tool) && (
+                <div className="mf-annot-tool-group">
+                  <div className="mf-annot-width-row">
+                    <span className="mf-annot-color-label" style={{fontSize:'7px'}}>Width</span>
+                    {[2,4,6,8].map(w => (
+                      <button key={w} className={`mf-annot-width-btn ${strokeW === w ? 'active' : ''}`}
+                        onClick={() => setStrokeW(w)}>
+                        <Minus size={w} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <svg className="mf-annot-svg-layer"
+            ref={svgRef} width="100%" height="100%" style={{position:'absolute',inset:0,overflow:'visible',pointerEvents:'none'}}>
+            {annotations.map((anno, idx) => {
+              const s = renderShape(anno, idx);
+              return s ? (
+                <g key={anno.id} className="mf-annot-shape" onClick={(e) => handleShapeClick(e, anno)}>{s}</g>
+              ) : null;
+            })}
+            {liveShape && liveShape.type && (() => {
+              if (liveShape.type === 'circle') {
+                const cx = (liveShape.start.x + liveShape.end.x)/2;
+                const cy = (liveShape.start.y + liveShape.end.y)/2;
+                const rx = Math.abs(liveShape.end.x - liveShape.start.x)/2;
+                const ry = Math.abs(liveShape.end.y - liveShape.start.y)/2;
+                return <ellipse cx={`${cx*100}%`} cy={`${cy*100}%`} rx={`${rx*100}%`} ry={`${ry*100}%`}
+                  fill={liveShape.color} fillOpacity="0.2" stroke={liveShape.color} strokeWidth={liveShape.strokeWidth||2} />;
+              }
+              if (liveShape.type === 'rect') {
+                const x = Math.min(liveShape.start.x, liveShape.end.x);
+                const y = Math.min(liveShape.start.y, liveShape.end.y);
+                const w = Math.abs(liveShape.end.x - liveShape.start.x);
+                const h = Math.abs(liveShape.end.y - liveShape.start.y);
+                return <rect x={`${x*100}%`} y={`${y*100}%`} width={`${w*100}%`} height={`${h*100}%`}
+                  fill={liveShape.color} fillOpacity="0.2" stroke={liveShape.color} strokeWidth={liveShape.strokeWidth||2} rx="4" />;
+              }
+              return null;
+            })()}
+            {liveShape && liveShape.points && liveShape.points.length > 1 && (
+              <path d={liveShape.points.map((p,i)=>`${i===0?'M':'L'}${p.x*100}% ${p.y*100}%`).join(' ')}
+                fill="none" stroke={color} strokeWidth={strokeW} strokeLinecap="round" strokeLinejoin="round" />
+            )}
+          </svg>
+
+          {annotations.filter(a => !a.type || a.type === 'marker').map((anno, idx) => (
+            <div key={anno.id} className="mf-annotation-marker"
+              style={{ left: `${anno.x*100}%`, top: `${anno.y*100}%` }}
+              onClick={(e) => handleShapeClick(e, anno)}>
+              <div className="mf-annotation-dot" style={{ background: anno.color }}>{idx + 1}</div>
+              {activeNote?.id === anno.id && (
+                <AnnotPopup note={anno} editing={activeNote.editing}
+                  editContent={editContent} setEditContent={setEditContent}
+                  onSave={handleSaveNote}
+                  onEdit={() => { setActiveNote({ id: anno.id, editing: true }); setEditContent(anno.note || ''); }}
+                  onDelete={() => handleDeleteAnno(anno.id)}
+                  onClose={() => { setActiveNote(null); setEditContent(''); }} />
+              )}
+            </div>
+          ))}
+
+          {annotations.filter(a => a.type && ['rect','circle','freehand'].includes(a.type)).map((anno) => {
+            let cx = 0.5, cy = 0.5;
+            if (anno.type === 'circle') { cx = anno.cx; cy = anno.cy; }
+            else if (anno.type === 'freehand' && anno.points?.length) {
+              const sum = anno.points.reduce((a,p) => ({x:a.x+p.x, y:a.y+p.y}), {x:0,y:0});
+              cx = sum.x / anno.points.length; cy = sum.y / anno.points.length;
+            } else { cx = (anno.x || 0) + (anno.w||0)/2; cy = (anno.y || 0) + (anno.h||0)/2; }
+            return (
+              <div key={`tr_${anno.id}`} className="mf-annot-shape-note-trigger"
+                style={{ left: `${cx*100}%`, top: `${cy*100}%`, width:'16px', height:'16px', marginLeft:'-8px', marginTop:'-8px' }}
+                onClick={(e) => { e.stopPropagation(); handleShapeClick(e, anno); }}>
+                <div style={{ width:'12px', height:'12px', borderRadius:'50%', background: anno.color, margin:'2px auto', border:'2px solid rgba(255,255,255,0.8)', boxShadow:'0 1px 4px rgba(0,0,0,0.2)' }} />
+                {activeNote?.id === anno.id && (
+                  <AnnotPopup note={anno} editing={activeNote.editing}
+                    editContent={editContent} setEditContent={setEditContent}
+                    onSave={handleSaveNote}
+                    onEdit={() => { setActiveNote({ id: anno.id, editing: true }); setEditContent(anno.note || ''); }}
+                    onDelete={() => handleDeleteAnno(anno.id)}
+                    onClose={() => { setActiveNote(null); setEditContent(''); }} />
+                )}
+              </div>
+            );
+          })}
+
+          {annotMode && annotations.length === 0 && !isDrawing && (
+            <div style={{ position:'absolute', top:'60px', left:'50%', transform:'translateX(-50%)',
+              background:'var(--bg-card)', border:'1px solid var(--accent-amber)', borderRadius:'var(--radius-md)',
+              padding:'8px 16px', fontSize:'var(--fs-sm)', color:'var(--accent-amber)', fontWeight:'var(--fw-medium)',
+              boxShadow:'0 4px 16px rgba(0,0,0,0.15)', pointerEvents:'none', zIndex:25,
+              animation:'mfSlideIn 0.3s ease', whiteSpace:'nowrap' }}>
+              {tool === 'marker' ? '\u{1F4CD} Click to drop a note marker' : tool === 'pencil' ? '\u270F\uFE0F Drag to draw freehand' : '\u{2B1C} Drag to draw a ' + tool}
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+
+  // ─── Render side panel ───
+  const renderSidePanel = () => (
+    <div className="mf-side-panel">
+      <div className="mf-panel-tabs">
+        {PANEL_TABS.map(tab => {
+          const Icon = tab.icon;
+          return (
+            <button key={tab.id} className={`mf-panel-tab ${panelTab === tab.id ? 'active' : ''}`}
+              onClick={() => setPanelTab(tab.id)}>
+              <Icon size={12} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="mf-panel-content">
+        {panelTab === 'music' && <MusicPlayer />}
+        {panelTab === 'youtube' && <YouTubePlayer />}
+        {panelTab === 'gemini' && <GeminiChat />}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="mf-preview-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="mf-preview-modal" ref={modalRef} onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="mf-preview-header">
+          <FileTypeIcon category={category} size={40} variant="list" />
+          <div className="mf-preview-header-info">
+            <div className="mf-preview-header-name">{file.name}</div>
+            <div className="mf-preview-header-meta">
+              <span>{formatFileSize(file.size)}</span>
+              {file.modifiedTime && <><span>·</span><Clock size={11} /><span>{new Date(file.modifiedTime).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</span></>}
+              <span>·</span><FileType size={11} /><span>{meta.label}</span>
+              {annotCount > 0 && <><span>·</span><span style={{color:'var(--accent-amber)',fontWeight:'var(--fw-bold)',display:'inline-flex',alignItems:'center',gap:'3px'}}><StickyNote size={11} /> {annotCount} note{annotCount>1?'s':''}</span></>}
+            </div>
+          </div>
+
+          <div className="mf-preview-header-actions">
+            {supportsAnnot && (
+              <button className={`mf-annotate-btn ${annotMode?'active':''}`} onClick={() => { setAnnotMode(v=>!v); if(!annotMode) setTool('marker'); }} title="Toggle annotation mode">
+                <StickyNote size={14} /> {annotMode?'Done':'Annotate'}
+                {annotCount>0 && <span className="mf-annotate-count">{annotCount}</span>}
+              </button>
+            )}
+            {isImage && !annotMode && (
+              <button className="mf-preview-nav-btn" onClick={()=>setZoomed(z=>!z)} title={zoomed?'Zoom out':'Zoom in'}>
+                {zoomed?<ZoomOut size={14}/>:<ZoomIn size={14}/>}
+              </button>
+            )}
+            {/* YouTube toggle (left side) */}
+            <button className={`mf-yt-toggle ${showYT?'active':''}`}
+              onClick={() => setShowYT(v=>!v)} title={showYT?'Close YouTube':'Open YouTube'}>
+              <PlayCircle size={14} />
+              <span style={{fontSize:'10px'}}>YouTube</span>
+            </button>
+
+            {/* Panel toggle (right side - music/gemini) */}
+            <button className={`mf-panel-toggle ${showPanel?'active':''}`}
+              onClick={() => setShowPanel(v=>!v)} title={showPanel?'Close panel':'Open panel'}>
+              {showPanel ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
+              <span style={{fontSize:'10px'}}>Panel</span>
+            </button>
+
+            <button className="mf-preview-nav-btn" onClick={toggleFullscreen} title={fullscreen?'Exit fullscreen':'Fullscreen'}>
+              {fullscreen?<Minimize2 size={14}/>:<Maximize2 size={14}/>}
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={openInDrive}><ExternalLink size={14} /> Open</button>
+            <button className="btn btn-primary btn-sm" onClick={handleDownload}><Download size={14} /> Download</button>
+            {currentIndex>0 && !annotMode && (
+              <button className="mf-preview-nav-btn" onClick={prevFile}><ChevronLeft size={14} /></button>
+            )}
+            <span className="mf-preview-counter">{currentIndex+1}/{files.length}</span>
+            {currentIndex<files.length-1 && !annotMode && (
+              <button className="mf-preview-nav-btn" onClick={nextFile}><ChevronRight size={14} /></button>
+            )}
+            <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={18} /></button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className={`mf-preview-body${showPanel ? ' with-panel' : ''}${showYT ? ' with-yt' : ''}`} key={file.id}>
+          {showYT && (
+            <YTSidebar />
+          )}
+          <div className="mf-preview-main">{renderPreviewContent()}</div>
+          {showPanel && renderSidePanel()}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Annotation Popup (view / edit) ─── */
+function AnnotPopup({ note, editing, editContent, setEditContent, onSave, onEdit, onDelete, onClose }) {
+  return (
+    <div className="mf-annotation-popup" onClick={e => e.stopPropagation()}>
+      {editing ? (
+        <>
+          <div className="mf-annotation-popup-header">
+            <span className="mf-annotation-popup-title"><Edit3 size={11} /> Write your note</span>
+            <button className="mf-annotation-popup-close" onClick={onClose}><X size={12} /></button>
+          </div>
+          <div className="mf-annotation-popup-body">
+            <textarea className="mf-annotation-textarea" value={editContent}
+              onChange={e => setEditContent(e.target.value)}
+              placeholder="Write your notes here... (bangla, english, anything)"
+              autoFocus onKeyDown={e => { if (e.key==='Enter'&&e.ctrlKey) onSave(); if (e.key==='Escape') onClose(); }} />
+          </div>
+          <div className="mf-annotation-popup-actions">
+            <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+            <button className="btn btn-primary btn-sm" onClick={onSave}><Save size={12} /> Save</button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="mf-annotation-popup-header">
+            <span className="mf-annotation-popup-title">Your Note</span>
+            <div style={{display:'flex',gap:'4px'}}>
+              <button className="mf-annotation-popup-close" onClick={onEdit} title="Edit"><Edit3 size={11} /></button>
+              <button className="mf-annotation-popup-close" onClick={onDelete} title="Delete"><Trash2 size={11} /></button>
+              <button className="mf-annotation-popup-close" onClick={onClose} title="Close"><X size={12} /></button>
+            </div>
+          </div>
+          <div className="mf-annotation-popup-body">
+            {(note.note || note.content) ? (
+              <>
+                <div className="mf-annotation-view-content">{note.note || note.content}</div>
+                <div className="mf-annotation-view-time">{new Date(note.updatedAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+              </>
+            ) : (
+              <p style={{color:'var(--text-tertiary)',fontSize:'var(--fs-sm)',fontStyle:'italic'}}>Empty note — click edit to add content.</p>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ═══════════════════════════════════════════════════════════════════════ */
+export default function MaterialFolders({ vaultContext }) {
+  const { course, courseName, department, yearSem } = vaultContext;
+
+  /* ─── State ─── */
+  const [folderUrl, setFolderUrl] = useState(() => getCourseFolderUrl(course, department, yearSem) || '');
+  const [imgErrors, setImgErrors] = useState({});
+  const [isEditing, setIsEditing] = useState(!folderUrl);
+  const [allFiles, setAllFiles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Folder nav
+  const [currentFolderId, setCurrentFolderId] = useState(null);
+  const [currentFolderName, setCurrentFolderName] = useState('');
+  const [breadcrumbs, setBreadcrumbs] = useState([]);
+
+  // Preview
+  const [previewIndex, setPreviewIndex] = useState(-1);
+  const [previewFiles, setPreviewFiles] = useState([]);
+
+  // View options
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('mf_view_mode') || 'grid');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('name');
+
+  /* ─── Reset on course change ─── */
+  useEffect(() => {
+    const savedUrl = getCourseFolderUrl(course, department, yearSem) || '';
+    setFolderUrl(savedUrl);
+    setIsEditing(!savedUrl);
+    setAllFiles([]);
+    setError(null);
+    setCurrentFolderId(null);
+    setCurrentFolderName('');
+    setBreadcrumbs([]);
+    setPreviewIndex(-1);
+    setPreviewFiles([]);
+    setImgErrors({});
+  }, [course, department, yearSem]);
+
+  /* ─── Persist view mode ─── */
+  useEffect(() => {
+    localStorage.setItem('mf_view_mode', viewMode);
+  }, [viewMode]);
+
+  /* ─── Fetch files from folder using API key ─── */
+  const fetchFiles = async (folderId) => {
+    if (!folderId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const items = await fetchDriveFolderFiles(folderId, GOOGLE_API_KEY);
+      setAllFiles(items);
+      setIsEditing(false);
+      setImgErrors({});
+    } catch (err) {
+      console.error('Failed to fetch:', err);
+      setError(err.message || 'Failed to load files. Make sure the folder is publicly shared.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ─── Folder navigation ─── */
   const navigateToFolder = async (folder) => {
     const newBreadcrumb = {
       id: currentFolderId || extractFolderId(folderUrl),
       name: currentFolderName || 'Root',
     };
-    setBreadcrumbs([...breadcrumbs, newBreadcrumb]);
+    setBreadcrumbs(prev => [...prev, newBreadcrumb]);
     setCurrentFolderId(folder.id);
     setCurrentFolderName(folder.name);
+    setSearchQuery('');
     await fetchFiles(folder.id);
   };
 
-  // Navigate back to parent folder
   const navigateBack = async () => {
     if (breadcrumbs.length === 0) {
-      // Go back to root
       const rootId = extractFolderId(folderUrl);
       setCurrentFolderId(null);
       setCurrentFolderName('');
@@ -262,17 +1367,15 @@ export default function MaterialFolders({ vaultContext }) {
       await fetchFiles(rootId);
     } else {
       const prev = breadcrumbs[breadcrumbs.length - 1];
-      setBreadcrumbs(breadcrumbs.slice(0, -1));
+      setBreadcrumbs(prev => prev.slice(0, -1));
       setCurrentFolderId(prev.id);
       setCurrentFolderName(prev.name);
       await fetchFiles(prev.id);
     }
   };
 
-  // Navigate to specific breadcrumb
   const navigateToBreadcrumb = async (index) => {
     if (index === -1) {
-      // Go to root
       const rootId = extractFolderId(folderUrl);
       setCurrentFolderId(null);
       setCurrentFolderName('');
@@ -280,21 +1383,22 @@ export default function MaterialFolders({ vaultContext }) {
       await fetchFiles(rootId);
     } else {
       const target = breadcrumbs[index];
-      setBreadcrumbs(breadcrumbs.slice(0, index));
+      setBreadcrumbs(prev => prev.slice(0, index));
       setCurrentFolderId(target.id);
       setCurrentFolderName(target.name);
       await fetchFiles(target.id);
     }
   };
 
-  // Auto-fetch when ready
+  /* ─── Auto-fetch on mount ─── */
   useEffect(() => {
-    if (folderUrl && !isEditing && isTokenValid() && course && !currentFolderId) {
+    if (folderUrl && !isEditing && course && !currentFolderId) {
       const rootId = extractFolderId(folderUrl);
       if (rootId) fetchFiles(rootId);
     }
-  }, [folderUrl, isEditing, course, token]);
+  }, [folderUrl, isEditing, course]);
 
+  /* ─── Save / remove folder URL ─── */
   const handleSaveUrl = () => {
     if (folderUrl.trim()) {
       saveCourseFolderUrl(course, department, yearSem, folderUrl.trim());
@@ -302,16 +1406,14 @@ export default function MaterialFolders({ vaultContext }) {
       setCurrentFolderId(null);
       setCurrentFolderName('');
       setBreadcrumbs([]);
-      if (isTokenValid()) {
-        const rootId = extractFolderId(folderUrl.trim());
-        if (rootId) fetchFiles(rootId);
-      }
+      const rootId = extractFolderId(folderUrl.trim());
+      if (rootId) fetchFiles(rootId);
     }
   };
 
   const handleRemoveUrl = () => {
     setFolderUrl('');
-    setFiles([]);
+    setAllFiles([]);
     setIsEditing(true);
     setCurrentFolderId(null);
     setCurrentFolderName('');
@@ -319,24 +1421,14 @@ export default function MaterialFolders({ vaultContext }) {
     saveCourseFolderUrl(course, department, yearSem, '');
   };
 
-  const handleDownload = async (file) => {
-    if (!isTokenValid()) return;
-    try {
-      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = file.name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Download failed:', err);
-    }
+  const handleRefresh = () => {
+    const targetId = currentFolderId || extractFolderId(folderUrl);
+    if (targetId) { setImgErrors({}); fetchFiles(targetId); }
+  };
+
+  /* ─── File operations ─── */
+  const handleDownload = (file) => {
+    window.open('https://drive.google.com/uc?export=download&id=' + file.id, '_blank', 'noopener');
   };
 
   const handleFileClick = (file) => {
@@ -344,202 +1436,418 @@ export default function MaterialFolders({ vaultContext }) {
       navigateToFolder(file);
     } else {
       const category = getFileCategory(file.mimeType);
-      if (['pdf', 'image', 'video'].includes(category)) {
-        setPreviewFile(file);
+      if (['pdf', 'image', 'video', 'document', 'spreadsheet', 'presentation'].includes(category)) {
+        const previewable = filteredFiles.filter(f =>
+          !f.mimeType.includes('folder') &&
+          ['pdf', 'image', 'video', 'document', 'spreadsheet', 'presentation'].includes(getFileCategory(f.mimeType))
+        );
+        const idx = previewable.findIndex(f => f.id === file.id);
+        setPreviewFiles(previewable);
+        setPreviewIndex(idx >= 0 ? idx : 0);
       } else {
         handleDownload(file);
       }
     }
   };
 
-  // Not signed in
-  if (!isTokenValid()) {
-    return (
-      <div className="glass-card-static materials-container animate-fadeInUp">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Lecture Notes</h2>
-            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>{courseName} — Google Drive materials</p>
+  /* ─── Search & sort ─── */
+  const filteredFiles = useMemo(() => {
+    let list = [...allFiles];
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter(f => f.name.toLowerCase().includes(q));
+    }
+
+    list.sort((a, b) => {
+      const aFolder = a.mimeType === 'application/vnd.google-apps.folder';
+      const bFolder = b.mimeType === 'application/vnd.google-apps.folder';
+      if (aFolder && !bFolder) return -1;
+      if (!aFolder && bFolder) return 1;
+
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+        case 'date':
+          return (b.modifiedTime || '').localeCompare(a.modifiedTime || '');
+        case 'size':
+          return (parseInt(b.size) || 0) - (parseInt(a.size) || 0);
+        case 'type':
+          return (getFileCategory(a.mimeType) || '').localeCompare(getFileCategory(b.mimeType) || '');
+        default:
+          return 0;
+      }
+    });
+
+    return list;
+  }, [allFiles, searchQuery, sortBy]);
+
+  /* ─── Stats ─── */
+  const stats = useMemo(() => {
+    const folders = allFiles.filter(f => f.mimeType === 'application/vnd.google-apps.folder');
+    const nonFolders = allFiles.filter(f => f.mimeType !== 'application/vnd.google-apps.folder');
+    const totalSize = nonFolders.reduce((sum, f) => sum + (parseInt(f.size) || 0), 0);
+    const byCategory = {};
+    nonFolders.forEach(f => {
+      const cat = getFileCategory(f.mimeType);
+      byCategory[cat] = (byCategory[cat] || 0) + 1;
+    });
+    return { folders: folders.length, files: nonFolders.length, totalSize, byCategory };
+  }, [allFiles]);
+
+  /* ─── Render helpers ─── */
+  const renderFileGrid = () => (
+    <div className="mf-file-grid">
+      {filteredFiles.map((file) => {
+        const isFolder = file.mimeType === 'application/vnd.google-apps.folder';
+        const category = getFileCategory(file.mimeType);
+        const meta = CATEGORY_META[category] || CATEGORY_META.other;
+
+        return (
+          <div
+            key={file.id}
+            className={`mf-file-grid-item ${isFolder ? 'mf-folder' : ''}`}
+            onClick={() => handleFileClick(file)}
+            style={{ animationDelay: '0s' }}
+          >
+            <div className="mf-file-grid-thumb" style={{ background: isFolder ? meta.glow : 'var(--bg-secondary)' }}>
+              {category === 'image' && !imgErrors[file.id] ? (
+                <img
+                  src={`https://drive.google.com/uc?id=${file.id}`}
+                  alt={file.name}
+                  className="mf-file-grid-thumb-img"
+                  loading="lazy"
+                  onError={() => setImgErrors(prev => ({ ...prev, [file.id]: true }))}
+                />
+              ) : (
+                <div className="mf-file-grid-thumb-placeholder" style={{ display: 'flex' }}>
+                  <span className="mf-file-grid-thumb-icon">{meta.icon}</span>
+                  {isFolder ? <span style={{ fontSize: '8px', opacity: 0.7 }}>Folder</span> : null}
+                </div>
+              )}
+            </div>
+
+            <div className="mf-file-grid-body">
+              <div className="mf-file-grid-name">{file.name}</div>
+              <div className="mf-file-grid-meta">
+                {!isFolder && (
+                  <>
+                    <span className="mf-file-grid-size">{formatFileSize(file.size)}</span>
+                    {file.modifiedTime && <span className="mf-file-grid-date">· {new Date(file.modifiedTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>}
+                  </>
+                )}
+                <FileTypeBadge category={category} />
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  const renderFileList = () => (
+    <div className="mf-file-list">
+      {filteredFiles.map((file, idx) => {
+        const isFolder = file.mimeType === 'application/vnd.google-apps.folder';
+        const category = getFileCategory(file.mimeType);
+        const canPreview = !isFolder && ['pdf', 'image', 'video', 'document', 'spreadsheet', 'presentation'].includes(category);
+
+        return (
+          <div
+            key={file.id}
+            className={`mf-file-list-item ${isFolder ? 'mf-folder' : ''}`}
+            onClick={() => handleFileClick(file)}
+            style={{ animationDelay: `${Math.min(idx, 10) * 0.025}s` }}
+          >
+            <FileTypeIcon category={category} size={40} variant="list" />
+
+            <div className="mf-file-list-body">
+              <div className="mf-file-list-name">
+                {isFolder ? '\u{1F4C1} ' : ''}{file.name}
+              </div>
+              <div className="mf-file-list-sub">
+                {!isFolder && (
+                  <>
+                    <span className="mf-file-list-size">{formatFileSize(file.size)}</span>
+                    {file.modifiedTime && (
+                      <span className="mf-file-list-date">
+                        · {new Date(file.modifiedTime).toLocaleDateString('en-US', {
+                          month: 'short', day: 'numeric', year: 'numeric'
+                        })}
+                      </span>
+                    )}
+                  </>
+                )}
+                <span className={`mf-file-list-category mf-file-list-category-${category}`}>
+                  {CATEGORY_META[category]?.label || 'Other'}
+                </span>
+              </div>
+            </div>
+
+            <div className="mf-file-list-actions">
+              {isFolder ? (
+                <ChevronRight size={16} style={{ color: 'var(--accent-blue)' }} />
+              ) : (
+                <>
+                  {canPreview && (
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={(e) => { e.stopPropagation(); handleFileClick(file); }}
+                      title="Preview"
+                      style={{ padding: '4px 8px' }}
+                    >
+                      <Eye size={14} />
+                    </button>
+                  )}
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={(e) => { e.stopPropagation(); handleDownload(file); }}
+                    title="Download"
+                    style={{ padding: '4px 8px' }}
+                  >
+                    <Download size={14} />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  const renderNoSearchResults = () => (
+    <div className="mf-no-results">
+      <Search size={40} />
+      <p>No files matching &quot;<strong>{searchQuery}</strong>&quot;</p>
+      <button className="btn btn-ghost btn-sm" onClick={() => setSearchQuery('')}>
+        <X size={14} /> Clear search
+      </button>
+    </div>
+  );
+
+  /* ═══════════════════════════════════════════════════════════════════
+     MAIN UI — No OAuth, just paste a public Drive folder link
+     ═══════════════════════════════════════════════════════════════════ */
+  return (
+    <div className="mf-container animate-fadeInUp">
+      {/* ─── Header ─── */}
+      <div className="mf-header">
+        <div className="mf-header-left">
+          <div className="mf-header-icon">
+            <BookOpen size={22} />
+          </div>
+          <div className="mf-header-info">
+            <h2>Lecture Notes</h2>
+            <p>{courseName} — Google Drive materials</p>
           </div>
         </div>
-        <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--accent-blue-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '28px' }}>🔗</div>
-          <h3 style={{ fontSize: '16px', fontWeight: 'var(--fw-bold)', margin: '0 0 8px' }}>Connect Google Drive</h3>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 20px', maxWidth: '400px', marginInline: 'auto' }}>
-            Sign in with Google to access your batch's study materials, lecture notes, and resources.
-          </p>
-          <button className="btn btn-primary" onClick={signInWithGoogle} disabled={authLoading} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 24px' }}>
-            {authLoading ? (<><Loader2 size={16} className="animate-spin" /> Connecting...</>) : (
-              <>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                Sign in with Google
-              </>
-            )}
-          </button>
-          {error && (<div style={{ marginTop: '16px', padding: '10px 16px', background: 'var(--accent-rose-glow)', borderRadius: 'var(--radius-md)', border: '1px solid color-mix(in srgb, var(--accent-rose) 30%, transparent)', fontSize: '12px', color: 'var(--accent-rose)' }}>{error}</div>)}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="glass-card-static materials-container animate-fadeInUp">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Lecture Notes</h2>
-          <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>{courseName} — Google Drive materials</p>
-        </div>
-        <div className="flex items-center gap-2">
+        <div className="mf-header-right">
           {folderUrl && !isEditing && (
             <>
-              <button className="btn btn-ghost btn-sm" onClick={() => { const rootId = extractFolderId(folderUrl); setCurrentFolderId(null); setCurrentFolderName(''); setBreadcrumbs([]); if (rootId) fetchFiles(rootId); }} disabled={loading} title="Refresh">
+              <button className="btn btn-ghost btn-sm" onClick={handleRefresh} disabled={loading} title="Refresh">
                 <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
               </button>
-              <button className="btn btn-ghost btn-sm" onClick={() => setIsEditing(true)} title="Change folder"><Link size={14} /></button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setIsEditing(true)} title="Change folder">
+                <Link size={14} />
+              </button>
             </>
           )}
-          <button className="btn btn-ghost btn-sm" onClick={signOut}>Sign Out</button>
         </div>
       </div>
 
-      {/* Folder URL Input */}
-      {isEditing && (
-        <div style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-primary)', marginBottom: '16px' }}>
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Paste your Google Drive folder link:</p>
-          <div className="flex gap-2">
-            <input type="text" value={folderUrl} onChange={(e) => setFolderUrl(e.target.value)} placeholder="https://drive.google.com/drive/folders/..." className="input" style={{ flex: 1, fontSize: '12px' }} onKeyDown={(e) => e.key === 'Enter' && handleSaveUrl()} />
-            <button className="btn btn-primary btn-sm" onClick={handleSaveUrl} disabled={!folderUrl.trim()}>Connect</button>
-            {folderUrl && <button className="btn btn-ghost btn-sm" onClick={() => { setFolderUrl(''); setIsEditing(false); }}><X size={14} /></button>}
+      {/* ─── Stats Bar ─── */}
+      {!isEditing && allFiles.length > 0 && (
+        <div className="mf-stats-bar">
+          <div className="mf-stat">
+            <HardDrive size={14} />
+            <span><strong>{stats.folders}</strong> folders</span>
           </div>
-          <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '6px' }}>Right-click folder in Drive → "Get link" → Paste here</p>
+          <div className="mf-stat-sep" />
+          <div className="mf-stat">
+            <File size={14} />
+            <span><strong>{stats.files}</strong> files</span>
+          </div>
+          <div className="mf-stat-sep" />
+          <div className="mf-stat">
+            <Download size={14} />
+            <span><strong>{formatFileSize(stats.totalSize)}</strong> total</span>
+          </div>
+          {Object.entries(stats.byCategory).filter(([_, count]) => count > 0).map(([cat, count]) => (
+            <span key={cat} className={`mf-stat-badge mf-stat-badge-${cat}`}>
+              {CATEGORY_META[cat]?.icon || '\u{1F4CE}'} {count}
+            </span>
+          ))}
         </div>
       )}
 
-      {/* Breadcrumbs */}
-      {folderUrl && !isEditing && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '12px', fontSize: '12px', flexWrap: 'wrap' }}>
+      {/* ─── Folder URL Input ─── */}
+      {isEditing && (
+        <div className="mf-folder-input">
+          <span className="mf-folder-input-label">Paste your Google Drive folder link:</span>
+          <div className="mf-folder-input-row">
+            <input
+              type="text"
+              value={folderUrl}
+              onChange={(e) => setFolderUrl(e.target.value)}
+              placeholder="https://drive.google.com/drive/folders/..."
+              className="mf-folder-input-field"
+              onKeyDown={(e) => e.key === 'Enter' && handleSaveUrl()}
+            />
+            <button className="btn btn-primary btn-sm" onClick={handleSaveUrl} disabled={!folderUrl.trim()}>
+              <Link size={14} /> Connect
+            </button>
+            {folderUrl && (
+              <button className="btn btn-ghost btn-sm" onClick={() => { setFolderUrl(''); setIsEditing(false); }}>
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          <p className="mf-folder-input-hint">
+            Right-click any folder in Google Drive &rarr; &quot;Get link&quot; &rarr; Paste the link here.
+            Make sure the folder is shared with &quot;Anyone with the link&quot;.
+          </p>
+        </div>
+      )}
+
+      {/* ─── Breadcrumbs ─── */}
+      {folderUrl && !isEditing && breadcrumbs.length + (currentFolderName ? 1 : 0) > 0 && (
+        <div className="mf-breadcrumbs">
           <button
+            className={`mf-breadcrumb-btn ${!currentFolderId ? 'mf-breadcrumb-current' : ''}`}
             onClick={() => navigateToBreadcrumb(-1)}
-            style={{ background: 'none', border: 'none', color: currentFolderId ? 'var(--accent-blue)' : 'var(--text-primary)', cursor: 'pointer', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 'var(--fw-medium)' }}
           >
-            <Home size={14} /> Root
+            <Home size={13} /> Root
           </button>
           {breadcrumbs.map((bc, i) => (
-            <React.Fragment key={bc.id + i}>
-              <ChevronRight size={12} style={{ color: 'var(--text-tertiary)' }} />
+            <React.Fragment key={bc.id}>
+              <ChevronRight size={12} className="mf-breadcrumb-sep" />
               <button
+                className={`mf-breadcrumb-btn ${i === breadcrumbs.length - 1 && !currentFolderName ? 'mf-breadcrumb-current' : ''}`}
                 onClick={() => navigateToBreadcrumb(i)}
-                style={{ background: 'none', border: 'none', color: i === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--accent-blue)', cursor: 'pointer', padding: '4px 6px', borderRadius: '4px', fontSize: '12px', fontWeight: 'var(--fw-medium)' }}
               >
                 {bc.name}
               </button>
             </React.Fragment>
           ))}
-          {currentFolderName && breadcrumbs.length > 0 && (
+          {currentFolderName && (
             <>
-              <ChevronRight size={12} style={{ color: 'var(--text-tertiary)' }} />
-              <span style={{ color: 'var(--text-primary)', padding: '4px 6px', fontWeight: 'var(--fw-bold)' }}>{currentFolderName}</span>
+              <ChevronRight size={12} className="mf-breadcrumb-sep" />
+              <span className="mf-breadcrumb-btn mf-breadcrumb-current">{currentFolderName}</span>
             </>
           )}
         </div>
       )}
 
-      {/* Back button when inside folder */}
+      {/* ─── Back button ─── */}
       {currentFolderId && !isEditing && (
         <button
           className="btn btn-ghost btn-sm"
           onClick={navigateBack}
-          style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+          style={{ marginBottom: 'var(--sp-3)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
         >
-          ← Back
+          <ChevronsLeft size={14} /> Back
         </button>
       )}
 
-      {/* Error */}
+      {/* ─── Error ─── */}
       {error && (
-        <div style={{ padding: '12px 16px', background: 'var(--accent-rose-glow)', borderRadius: 'var(--radius-md)', border: '1px solid color-mix(in srgb, var(--accent-rose) 30%, transparent)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--accent-rose)' }}>
-          <AlertCircle size={16} /><span style={{ flex: 1 }}>{error}</span>
-          <button className="btn btn-ghost btn-sm" onClick={() => setError(null)}><X size={14} /></button>
+        <div className="mf-error">
+          <AlertCircle size={16} />
+          <span className="mf-error-msg">{error}</span>
+          <button className="mf-error-dismiss" onClick={() => setError(null)}>
+            <X size={14} />
+          </button>
         </div>
       )}
 
-      {/* Loading */}
-      {loading && (
-        <div style={{ padding: '48px 16px', textAlign: 'center' }}>
-          <Loader2 size={24} style={{ color: 'var(--accent-blue)', animation: 'spin 1s linear infinite', marginBottom: '12px' }} />
-          <p style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Loading...</p>
-        </div>
-      )}
+      {/* ─── Search & Sort Toolbar ─── */}
+      {!isEditing && allFiles.length > 0 && (
+        <div className="mf-toolbar">
+          <div className="mf-search-wrap">
+            <Search size={15} className="mf-search-icon" />
+            <input
+              type="text"
+              className="mf-search-input"
+              placeholder="Search files by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button className="mf-search-clear" onClick={() => setSearchQuery('')}>
+                <X size={12} />
+              </button>
+            )}
+          </div>
 
-      {/* Files & Folders List */}
-      {!loading && !error && files.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {files.map((file) => {
-            const isFolder = file.mimeType === 'application/vnd.google-apps.folder';
-            const category = getFileCategory(file.mimeType);
-            const canPreview = !isFolder && ['pdf', 'image', 'video'].includes(category);
+          <div className="mf-toolbar-actions">
+            <select
+              className="mf-sort-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="name">Name</option>
+              <option value="date">Date</option>
+              <option value="size">Size</option>
+              <option value="type">Type</option>
+            </select>
 
-            return (
-              <div
-                key={file.id}
-                style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-primary)', cursor: 'pointer', transition: 'all 0.15s ease' }}
-                onClick={() => handleFileClick(file)}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-card-hover)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-input)'; }}
+            <div className="mf-view-toggle">
+              <button
+                className={`mf-view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                onClick={() => setViewMode('grid')}
+                title="Grid view"
               >
-                <FileIcon mimeType={file.mimeType} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '13px', fontWeight: isFolder ? 'var(--fw-bold)' : 'var(--fw-medium)', color: isFolder ? 'var(--accent-blue)' : 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {isFolder ? '📁 ' : ''}{file.name}
-                  </p>
-                  {!isFolder && (
-                    <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', margin: '2px 0 0' }}>
-                      {formatFileSize(file.size)}{file.modifiedTime && ` · ${new Date(file.modifiedTime).toLocaleDateString()}`}
-                    </p>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                  {isFolder ? (
-                    <ChevronRight size={16} style={{ color: 'var(--accent-blue)' }} />
-                  ) : (
-                    <>
-                      {canPreview && (
-                        <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setPreviewFile(file); }} style={{ padding: '4px 8px' }}><Eye size={14} /></button>
-                      )}
-                      <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); handleDownload(file); }} style={{ padding: '4px 8px' }}><Download size={14} /></button>
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                <Grid3X3 size={14} />
+              </button>
+              <button
+                className={`mf-view-btn ${viewMode === 'list' ? 'active' : ''}`}
+                onClick={() => setViewMode('list')}
+                title="List view"
+              >
+                <List size={14} />
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Empty */}
-      {!loading && !error && folderUrl && files.length === 0 && !isEditing && (
-        <div style={{ padding: '32px 16px', textAlign: 'center' }}>
-          <Folder size={32} style={{ color: 'var(--text-tertiary)', marginBottom: '12px' }} />
-          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>This folder is empty</p>
-          <button className="btn btn-secondary btn-sm" onClick={handleRemoveUrl} style={{ marginTop: '12px' }}>Change Folder</button>
+      {/* ─── Content ─── */}
+      {loading ? (
+        <FileSkeleton />
+      ) : !isEditing && folderUrl && filteredFiles.length === 0 && searchQuery ? (
+        renderNoSearchResults()
+      ) : !isEditing && folderUrl && allFiles.length === 0 ? (
+        <div className="mf-empty">
+          <div className="mf-empty-icon"><Folder size={32} /></div>
+          <h3>This folder is empty</h3>
+          <p>No files or folders found. Try connecting a different folder.</p>
+          <button className="btn btn-secondary btn-sm" onClick={handleRemoveUrl}>
+            Change Folder
+          </button>
         </div>
-      )}
-
-      {/* No Folder */}
-      {!loading && !error && !folderUrl && !isEditing && (
-        <div style={{ padding: '32px 16px', textAlign: 'center' }}>
-          <Link size={32} style={{ color: 'var(--text-tertiary)', marginBottom: '12px' }} />
-          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>Connect a Drive folder for {courseName}</p>
-          <button className="btn btn-primary btn-sm" onClick={() => setIsEditing(true)} style={{ marginTop: '12px' }}><Plus size={14} /> Add Folder</button>
+      ) : !isEditing && !folderUrl ? (
+        <div className="mf-empty">
+          <div className="mf-empty-icon"><Link size={32} /></div>
+          <h3>No folder connected</h3>
+          <p>Connect a Google Drive folder to see lecture notes for {courseName}.</p>
+          <button className="btn btn-primary btn-sm" onClick={() => setIsEditing(true)}>
+            <Plus size={14} /> Connect Folder
+          </button>
         </div>
-      )}
+      ) : !isEditing ? (
+        viewMode === 'grid' ? renderFileGrid() : renderFileList()
+      ) : null}
 
-      {previewFile && <FilePreviewModal file={previewFile} token={token} onClose={() => setPreviewFile(null)} />}
+      {/* ─── Preview Modal ─── */}
+      {previewIndex >= 0 && previewFiles.length > 0 && (
+        <FilePreviewModal
+          files={previewFiles}
+          currentIndex={previewIndex}
+          setCurrentIndex={setPreviewIndex}
+          onClose={() => { setPreviewIndex(-1); setPreviewFiles([]); }}
+        />
+      )}
     </div>
   );
 }
