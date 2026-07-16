@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { Coffee, Flame, Star, MessageSquare, AlertTriangle } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { Coffee, Flame, Star, MessageSquare, AlertTriangle, Plus, X, Info } from 'lucide-react';
 import { canteenData } from '../../data/mockData';
 import {
   getReviewSummary,
@@ -9,11 +10,52 @@ import {
   getComplaintCount,
   addComplaint,
 } from '../../utils/canteenFeedbackStorage';
+import './CanteenMenu.css';
 
-// Small read-only star row for showing an average rating.
+// ─── Time-slot based crowd status ───
+
+const crowdTimeSlots = [
+  { start: '07:00', end: '07:50', status: 'Filling Up Fast', icon: '📈', level: 'Moderate', color: '#e2b95c', desc: 'Seats are filling up with the breakfast crowd.' },
+  { start: '07:50', end: '08:00', status: 'Sudden Drop', icon: '📉', level: 'Low', color: '#8fc7bc', desc: 'Rapid clearance! Everyone is sprinting to class.' },
+  { start: '08:00', end: '09:40', status: 'Ghost Town', icon: '🧊', level: 'Zero Crowd', color: '#a3bd97', desc: 'Practically empty. You can take 3 tables alone.' },
+  { start: '09:40', end: '10:00', status: 'Blitz Rush', icon: '⚡', level: 'High (Short)', color: '#cf8666', desc: 'Heavy queue at the counter! Fast-paced break rush.' },
+  { start: '10:00', end: '10:30', status: 'Room to Breathe', icon: '🍃', level: 'Low', color: '#8fc7bc', desc: 'Crowd vanished back to class. Lots of free seats.' },
+  { start: '10:30', end: '10:50', status: 'Snack Surge', icon: '⚡', level: 'High (Short)', color: '#cf8666', desc: 'Quick mid-day rush. Long lines but moves fast.' },
+  { start: '10:50', end: '12:30', status: 'Easy Flow', icon: '🚶', level: 'Light Crowd', color: '#b9e2da', desc: 'Casual crowd. Easy to find a spot to sit and chill.' },
+  { start: '12:30', end: '14:30', status: 'Gridlock / Full House', icon: '🔥', level: 'Extreme', color: '#e2b95c', desc: '100% Capacity! Standing room only. Good luck finding a seat.' },
+  { start: '14:30', end: '15:30', status: 'Mass Exodus', icon: '📉', level: 'Receding', color: '#d0c15f', desc: 'Heavy crowd is leaving. Tables are opening up.' },
+  { start: '15:30', end: '16:20', status: 'Chilled Adda', icon: '☕', level: 'Moderate', color: '#e2b95c', desc: 'Cozy afternoon crowd. Decent rush for tea.' },
+  { start: '16:20', end: '17:10', status: 'Dwindling Down', icon: '🍂', level: 'Very Low', color: '#c6d8bd', desc: 'Campus leaving hour. Canteen is emptying out fast.' },
+  { start: '17:10', end: '18:00', status: 'Barely Anyone', icon: '🌫️', level: 'Near Zero', color: '#a3bd97', desc: 'Just a handful of people left. Total peace.' },
+  { start: '18:00', end: '19:00', status: 'Wrapping Up', icon: '🧹', level: 'Closing', color: '#b998c0', desc: 'No new entry/orders. Staff is cleaning the floors.' },
+  { start: '19:00', end: '07:00', status: 'Hard Shutdown', icon: '🚫', level: 'Locked', color: '#ad6448', desc: 'Canteen closed. Doors locked.' },
+];
+
+function toMinutes(timeStr) {
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function getCurrentTimeSlot() {
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  for (const slot of crowdTimeSlots) {
+    const startM = toMinutes(slot.start);
+    const endM = toMinutes(slot.end);
+    if (endM > startM) {
+      if (currentMinutes >= startM && currentMinutes < endM) return slot;
+    } else {
+      if (currentMinutes >= startM || currentMinutes < endM) return slot;
+    }
+  }
+  return crowdTimeSlots[crowdTimeSlots.length - 1];
+}
+
+// ─── Star display ───
 function StarDisplay({ value, size = 12 }) {
   return (
-    <span style={{ display: 'inline-flex', gap: '1px' }}>
+    <span className="canteen-food-rating-stars">
       {[1, 2, 3, 4, 5].map((n) => (
         <Star
           key={n}
@@ -28,17 +70,15 @@ function StarDisplay({ value, size = 12 }) {
   );
 }
 
-// Interactive star picker for the review form.
 function StarPicker({ value, onChange }) {
   const [hover, setHover] = useState(0);
   return (
-    <span style={{ display: 'inline-flex', gap: '2px' }}>
+    <span className="canteen-star-picker">
       {[1, 2, 3, 4, 5].map((n) => (
         <Star
           key={n}
           size={20}
           style={{
-            cursor: 'pointer',
             color: n <= (hover || value) ? 'var(--accent-amber)' : 'var(--text-tertiary)',
             fill: n <= (hover || value) ? 'var(--accent-amber)' : 'none',
           }}
@@ -51,71 +91,50 @@ function StarPicker({ value, onChange }) {
   );
 }
 
-// A single food card: price, average rating, and the feedback panel.
+// ─── Food card ───
 function FoodCard({ food }) {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-  // Bump to force a re-read of feedback after a submit.
   const [feedbackVersion, setFeedbackVersion] = useState(0);
 
   const summary = useMemo(() => getReviewSummary(food.id), [food.id, feedbackVersion]);
   const complaintCount = useMemo(() => getComplaintCount(food.id), [food.id, feedbackVersion]);
 
   return (
-    <div
-      className="glass-card"
-      style={{
-        padding: '16px',
-        background: 'var(--bg-input)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        opacity: food.available ? 1 : 0.5,
-        position: 'relative'
-      }}
-    >
+    <div className={`canteen-food-card${food.available ? '' : ' unavailable'}`}>
       {food.popular && (
-        <span className="badge badge-amber" style={{ position: 'absolute', top: '8px', right: '8px', fontSize: '8px', display: 'flex', gap: '2px', alignItems: 'center' }}>
+        <span className="canteen-bestseller-badge">
           <Flame size={8} /> BESTSELLER
         </span>
       )}
 
       <div>
-        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 'bold' }}>{food.category}</span>
-        <h3 style={{ fontSize: '14px', fontWeight: 'bold', margin: '4px 0' }}>{food.name}</h3>
+        <span className="canteen-food-category">{food.category}</span>
+        <h3 className="canteen-food-name">{food.name}</h3>
 
-        {/* Average rating */}
-        <div className="flex items-center gap-1" style={{ margin: '4px 0' }}>
+        <div className="canteen-food-rating">
           <StarDisplay value={summary.average} />
-          <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
+          <span className="canteen-food-rating-count">
             {summary.count > 0 ? `${summary.average} (${summary.count})` : 'No ratings'}
           </span>
         </div>
 
-        <p style={{ fontSize: 'var(--fs-md)', fontWeight: 'bold', color: 'var(--accent-cyan)', margin: '8px 0 0 0' }}>
-          ৳ {food.price}
-        </p>
+        <p className="canteen-food-price">৳ {food.price}</p>
       </div>
 
-      <div className="flex justify-between items-center mt-6 pt-2" style={{ borderTop: '1px solid var(--border-secondary)', fontSize: '11px' }}>
-        <span>
-          {food.available ? (
-            <span style={{ color: 'var(--accent-emerald)', fontWeight: 'bold' }}>In Stock</span>
-          ) : (
-            <span style={{ color: 'var(--accent-rose)', fontWeight: 'bold' }}>Stock Out</span>
-          )}
+      <div className="canteen-food-footer">
+        <span className={`canteen-stock-status ${food.available ? 'in-stock' : 'out-of-stock'}`}>
+          {food.available ? 'In Stock' : 'Stock Out'}
         </span>
       </div>
 
-      {/* Review / complaint toggle */}
       <button
-        className="btn btn-ghost btn-sm"
+        className="canteen-feedback-toggle"
         onClick={() => setIsFeedbackOpen((open) => !open)}
-        style={{ marginTop: '8px', fontSize: '10px', display: 'flex', gap: '5px', justifyContent: 'center', alignItems: 'center', color: 'var(--text-secondary)' }}
       >
         <MessageSquare size={11} />
         {isFeedbackOpen ? 'Hide feedback' : 'Review or complain'}
         {complaintCount > 0 && (
-          <span className="badge badge-rose" style={{ fontSize: '8px', padding: '1px 4px' }}>{complaintCount}</span>
+          <span className="canteen-complaint-count">{complaintCount}</span>
         )}
       </button>
 
@@ -126,7 +145,7 @@ function FoodCard({ food }) {
   );
 }
 
-// The expandable review + complaint panel for a single food item.
+// ─── Feedback panel ───
 function FoodFeedback({ food, onChanged }) {
   const [tab, setTab] = useState('reviews');
   const [rating, setRating] = useState(0);
@@ -163,58 +182,50 @@ function FoodFeedback({ food, onChanged }) {
   };
 
   return (
-    <div style={{ marginTop: '10px', borderTop: '1px solid var(--border-secondary)', paddingTop: '10px' }}>
-      {/* Tab switch */}
-      <div className="flex gap-1 mb-3" style={{ background: 'var(--bg-card)', padding: '2px', borderRadius: 'var(--radius-md)' }}>
+    <div className="canteen-feedback-panel">
+      <div className="canteen-feedback-tabs">
         <button
-          className={`btn btn-sm ${tab === 'reviews' ? 'btn-primary' : 'btn-ghost'}`}
-          style={{ flex: 1, padding: '5px', fontSize: '10px', display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}
+          className={`canteen-feedback-tab ${tab === 'reviews' ? 'active' : ''}`}
           onClick={() => setTab('reviews')}
         >
           <MessageSquare size={11} /> Reviews ({reviews.length})
         </button>
         <button
-          className={`btn btn-sm ${tab === 'complaints' ? 'btn-primary' : 'btn-ghost'}`}
-          style={{ flex: 1, padding: '5px', fontSize: '10px', display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}
+          className={`canteen-feedback-tab ${tab === 'complaints' ? 'active' : ''}`}
           onClick={() => setTab('complaints')}
         >
           <AlertTriangle size={11} /> Complaints ({complaints.length})
         </button>
       </div>
 
-      {error && (
-        <p style={{ color: 'var(--accent-rose)', fontSize: '10px', margin: '0 0 8px 0' }}>{error}</p>
-      )}
+      {error && <p className="canteen-feedback-error">{error}</p>}
 
       {tab === 'reviews' ? (
         <>
-          <form onSubmit={submitReview} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+          <form className="canteen-feedback-form" onSubmit={submitReview}>
             <StarPicker value={rating} onChange={setRating} />
             <textarea
+              className="input canteen-feedback-textarea"
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
-              className="input"
               placeholder="Share your thoughts on this item (optional)..."
-              style={{ minHeight: '48px', resize: 'vertical', fontSize: '11px' }}
             />
-            <button type="submit" className="btn btn-primary btn-sm" style={{ fontSize: '11px' }}>
+            <button type="submit" className="canteen-feedback-submit">
               Submit Review
             </button>
           </form>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '160px', overflowY: 'auto' }}>
+          <div className="canteen-feedback-list">
             {reviews.length === 0 ? (
-              <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', textAlign: 'center', padding: '8px 0' }}>
-                No reviews yet. Be the first!
-              </p>
+              <p className="canteen-feedback-empty">No reviews yet. Be the first!</p>
             ) : (
               reviews.map((r) => (
-                <div key={r.id} style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-sm)', padding: '8px' }}>
-                  <div className="flex justify-between items-center">
+                <div key={r.id} className="canteen-review-card">
+                  <div className="canteen-review-header">
                     <StarDisplay value={r.rating} />
-                    <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>{r.dateLabel}</span>
+                    <span className="canteen-review-date">{r.dateLabel}</span>
                   </div>
-                  {r.comment && <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>{r.comment}</p>}
+                  {r.comment && <p className="canteen-review-comment">{r.comment}</p>}
                 </div>
               ))
             )}
@@ -222,34 +233,31 @@ function FoodFeedback({ food, onChanged }) {
         </>
       ) : (
         <>
-          <form onSubmit={submitComplaint} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+          <form className="canteen-feedback-form" onSubmit={submitComplaint}>
             <textarea
+              className="input canteen-feedback-textarea"
               value={complaintText}
               onChange={(e) => setComplaintText(e.target.value)}
-              className="input"
               placeholder="Report an issue (quality, hygiene, wrong price...)"
-              style={{ minHeight: '48px', resize: 'vertical', fontSize: '11px' }}
             />
-            <button type="submit" className="btn btn-sm" style={{ fontSize: '11px', background: 'var(--accent-rose)', color: '#fff' }}>
+            <button type="submit" className="canteen-feedback-submit complaint">
               Submit Complaint
             </button>
           </form>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '160px', overflowY: 'auto' }}>
+          <div className="canteen-feedback-list">
             {complaints.length === 0 ? (
-              <p style={{ fontSize: '10px', color: 'var(--text-tertiary)', textAlign: 'center', padding: '8px 0' }}>
-                No complaints filed.
-              </p>
+              <p className="canteen-feedback-empty">No complaints filed.</p>
             ) : (
               complaints.map((c) => (
-                <div key={c.id} style={{ background: 'var(--accent-rose-glow)', border: '1px solid var(--accent-rose)', borderRadius: 'var(--radius-sm)', padding: '8px' }}>
-                  <div className="flex justify-between items-center">
-                    <span style={{ fontSize: '9px', color: 'var(--accent-rose)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <div key={c.id} className="canteen-complaint-card">
+                  <div className="canteen-complaint-header">
+                    <span className="canteen-complaint-badge">
                       <AlertTriangle size={10} /> Complaint
                     </span>
-                    <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>{c.dateLabel}</span>
+                    <span className="canteen-review-date">{c.dateLabel}</span>
                   </div>
-                  <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>{c.text}</p>
+                  <p className="canteen-complaint-text">{c.text}</p>
                 </div>
               ))
             )}
@@ -260,9 +268,10 @@ function FoodFeedback({ food, onChanged }) {
   );
 }
 
+// ─── Main Component ───
 export default function CanteenMenu() {
   const [activeCategory, setActiveCategory] = useState('All');
-  const [canteenInfo] = useState(() => {
+  const [canteenInfo, setCanteenInfo] = useState(() => {
     try {
       const stored = localStorage.getItem('aust-canteen-data');
       return stored ? JSON.parse(stored) : canteenData;
@@ -270,6 +279,28 @@ export default function CanteenMenu() {
       return canteenData;
     }
   });
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addForm, setAddForm] = useState({ name: '', category: 'Meals', price: '' });
+  const [showCrowdInfo, setShowCrowdInfo] = useState(false);
+
+  // Lock body scroll + close on Escape when overlay is open
+  useEffect(() => {
+    if (!showCrowdInfo) return;
+    document.body.style.overflow = 'hidden';
+    const handler = (e) => { if (e.key === 'Escape') setShowCrowdInfo(false); };
+    document.addEventListener('keydown', handler);
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handler);
+    };
+  }, [showCrowdInfo]);
+
+  const currentSlot = useMemo(() => getCurrentTimeSlot(), []);
+
+  const autoStatus = currentSlot.status === 'Hard Shutdown' ? 'closed' : 'open';
+  const effectiveStatus = canteenInfo.statusMode === 'auto' ? autoStatus : canteenInfo.status;
+  const effectiveCrowdSlot = canteenInfo.crowdMode === 'auto' ? currentSlot : null;
+  const isOpen = effectiveStatus === 'open';
 
   const categories = useMemo(() => {
     const list = new Set(canteenInfo.menu ? canteenInfo.menu.map(item => item.category) : []);
@@ -278,74 +309,233 @@ export default function CanteenMenu() {
 
   const filteredMenu = useMemo(() => {
     const menuList = canteenInfo.menu || [];
-    return menuList.filter(item => {
-      return activeCategory === 'All' || item.category === activeCategory;
-    });
+    return menuList.filter(item => activeCategory === 'All' || item.category === activeCategory);
   }, [activeCategory, canteenInfo]);
 
-  const isOpen = canteenInfo.status === 'open';
+  const handleAddItem = (e) => {
+    e.preventDefault();
+    const name = addForm.name.trim();
+    const price = Number(addForm.price);
+    if (!name || !(price >= 0)) return;
+
+    const newItem = {
+      id: Date.now(),
+      name,
+      category: addForm.category,
+      price,
+      popular: false,
+      available: true,
+    };
+
+    const updated = { ...canteenInfo, menu: [...(canteenInfo.menu || []), newItem] };
+    setCanteenInfo(updated);
+    localStorage.setItem('aust-canteen-data', JSON.stringify(updated));
+    setAddForm({ name: '', category: 'Meals', price: '' });
+    setShowAddForm(false);
+  };
+
+  const getCrowdColor = () => {
+    if (!isOpen) return 'var(--text-tertiary)';
+    if (canteenInfo.crowdLevel >= 75) return 'var(--accent-rose)';
+    if (canteenInfo.crowdLevel >= 40) return 'var(--accent-amber)';
+    return 'var(--accent-emerald)';
+  };
 
   return (
     <div className="glass-card-static canteen-menu-container animate-fadeInUp">
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-        <div className="flex items-center gap-2">
-          <div className="icon" style={{ backgroundColor: 'var(--accent-amber-glow)', color: 'var(--accent-amber)', padding: '6px', borderRadius: '8px' }}>
-            <Coffee size={18} />
+      {/* ─── Header ─── */}
+      <div className="canteen-header">
+        <div className="canteen-header-left">
+          <div className="canteen-header-icon">
+            <Coffee size={20} />
           </div>
           <div>
-            <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Canteen Food Menu & Crowd</h2>
-            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>Check live crowd indices, timings, and popular menu choices</p>
+            <h2 className="canteen-header-title">Canteen Food Menu &amp; Crowd</h2>
+            <p className="canteen-header-subtitle">
+              Check live crowd indices, timings, and popular menu choices
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 flex-wrap">
-          {/* Live occupancy/canteen status */}
-          <div className="flex items-center gap-2" style={{ background: 'var(--bg-input)', padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: '11px' }}>
-            <span style={{ color: 'var(--text-secondary)' }}>Status:</span>
-            <span className={`badge ${isOpen ? 'badge-emerald' : 'badge-rose'}`} style={{ fontSize: '9px', padding: '2px 6px' }}>
+        <div className="canteen-controls">
+          {/* Status */}
+          <div className="canteen-pill">
+            <span className="canteen-pill-label">Status:</span>
+            <span className={`canteen-status-text ${isOpen ? 'open' : 'closed'}`}>
               {isOpen ? 'OPEN' : 'CLOSED'}
             </span>
           </div>
 
-          {isOpen && (
-            <div className="flex items-center gap-2" style={{ background: 'var(--bg-input)', padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: '11px' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Crowd Pulse:</span>
-              <span style={{ fontWeight: 'bold', color: canteenInfo.crowdLevel >= 75 ? 'var(--accent-rose)' : 'var(--accent-emerald)' }}>
+          {/* Crowd */}
+          <div className="canteen-pill">
+            <span className="canteen-pill-label">Crowd:</span>
+            {canteenInfo.crowdMode === 'auto' && effectiveCrowdSlot ? (
+              <span className="canteen-crowd-text">
+                {effectiveCrowdSlot.icon} {effectiveCrowdSlot.status}
+                <span className="canteen-crowd-level">({effectiveCrowdSlot.level})</span>
+              </span>
+            ) : (
+              <span className="canteen-crowd-text" style={{ color: getCrowdColor() }}>
                 {canteenInfo.crowdLevel}% ({canteenInfo.crowdLevel >= 75 ? 'Busy' : canteenInfo.crowdLevel >= 40 ? 'Moderate' : 'Quiet'})
               </span>
-            </div>
-          )}
+            )}
+            <button
+              type="button"
+              className="canteen-info-btn"
+              onClick={() => setShowCrowdInfo(true)}
+              title="View crowd time-slots reference"
+            >
+              <Info size={13} />
+            </button>
+          </div>
 
+          {/* Categories */}
           {categories.length > 1 && (
-            <div className="flex gap-1" style={{ background: 'var(--bg-input)', padding: '2px', borderRadius: 'var(--radius-md)' }}>
+            <div className="canteen-categories">
               {categories.map(cat => (
                 <button
                   key={cat}
+                  className={`canteen-cat-btn ${activeCategory === cat ? 'active' : ''}`}
                   onClick={() => setActiveCategory(cat)}
-                  className={`btn btn-sm ${activeCategory === cat ? 'btn-primary' : 'btn-ghost'}`}
-                  style={{ padding: '6px 12px' }}
                 >
                   {cat}
                 </button>
               ))}
             </div>
           )}
+
+          {/* Add Item */}
+          <button
+            type="button"
+            className={`canteen-add-btn ${showAddForm ? 'canteen-add-btn-close' : ''}`}
+            onClick={() => setShowAddForm(open => !open)}
+          >
+            {showAddForm ? <X size={14} /> : <Plus size={14} />}
+            {showAddForm ? 'Close' : 'Add Item'}
+          </button>
         </div>
       </div>
 
-      {/* Food items Grid list */}
+      {/* ─── Add Item Form ─── */}
+      {showAddForm && (
+        <form className="canteen-add-form" onSubmit={handleAddItem}>
+          <div className="canteen-add-field" style={{ flex: '1 1 160px' }}>
+            <label className="canteen-add-field-label">Item Name</label>
+            <input
+              className="input canteen-add-field-input"
+              type="text"
+              placeholder="e.g. Chicken Burger"
+              value={addForm.name}
+              onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
+              required
+            />
+          </div>
+          <div className="canteen-add-field" style={{ flex: '0 1 120px' }}>
+            <label className="canteen-add-field-label">Category</label>
+            <select
+              className="input canteen-add-field-input"
+              value={addForm.category}
+              onChange={(e) => setAddForm({ ...addForm, category: e.target.value })}
+            >
+              <option value="Meals">Meals</option>
+              <option value="Snacks">Snacks</option>
+              <option value="Fast Food">Fast Food</option>
+              <option value="Beverages">Beverages</option>
+              <option value="Dessert">Dessert</option>
+            </select>
+          </div>
+          <div className="canteen-add-field" style={{ flex: '0 1 100px' }}>
+            <label className="canteen-add-field-label">Price (৳)</label>
+            <input
+              className="input canteen-add-field-input"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="70"
+              value={addForm.price}
+              onChange={(e) => setAddForm({ ...addForm, price: e.target.value })}
+              required
+            />
+          </div>
+          <button type="submit" className="canteen-add-submit">
+            <Plus size={14} /> Add
+          </button>
+        </form>
+      )}
+
+      {/* ─── Menu Grid ─── */}
       {filteredMenu.length === 0 ? (
-        <div className="glass-card-static" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)', background: 'var(--bg-input)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-lg)' }}>
-          <p style={{ margin: 0, fontSize: 'var(--fs-sm)' }}>
+        <div className="canteen-empty">
+          <p style={{ margin: 0 }}>
             {!isOpen ? 'The canteen is currently closed.' : 'No menu items available.'}
           </p>
         </div>
       ) : (
-        <div className="grid-3">
+        <div className="canteen-grid">
           {filteredMenu.map(food => (
             <FoodCard key={food.id} food={food} />
           ))}
         </div>
+      )}
+
+      {/* ─── Disclaimer ─── */}
+      <p className="canteen-disclaimer">
+        ⚠️ Crowd status &amp; opening status are estimated based on typical university schedules
+        and human behavior patterns. They are <strong>not</strong> live/real-time data and may not
+        reflect actual conditions.
+      </p>
+
+      {/* ─── Crowd Reference Overlay ─── */}
+      {showCrowdInfo && createPortal(
+        <>
+          <div className="canteen-overlay-backdrop" onClick={() => setShowCrowdInfo(false)} />
+          <div className="canteen-overlay">
+            <div className="canteen-overlay-card">
+              {/* Header */}
+              <div className="canteen-overlay-header">
+                <h3 className="canteen-overlay-title">Canteen Crowd Reference</h3>
+                <button
+                  type="button"
+                  className="canteen-overlay-close"
+                  onClick={() => setShowCrowdInfo(false)}
+                >
+                  <X size={16} /> Close
+                </button>
+              </div>
+
+              {/* Table */}
+              <div className="canteen-overlay-body">
+                <table className="canteen-ref-table">
+                  <thead>
+                    <tr>
+                      <th>Time Slot</th>
+                      <th>Status</th>
+                      <th className="center">Level</th>
+                      <th>What it means</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {crowdTimeSlots.map((slot) => {
+                      const isActive = slot === currentSlot;
+                      return (
+                        <tr key={slot.start + slot.end} className={isActive ? 'canteen-ref-row active' : ''}>
+                          <td className="nowrap">
+                            {isActive && <span className="canteen-ref-active-icon">▶</span>}
+                            {slot.start} — {slot.end}
+                          </td>
+                          <td className="nowrap">{slot.icon} {slot.status}</td>
+                          <td className="center nowrap">{slot.level}</td>
+                          <td className="desc">{slot.desc}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </>,
+        document.body
       )}
     </div>
   );

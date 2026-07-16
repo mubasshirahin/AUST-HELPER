@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { TrendingUp, Layers, Grid3x3, Trophy, FlaskConical } from 'lucide-react';
+import { TrendingUp, Layers, Grid3x3, Trophy, FlaskConical, GitBranch } from 'lucide-react';
 import CGPAGraph from './CGPAGraph';
 import SemesterTracker from './SemesterTracker';
 import DeptHeatmap from './DeptHeatmap';
 import CoursePoll from './CoursePoll';
+import PrerequisiteTree from './PrerequisiteTree';
 import GliderTabs from '../../components/GliderTabs';
 import './AnalyticsPage.css';
 
@@ -14,6 +15,7 @@ const gradeLabTabs = [
   { id: 'semestertracker', label: 'Semester', icon: Layers, color: 'purple', desc: 'Per-semester' },
   { id: 'heatmap', label: 'Dept Heatmap', icon: Grid3x3, color: 'rose', desc: 'Topic density' },
   { id: 'bestworst', label: 'Best & Worst', icon: Trophy, color: 'emerald', desc: 'Course poll' },
+  { id: 'prereqs', label: 'Prerequisites', icon: GitBranch, color: 'purple', desc: 'Course flow map' },
 ];
 
 export default function AnalyticsPage() {
@@ -32,6 +34,7 @@ export default function AnalyticsPage() {
       case 'semestertracker': return <SemesterTracker />;
       case 'heatmap': return <DeptHeatmap />;
       case 'bestworst': return <CoursePoll />;
+      case 'prereqs': return <PrerequisiteTree />;
       default: return <CGPAGraph />;
     }
   };

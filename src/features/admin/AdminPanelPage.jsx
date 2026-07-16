@@ -824,6 +824,30 @@ export default function AdminPanelPage() {
                   </div>
                 </div>
 
+                {/* Status Mode: Auto / Manual */}
+                <div>
+                  <label className="input-label" style={{ display: 'block', marginBottom: '6px' }}>
+                    Status Mode
+                    <span style={{ fontWeight: 'normal', fontSize: '10px', color: 'var(--text-tertiary)', marginLeft: '6px' }}>
+                      — Auto uses time-slot; Manual uses your toggle above
+                    </span>
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      className={`btn ${canteenInfo.statusMode === 'auto' ? 'btn-primary' : 'btn-secondary'} flex-1`}
+                      onClick={() => handleUpdateCanteen('statusMode', 'auto')}
+                    >
+                      Auto
+                    </button>
+                    <button
+                      className={`btn ${canteenInfo.statusMode === 'manual' ? 'btn-rose' : 'btn-secondary'} flex-1`}
+                      onClick={() => handleUpdateCanteen('statusMode', 'manual')}
+                    >
+                      Manual
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label className="input-label" style={{ display: 'block', marginBottom: '6px' }}>Canteen Working Hours</label>
                   <input
@@ -835,7 +859,31 @@ export default function AdminPanelPage() {
                   />
                 </div>
 
-                {canteenInfo.status === 'open' && (
+                {/* Crowd Mode: Auto / Manual */}
+                <div>
+                  <label className="input-label" style={{ display: 'block', marginBottom: '6px' }}>
+                    Crowd Level Mode
+                    <span style={{ fontWeight: 'normal', fontSize: '10px', color: 'var(--text-tertiary)', marginLeft: '6px' }}>
+                      — Auto uses time-slot; Manual lets you set % below
+                    </span>
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      className={`btn ${canteenInfo.crowdMode === 'auto' ? 'btn-primary' : 'btn-secondary'} flex-1`}
+                      onClick={() => handleUpdateCanteen('crowdMode', 'auto')}
+                    >
+                      Auto
+                    </button>
+                    <button
+                      className={`btn ${canteenInfo.crowdMode === 'manual' ? 'btn-rose' : 'btn-secondary'} flex-1`}
+                      onClick={() => handleUpdateCanteen('crowdMode', 'manual')}
+                    >
+                      Manual
+                    </button>
+                  </div>
+                </div>
+
+                {(canteenInfo.status === 'open' || canteenInfo.crowdMode === 'manual') && (
                   <div>
                     <div className="flex justify-between items-center mb-1">
                       <label className="input-label">Live Crowd Index ({canteenInfo.crowdLevel}%)</label>

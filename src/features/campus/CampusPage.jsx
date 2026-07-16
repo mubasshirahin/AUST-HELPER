@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Map, MapPin, Users, Library, UtensilsCrossed, GitBranch } from 'lucide-react';
+import { Map, MapPin, Users, Library, UtensilsCrossed } from 'lucide-react';
 import InteractiveMap from './InteractiveMap';
 import FacultyStatus from './FacultyStatus';
 import LibraryPulse from './LibraryPulse';
 import CanteenMenu from './CanteenMenu';
-import PrerequisiteTree from './PrerequisiteTree';
 import GliderTabs from '../../components/GliderTabs';
 import './CampusPage.css';
 
@@ -13,7 +12,6 @@ const campusTabs = [
   { id: 'faculty', label: 'Faculty Status',   icon: Users,           color: 'amber',   desc: 'Office hours' },
   { id: 'library', label: 'Library Pulse',    icon: Library,         color: 'emerald', desc: 'Occupancy' },
   { id: 'canteen', label: 'Canteen Menu',     icon: UtensilsCrossed, color: 'rose',    desc: "Today's menu" },
-  { id: 'prereqs', label: 'Prerequisites',    icon: GitBranch,       color: 'purple',  desc: 'Course tree' },
 ];
 
 const CAMPUS_TAB_KEY = 'aust-campus-active-tab';
@@ -34,7 +32,6 @@ export default function CampusPage() {
       case 'faculty': return <FacultyStatus />;
       case 'library': return <LibraryPulse />;
       case 'canteen': return <CanteenMenu />;
-      case 'prereqs': return <PrerequisiteTree />;
       default: return <InteractiveMap />;
     }
   };

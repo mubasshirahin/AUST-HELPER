@@ -299,6 +299,7 @@ export default function SettingsPage() {
     avatar: user.avatar || '',
     bloodGroup: user.bloodGroup || '',
     facebook: user.facebook || '',
+    facebookName: user.facebookName || '',
     whatsapp: user.whatsapp || '',
     linkedin: user.linkedin || '',
     discord: user.discord || '',
@@ -326,6 +327,7 @@ export default function SettingsPage() {
       avatar: user.avatar || '',
       bloodGroup: user.bloodGroup || '',
       facebook: user.facebook || '',
+      facebookName: user.facebookName || '',
       whatsapp: user.whatsapp || '',
       linkedin: user.linkedin || '',
       discord: user.discord || '',
@@ -397,6 +399,56 @@ export default function SettingsPage() {
     discord: 'username#0000',
   };
 
+  // Build a clickable URL from a raw social value (full URL or bare username)
+  const socialHref = (key, value) => {
+    const v = String(value || '').trim();
+    if (!v) return null;
+    if (/^https?:\/\//i.test(v)) return v;
+    switch (key) {
+      case 'facebook':
+        // strip leading facebook.com/ or fb.com/ if pasted without protocol
+        return `https://facebook.com/${v.replace(/^(www\.)?(facebook\.com|fb\.com)\//i, '').replace(/^@/, '')}`;
+      case 'linkedin':
+        return v.match(/linkedin\.com/i)
+          ? `https://${v.replace(/^(www\.)?/i, '')}`
+          : `https://linkedin.com/in/${v.replace(/^@/, '')}`;
+      case 'whatsapp': {
+        const digits = v.replace(/[^\d]/g, '');
+        return digits ? `https://wa.me/${digits}` : null;
+      }
+      default:
+        return null; // discord etc. — no profile URL
+    }
+  };
+
+  // Short display label from a raw social value (username only, not the full URL)
+  const socialDisplay = (key, value) => {
+    const v = String(value || '').trim();
+    if (!v) return '';
+    switch (key) {
+      case 'facebook': {
+        // profile.php?id=123... links have no username — show the numeric id
+        const idMatch = v.match(/profile\.php\?id=(\d+)/i);
+        if (idMatch) return idMatch[1];
+        return v
+          .replace(/^https?:\/\//i, '')
+          .replace(/^(www\.|m\.|web\.)?(facebook\.com|fb\.com)\//i, '')
+          .replace(/^@/, '')
+          .split(/[/?#]/)[0] || v;
+      }
+      case 'linkedin':
+        return v
+          .replace(/^https?:\/\//i, '')
+          .replace(/^(www\.)?linkedin\.com\/(in|company)\//i, '')
+          .replace(/^@/, '')
+          .split(/[/?#]/)[0] || v;
+      case 'whatsapp':
+        return v;
+      default:
+        return v;
+    }
+  };
+
   const renderSocialItem = (key, label, value, editing) => {
     const icon = socialIcons[key];
     const placeholder = socialPlaceholders[key];
@@ -419,11 +471,36 @@ export default function SettingsPage() {
         </label>
       );
     }
-    if (!value) return null;
+    // Not set → still show the logo, just dimmed with a blank value
+    if (!value) {
+      return (
+        <span className="profile-linked-social-item" style={{ opacity: 0.35 }} title={`${label} not added yet`}>
+          {icon}
+          <span style={{ fontSize: '10px', fontStyle: 'italic', color: 'var(--text-tertiary)' }}>—</span>
+        </span>
+      );
+    }
+    const href = socialHref(key, value);
+    const display = socialDisplay(key, value);
+    if (href) {
+      return (
+        <a
+          className="profile-linked-social-item"
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`Open ${label} profile`}
+          style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}
+        >
+          {icon}
+          {display}
+        </a>
+      );
+    }
     return (
       <span className="profile-linked-social-item">
         {icon}
-        {value}
+        {display}
       </span>
     );
   };
@@ -845,23 +922,21 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                {(user.linkedSocial?.gmail || user.linkedSocial?.facebook || profileDetails.facebook || profileDetails.whatsapp || profileDetails.linkedin || profileDetails.discord || isEditingProfile) && (
-                  <div className="profile-linked-social">
-                    <h4>Linked Accounts</h4>
-                    <div className="profile-linked-social-list">
-                      {user.linkedSocial?.gmail && (
-                        <span className="profile-linked-social-item">
-                          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                          {user.linkedSocial.gmail}
-                        </span>
-                      )}
-                      {renderSocialItem('facebook', 'Facebook', profileDetails.facebook, isEditingProfile)}
-                      {renderSocialItem('whatsapp', 'WhatsApp', profileDetails.whatsapp, isEditingProfile)}
-                      {renderSocialItem('linkedin', 'LinkedIn', profileDetails.linkedin, isEditingProfile)}
-                      {renderSocialItem('discord', 'Discord', profileDetails.discord, isEditingProfile)}
-                    </div>
+                <div className="profile-linked-social">
+                  <h4>Linked Accounts</h4>
+                  <div className="profile-linked-social-list">
+                    {user.linkedSocial?.gmail && (
+                      <span className="profile-linked-social-item">
+                        <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                        {user.linkedSocial.gmail}
+                      </span>
+                    )}
+                    {renderSocialItem('facebook', 'Facebook', profileDetails.facebook, isEditingProfile)}
+                    {renderSocialItem('whatsapp', 'WhatsApp', profileDetails.whatsapp, isEditingProfile)}
+                    {renderSocialItem('linkedin', 'LinkedIn', profileDetails.linkedin, isEditingProfile)}
+                    {renderSocialItem('discord', 'Discord', profileDetails.discord, isEditingProfile)}
                   </div>
-                )}
+                </div>
 
                 {isEditingProfile && (
                   <div className="settings-quick-change">
