@@ -52,15 +52,16 @@ export default function MarketplacePage() {
               <div className="marketplace-hero-grid" />
               <div className="marketplace-hero-orb marketplace-hero-orb-1" />
               <div className="marketplace-hero-orb marketplace-hero-orb-2" />
+              <div className="marketplace-hero-shimmer" />
             </div>
             <div className="marketplace-hero-content">
               <div className="marketplace-hero-title-row">
                 <div className="marketplace-hero-icon">
-                  <ShoppingBag size={24} />
+                  <ShoppingBag size={18} strokeWidth={2.5} />
                 </div>
                 <div>
                   <h1 className="marketplace-hero-title">
-                    Campus <span className="marketplace-hero-title-highlight">Market</span>
+                    Campus <span className="marketplace-hero-name">Market</span>
                   </h1>
                   <p className="marketplace-hero-subtitle">
                     Trade student equipment/books, find bachelor sharing hosts, locate lost products, and connect study buddies.

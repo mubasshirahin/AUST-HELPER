@@ -9,14 +9,14 @@ import './ProPage.css';
 const PLANS = [
   {
     id: 'free',
-    name: 'Free',
+    name: 'Node',
     subtitle: 'Get started with basics',
     price: 0,
     period: 'forever',
     originalPrice: null,
     icon: Star,
-    iconClass: 'free',
-    ctaClass: 'free',
+    iconClass: 'node',
+    ctaClass: 'node',
     ctaText: 'Current Plan',
     features: [
       { text: 'Dashboard & CGPA tracking', included: true },
@@ -35,19 +35,19 @@ const PLANS = [
   },
   {
     id: 'pro',
-    name: 'AUSTWise Pro',
+    name: 'Helix',
     subtitle: 'Level up your experience',
-    price: 20,
+    price: 50,
     period: '/month',
-    originalPrice: 49,
+    originalPrice: null,
     icon: Crown,
-    iconClass: 'pro',
-    ctaClass: 'pro',
-    ctaText: 'Get Pro',
+    iconClass: 'helix',
+    ctaClass: 'helix',
+    ctaText: 'Get Helix',
     badge: 'Most Popular',
     featured: true,
     features: [
-      { text: 'Everything in Free', included: true },
+      { text: 'Everything in Node', included: true },
       { text: 'Ad-free experience', included: true },
       { text: 'Premium themes & layouts', included: true },
       { text: 'Advanced analytics & insights', included: true },
@@ -60,17 +60,17 @@ const PLANS = [
   },
   {
     id: 'premium',
-    name: 'Premium',
+    name: 'Apex',
     subtitle: 'The ultimate experience',
-    price: 50,
-    period: '/month',
-    originalPrice: 99,
+    price: 500,
+    period: '/year',
+    originalPrice: null,
     icon: Zap,
-    iconClass: 'premium',
-    ctaClass: 'premium',
-    ctaText: 'Go Premium',
+    iconClass: 'apex',
+    ctaClass: 'apex',
+    ctaText: 'Go Apex',
     features: [
-      { text: 'Everything in Pro', included: true },
+      { text: 'Everything in Helix', included: true },
       { text: 'AI-powered study assistant', included: true, highlight: true },
       { text: 'Custom branding & themes', included: true },
       { text: 'Priority 24/7 support', included: true },
@@ -148,13 +148,12 @@ export default function ProPage() {
           <div className="pro-hero-badge">
             <Sparkles size={12} />
             <span>Unlock Premium Features</span>
-          </div>
-          <h1>
+          </div>            <h1>
             Go <span>AUSTWise Pro</span>
           </h1>
           <p>
-            Supercharge your academic journey with premium features, AI-powered tools,
-            and an ad-free experience. Choose the plan that fits your needs.
+            Three tiers, one goal — your academic edge. Node gets you started, Helix unlocks the
+            full toolkit, and Apex gives you everything plus AI-powered mastery.
           </p>
         </div>
       </section>
@@ -248,6 +247,11 @@ export default function ProPage() {
                       <Check size={16} />
                       Current Plan
                     </>
+                  ) : isFree ? (
+                    <>
+                      Get Started
+                      <ArrowRight size={16} />
+                    </>
                   ) : (
                     <>
                       {plan.ctaText}
@@ -275,9 +279,9 @@ export default function ProPage() {
         <div className="pro-comparison-table">
           <div className="pro-compare-row header">
             <div className="pro-compare-cell">Feature</div>
-            <div className="pro-compare-cell">Free</div>
-            <div className="pro-compare-cell">Pro</div>
-            <div className="pro-compare-cell">Premium</div>
+            <div className="pro-compare-cell">Node</div>
+            <div className="pro-compare-cell">Helix</div>
+            <div className="pro-compare-cell">Apex</div>
           </div>
           {COMPARISON_FEATURES.map((feature, i) => (
             <div key={i} className="pro-compare-row">
@@ -327,7 +331,7 @@ export default function ProPage() {
                       checked={selectedPlan === plan.id}
                       onChange={() => setSelectedPlan(plan.id)}
                     />
-                    <Icon size={18} style={{ color: plan.id === 'pro' ? 'var(--accent-amber)' : 'var(--accent-purple)' }} />
+                    <Icon size={18} style={{ color:                        plan.id === 'pro' ? 'var(--accent-amber)' : 'var(--accent-purple)' }} />
                     <div className="pro-modal-plan-info">
                       <div className="pro-modal-plan-name">{plan.name}</div>
                       <div className="pro-modal-plan-price">৳{plan.price}{plan.period}</div>

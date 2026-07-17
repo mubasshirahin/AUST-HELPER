@@ -1106,8 +1106,8 @@ select.input {
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(16px) scale(0.988); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);     }
 }
 
 @keyframes fadeInDown {
@@ -1161,7 +1161,7 @@ select.input {
 }
 
 .animate-fadeIn { animation: fadeIn 0.3s cubic-bezier(0.2, 0, 0, 1) forwards; }
-.animate-fadeInUp { animation: fadeInUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.animate-fadeInUp { animation: fadeInUp 0.48s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .animate-scaleIn { animation: scaleIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
 .animate-float { animation: float 3s ease-in-out infinite; }
 .animate-pulse { animation: pulse 2s ease-in-out infinite; }

@@ -1,0 +1,490 @@
+/* ═══════════════════════════════════════════════════════════════
+   Dashboard Premium Utility Layer
+   Design: Minimal luxury · Unified glassmorphism · 4px/8px grid
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Card micro-interactions ── */
+.premium-card {
+  transition:
+    transform 0.24s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
+}
+.premium-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent-blue) 28%, var(--border-primary));
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.04) inset,
+    0 8px 28px -8px color-mix(in srgb, var(--accent-blue) 14%, transparent);
+}
+
+/* ── List row micro-interaction ── */
+.premium-list-item {
+  transition:
+    background 0.18s ease,
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.18s ease;
+}
+.premium-list-item:hover {
+  background: color-mix(in srgb, var(--accent-blue) 6%, var(--bg-input)) !important;
+  transform: translateX(3px);
+}
+
+/* ── Status badges — unified token system ── */
+.badge-live,
+.badge-urgent,
+.badge-upcoming,
+.badge-active,
+.badge-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.badge-live    { color: var(--accent-emerald); background: color-mix(in srgb, var(--accent-emerald) 10%, transparent); }
+.badge-urgent  { color: var(--accent-rose);    background: color-mix(in srgb, var(--accent-rose)    10%, transparent); }
+.badge-upcoming{ color: var(--accent-blue);    background: color-mix(in srgb, var(--accent-blue)    10%, transparent); }
+.badge-active  { color: var(--accent-cyan);    background: color-mix(in srgb, var(--accent-cyan)    10%, transparent); }
+.badge-done    { color: var(--text-tertiary);  background: color-mix(in srgb, var(--text-tertiary)  10%, transparent); }
+
+/* ── Premium divider ── */
+.premium-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent-blue) 28%, transparent),
+    color-mix(in srgb, var(--border-primary) 50%, transparent) 55%,
+    transparent
+  );
+  border: none;
+  margin: var(--sp-3) 0;
+}
+
+/* ── Glassmorphism card ── */
+.glass-card-premium {
+  background: color-mix(in srgb, var(--bg-card) 82%, transparent);
+  backdrop-filter: blur(18px) saturate(1.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.05) inset,
+    0 4px 28px -8px rgba(0,0,0,0.28);
+}
+
+/* ── Section header ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.section-title .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+/* ── Typography scale ── */
+.text-display {
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+.text-heading {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+.text-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.text-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Stat value ── */
+.stat-value-premium {
+  font-size: var(--fs-3xl);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--text-primary) 55%, var(--text-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Skeleton shimmer ── */
+@keyframes skeletonPulse {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+.skeleton {
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--bg-secondary) 25%,
+    color-mix(in srgb, var(--text-tertiary) 14%, var(--bg-secondary)) 50%,
+    var(--bg-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.6s ease-in-out infinite;
+}
+
+/* ── Buttons ── */
+.btn-premium {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.01em;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s cubic-bezier(0.4,0,0.2,1),
+    box-shadow 0.2s ease;
+}
+.btn-premium:hover {
+  background: color-mix(in srgb, var(--accent-blue) 10%, var(--bg-secondary));
+  border-color: color-mix(in srgb, var(--accent-blue) 38%, transparent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--accent-blue) 22%, transparent);
+}
+.btn-premium:active { transform: translateY(0); box-shadow: none; }
+.btn-premium-solid {
+  background: var(--accent-blue);
+  color: #000;
+  border-color: transparent;
+  font-weight: var(--fw-bold);
+}
+.btn-premium-solid:hover {
+  filter: brightness(1.1);
+  background: var(--accent-blue);
+}
+
+/* ── Quote popup ── */
+.quote-popup {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-primary);
+  background: var(--bg-card);
+  padding: var(--sp-5) var(--sp-6) var(--sp-5) calc(var(--sp-6) + 12px);
+  font-style: italic;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  line-height: 1.75;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s ease;
+}
+.quote-popup:hover {
+  border-color: color-mix(in srgb, var(--accent-blue) 22%, var(--border-primary));
+}
+.quote-popup::before {
+  content: '\201C';
+  position: absolute;
+  top: -4px;
+  left: 12px;
+  font-size: 4rem;
+  line-height: 1;
+  color: var(--accent-blue);
+  opacity: 0.18;
+  font-style: normal;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+/* ── Pomodoro card ── */
+.pomodoro-card {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-primary);
+  background: var(--bg-card);
+  transition: transform 0.24s ease, box-shadow 0.24s ease;
+}
+.pomodoro-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px -8px color-mix(in srgb, var(--accent-rose) 18%, transparent);
+}
+
+/* ── Routine tab bar ── */
+.routine-card .tabs {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 3px;
+}
+.routine-card .tab {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.03em;
+  border-radius: var(--radius-md);
+  padding: 5px 10px;
+  transition: background 0.18s ease, color 0.18s ease;
+  color: var(--text-secondary);
+}
+.routine-card .tab.active {
+  background: color-mix(in srgb, var(--accent-blue) 12%, var(--bg-card));
+  color: var(--accent-blue);
+}
+
+/* ── Attendance bar ── */
+.attendance-bar-track {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+.attendance-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── WeekSchedule cell hover ── */
+.weekly-class-block {
+  transition: transform 0.18s cubic-bezier(0.4,0,0.2,1), box-shadow 0.18s ease;
+}
+.weekly-class-block:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 14px -4px rgba(0,0,0,0.4);
+  z-index: 2;
+  position: relative;
+}
+
+/* ── Focus ring ── */
+:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Dashboard scrollbar ── */
+.dashboard-page ::-webkit-scrollbar { width: 4px; height: 4px; }
+.dashboard-page ::-webkit-scrollbar-track { background: transparent; }
+.dashboard-page ::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 99px;
+  transition: background 0.2s ease;
+}
+.dashboard-page ::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--accent-blue) 45%, var(--border-primary));
+}
+
+/* ── Stat card upgrade ── */
+.stat-card {
+  transition:
+    transform 0.24s cubic-bezier(0.4,0,0.2,1),
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
+}
+.stat-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--accent-blue) 32%, var(--border-primary));
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.05) inset,
+    0 12px 32px -8px color-mix(in srgb, var(--accent-blue) 16%, transparent);
+}
+
+/* ── Notification banner hover ── */
+.animate-fadeIn[style*="border-radius: var(--radius-xl)"]:hover,
+div[class="animate-fadeIn"]:hover {
+  box-shadow: 0 6px 20px -6px color-mix(in srgb, var(--accent-blue) 16%, transparent);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Entrance Animations — fade-in + slide-up, staggered cascade
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Core keyframes ── */
+@keyframes dash-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dash-enter-subtle {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dash-enter-card {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Override the global animate-fadeInUp with a richer version ── */
+.animate-fadeInUp {
+  animation: dash-enter 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── GliderTabs entrance ── */
+.glider-tabs {
+  animation: dash-enter-subtle 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+}
+
+/* ── Section group cascade — each nth-child gets a later delay ── */
+.dashboard-page > .dash-section-group:nth-child(1),
+.dashboard-page > .dash-section:nth-child(1) {
+  animation: dash-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+}
+.dashboard-page > .dash-section-group:nth-child(2),
+.dashboard-page > .dash-section:nth-child(2) {
+  animation: dash-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.38s both;
+}
+.dashboard-page > .dash-section-group:nth-child(3),
+.dashboard-page > .dash-section:nth-child(3) {
+  animation: dash-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.46s both;
+}
+.dashboard-page > .dash-section-group:nth-child(4),
+.dashboard-page > .dash-section:nth-child(4) {
+  animation: dash-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.54s both;
+}
+.dashboard-page > .dash-section-group:nth-child(5),
+.dashboard-page > .dash-section:nth-child(5) {
+  animation: dash-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.6s both;
+}
+.dashboard-page > .dash-section-group:nth-child(6),
+.dashboard-page > .dash-section:nth-child(6) {
+  animation: dash-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.66s both;
+}
+
+/* ── Dashboard grid children ── */
+.dashboard-grid {
+  animation: dash-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
+}
+.dashboard-main-col > .dash-section-group:nth-child(1) {
+  animation: dash-enter 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.55s both;
+}
+.dashboard-main-col > .dash-section-group:nth-child(2) {
+  animation: dash-enter 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.63s both;
+}
+.dashboard-main-col > .dash-section-group:nth-child(3) {
+  animation: dash-enter 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.71s both;
+}
+.dashboard-side-col > .dash-section-group:nth-child(1) {
+  animation: dash-enter 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.6s both;
+}
+.dashboard-side-col > .dash-section-group:nth-child(2) {
+  animation: dash-enter 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.68s both;
+}
+.dashboard-side-col > .dash-section-group:nth-child(3) {
+  animation: dash-enter 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.76s both;
+}
+
+/* ── Section header slide-in from left ── */
+.dash-section-group .section-header {
+  animation: dash-enter-subtle 0.4s cubic-bezier(0.22, 1, 0.36, 1) inherit;
+  animation-delay: inherit;
+}
+
+/* ── Quick-stat cards: stagger via nth-child ── */
+.quick-stat-card:nth-child(1) { animation: dash-enter-card 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both; }
+.quick-stat-card:nth-child(2) { animation: dash-enter-card 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.42s both; }
+.quick-stat-card:nth-child(3) { animation: dash-enter-card 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.49s both; }
+.quick-stat-card:nth-child(4) { animation: dash-enter-card 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.56s both; }
+.quick-stat-card:nth-child(5) { animation: dash-enter-card 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.63s both; }
+.quick-stat-card:nth-child(6) { animation: dash-enter-card 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.70s both; }
+
+/* ── Exam course cards ── */
+.exam-course-card:nth-child(1) { animation: dash-enter-card 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.55s both; }
+.exam-course-card:nth-child(2) { animation: dash-enter-card 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.62s both; }
+.exam-course-card:nth-child(3) { animation: dash-enter-card 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.69s both; }
+.exam-course-card:nth-child(4) { animation: dash-enter-card 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.76s both; }
+.exam-course-card:nth-child(5) { animation: dash-enter-card 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.83s both; }
+.exam-course-card:nth-child(6) { animation: dash-enter-card 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.90s both; }
+
+/* ── Routine class rows ── */
+.routine-item:nth-child(1) { animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.6s  both; }
+.routine-item:nth-child(2) { animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.65s both; }
+.routine-item:nth-child(3) { animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.70s both; }
+.routine-item:nth-child(4) { animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.75s both; }
+.routine-item:nth-child(5) { animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.80s both; }
+.routine-item:nth-child(6) { animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.85s both; }
+.routine-item:nth-child(7) { animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.90s both; }
+.routine-item:nth-child(8) { animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.95s both; }
+
+/* ── Notice items ── */
+.notice-item:nth-child(1) { animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.65s both; }
+.notice-item:nth-child(2) { animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.72s both; }
+.notice-item:nth-child(3) { animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.79s both; }
+.notice-item:nth-child(4) { animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.86s both; }
+.notice-item:nth-child(5) { animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.93s both; }
+
+/* ── Profile warning banner ── */
+.dash-profile-warning {
+  animation: dash-enter-subtle 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.28s both;
+}
+
+/* ── Reduced-motion override — instant, no movement ── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeInUp,
+  .glider-tabs,
+  .dashboard-page > .dash-section-group,
+  .dashboard-page > .dash-section,
+  .dashboard-grid,
+  .dashboard-main-col > .dash-section-group,
+  .dashboard-side-col > .dash-section-group,
+  .quick-stat-card,
+  .exam-course-card,
+  .routine-item,
+  .notice-item,
+  .dash-profile-warning {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+

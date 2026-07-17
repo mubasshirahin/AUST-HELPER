@@ -7,7 +7,7 @@ import {
   LayoutDashboard, CalendarDays, BarChart3, BookOpen, MapPin, Users, ShoppingBag, Settings, MessageSquare,
   LogIn, Shield, Eye, Megaphone, Utensils,
   Library, FileText, FolderOpen, FileSpreadsheet, Map, ScrollText,
-  ChevronLeft, ChevronRight, ExternalLink, Moon, Crown
+  ChevronLeft, ChevronRight, ExternalLink, Moon, Crown, School, ClipboardCheck, Code2,  DollarSign, UtensilsCrossed, Banknote, NotebookPen, DoorOpen, Flame, Award, AlarmClock, Globe
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -25,6 +25,18 @@ const navItems = [
   { path: '/shadow', label: 'Shadow', icon: Moon },
   { path: '/pro', label: 'AUSTWise Pro', icon: Crown },
   { path: '/workspace', label: 'Workspace', icon: ExternalLink },
+  { path: '/exam-checklist', label: 'Exam Checklist', icon: ClipboardCheck },
+  { path: '/cp-hub', label: 'CP Hub', icon: Code2 },
+  { path: '/money-tracker', label: 'Money Tracker', icon: DollarSign },
+  { path: '/mess-meal', label: 'Mess Meal', icon: UtensilsCrossed },
+  { path: '/aust-bhara', label: 'Aust Bhara', icon: Banknote },
+  { path: '/cover-page-generator', label: 'Cover Page Generator', icon: NotebookPen },
+  { path: '/empty-classroom', label: 'Empty Classroom', icon: DoorOpen },
+  { path: '/roast-cv', label: 'Roast CV', icon: Flame },
+  { path: '/certificate', label: 'Certificate', icon: Award },
+  { path: '/auto-alarm', label: 'Auto Alarm', icon: AlarmClock },
+  { path: '/austeddit', label: 'Austeddit', icon: Globe },
+  { path: '/study-room', label: 'Study Room', icon: School },
   { id: 'toggle', label: 'Collapse', icon: ChevronLeft },
   ];
 
@@ -59,6 +71,10 @@ export default function Sidebar({ collapsed, onToggle }) {
       { path: '/messages', label: 'Messages', icon: MessageSquare },
       { path: '/settings', label: 'Settings', icon: Settings },
       { path: '/workspace', label: 'Workspace', icon: ExternalLink },
+      { path: '/exam-checklist', label: 'Exam Checklist', icon: ClipboardCheck },
+      { path: '/money-tracker', label: 'Money Tracker', icon: DollarSign },
+      { path: '/mess-meal', label: 'Mess Meal', icon: UtensilsCrossed },
+      { path: '/study-room', label: 'Study Room', icon: School },
       { id: 'toggle', label: 'Collapse', icon: ChevronLeft },
     ];
   }

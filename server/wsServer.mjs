@@ -20,11 +20,82 @@ const conversationSubscribers = new Map();
 // Map: userId -> Set<conversationId>
 const userSubscriptions = new Map();
 
+/* ─── Shadow Chat State ─── */
+let shadowQueue = []; // Array<{ ws, shadowId }>
+const shadowSessions = new Map(); // sessionId -> { userA: {ws, shadowId}, userB: {ws, shadowId}, expiresAt, timer }
+const SHADOW_DURATION_MS = 10 * 60 * 1000; // 10 minutes
+
+function generateSessionId() {
+  return `shadow-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function tryMatch() {
+  if (shadowQueue.length < 2) return null;
+  const userA = shadowQueue.shift();
+  const userB = shadowQueue.shift();
+  const sessionId = generateSessionId();
+  const expiresAt = Date.now() + SHADOW_DURATION_MS;
+
+  const session = {
+    userA: { ws: userA.ws, shadowId: userA.shadowId },
+    userB: { ws: userB.ws, shadowId: userB.shadowId },
+    expiresAt,
+    timer: null,
+    tickInterval: null,
+  };
+  shadowSessions.set(sessionId, session);
+
+  // Per-second server tick for fully synchronized countdown
+  session.tickInterval = setInterval(() => {
+    const remaining = Math.max(0, session.expiresAt - Date.now());
+    const tickPayload = { type: 'shadow-tick', payload: { remaining, serverTime: Date.now() } };
+    sendTo(session.userA.ws, tickPayload);
+    sendTo(session.userB.ws, tickPayload);
+  }, 1000);
+
+  // Master timeout to auto-end session at exactly 10 minutes
+  session.timer = setTimeout(() => {
+    clearInterval(session.tickInterval);
+    endShadowSession(sessionId, 'timeout');
+  }, SHADOW_DURATION_MS);
+
+  return { sessionId, userA, userB, expiresAt };
+}
+
+function endShadowSession(sessionId, reason) {
+  const session = shadowSessions.get(sessionId);
+  if (!session) return;
+
+  if (session.timer) clearTimeout(session.timer);
+  if (session.tickInterval) clearInterval(session.tickInterval);
+  shadowSessions.delete(sessionId);
+
+  const endPayload = { type: 'shadow-ended', payload: { sessionId, reason, serverTime: Date.now() } };
+  sendTo(session.userA.ws, endPayload);
+  sendTo(session.userB.ws, endPayload);
+}
+
+function findShadowSession(ws) {
+  for (const [id, s] of shadowSessions) {
+    if (s.userA.ws === ws || s.userB.ws === ws) return { sessionId: id, session: s };
+  }
+  return null;
+}
+
+function getShadowPeer(ws, session) {
+  return session.userA.ws === ws ? session.userB : session.userA;
+}
+
+function removeFromShadowQueue(ws) {
+  shadowQueue = shadowQueue.filter((entry) => entry.ws !== ws);
+}
+
 export function createWSServer(httpServer) {
   const wss = new WebSocketServer({ server: httpServer });
 
   wss.on('connection', (ws, req) => {
     let currentUserId = null;
+    let shadowId = null;
 
     // Send a confirmation that connection is established
     sendTo(ws, { type: 'connected', payload: { serverTime: Date.now() } });
@@ -108,6 +179,70 @@ export function createWSServer(httpServer) {
             // Keep-alive, no response needed
             break;
 
+          /* ─── Shadow Chat ─── */
+          case 'shadow-join': {
+            const { id } = payload;
+            if (!id) return;
+            shadowId = id;
+            shadowQueue.push({ ws, shadowId: id });
+            sendTo(ws, { type: 'shadow-queued', payload: { position: shadowQueue.length, serverTime: Date.now() } });
+            // Try to match immediately
+            const match = tryMatch();
+            if (match) {
+              const { sessionId, userA, userB, expiresAt } = match;
+              const matchPayload = { sessionId, peerId: null, expiresAt, serverTime: Date.now() };
+              sendTo(userA.ws, { type: 'shadow-matched', payload: { ...matchPayload, peerId: userB.shadowId } });
+              sendTo(userB.ws, { type: 'shadow-matched', payload: { ...matchPayload, peerId: userA.shadowId } });
+              // Update queue position for remaining queued users
+              shadowQueue.forEach((entry, idx) => {
+                sendTo(entry.ws, { type: 'shadow-queued', payload: { position: idx + 1, serverTime: Date.now() } });
+              });
+            }
+            break;
+          }
+
+          case 'shadow-leave': {
+            removeFromShadowQueue(ws);
+            sendTo(ws, { type: 'shadow-left', payload: { serverTime: Date.now() } });
+            shadowQueue.forEach((entry, idx) => {
+              sendTo(entry.ws, { type: 'shadow-queued', payload: { position: idx + 1, serverTime: Date.now() } });
+            });
+            break;
+          }
+
+          case 'shadow-message': {
+            const { sessionId, text, id: msgId, timestamp } = payload;
+            if (!sessionId || !text) return;
+            const s = shadowSessions.get(sessionId);
+            if (!s) return;
+            const peer = getShadowPeer(ws, s);
+            sendTo(peer.ws, {
+              type: 'shadow-message',
+              payload: { text, id: msgId, timestamp: timestamp || Date.now(), from: shadowId },
+            });
+            break;
+          }
+
+          case 'shadow-typing': {
+            const { sessionId, isTyping: typing } = payload;
+            if (!sessionId) return;
+            const s = shadowSessions.get(sessionId);
+            if (!s) return;
+            const peer = getShadowPeer(ws, s);
+            sendTo(peer.ws, { type: 'shadow-typing', payload: { isTyping: typing } });
+            break;
+          }
+
+          case 'shadow-time': {
+            const { sessionId } = payload;
+            if (!sessionId) return;
+            const s = shadowSessions.get(sessionId);
+            if (!s) return;
+            const remaining = Math.max(0, s.expiresAt - Date.now());
+            sendTo(ws, { type: 'shadow-time', payload: { remaining, serverTime: Date.now() } });
+            break;
+          }
+
           default:
             sendTo(ws, { type: 'error', payload: { message: `Unknown message type: ${type}` } });
         }
@@ -117,6 +252,18 @@ export function createWSServer(httpServer) {
     });
 
     ws.on('close', () => {
+      // Shadow cleanup
+      if (shadowId) {
+        removeFromShadowQueue(ws);
+        const shadowEntry = findShadowSession(ws);
+        if (shadowEntry) {
+          endShadowSession(shadowEntry.sessionId, 'peer-disconnected');
+        }
+        shadowQueue.forEach((entry, idx) => {
+          sendTo(entry.ws, { type: 'shadow-queued', payload: { position: idx + 1, serverTime: Date.now() } });
+        });
+      }
+      // Regular user cleanup
       if (currentUserId) {
         broadcastOnlineStatus(currentUserId, false);
         cleanupUser(currentUserId);
@@ -124,6 +271,15 @@ export function createWSServer(httpServer) {
     });
 
     ws.on('error', () => {
+      // Shadow cleanup
+      if (shadowId) {
+        removeFromShadowQueue(ws);
+        const shadowEntry = findShadowSession(ws);
+        if (shadowEntry) {
+          endShadowSession(shadowEntry.sessionId, 'peer-disconnected');
+        }
+      }
+      // Regular user cleanup
       if (currentUserId) {
         broadcastOnlineStatus(currentUserId, false);
         cleanupUser(currentUserId);

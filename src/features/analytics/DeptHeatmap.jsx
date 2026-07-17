@@ -42,11 +42,19 @@ export default function DeptHeatmap() {
   };
 
   return (
-    <div className="glass-card-static dept-heatmap-container animate-fadeInUp">
+    <div className="dept-heatmap-container animate-fadeInUp" style={{
+      background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 'var(--radius-xl)',
+      padding: 'var(--sp-5)',
+      boxShadow: '0 4px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06)',
+    }}>
       <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <div className="icon" style={{ backgroundColor: 'var(--accent-rose-glow)', color: 'var(--accent-rose)', padding: '6px', borderRadius: '8px' }}>
-            <Flame size={18} />
+          <div className="icon" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-rose) 14%, transparent)', color: 'var(--accent-rose)', padding: '6px', borderRadius: '8px', border: '1px solid color-mix(in srgb, var(--accent-rose) 22%, transparent)' }}>
+            <Flame size={16} strokeWidth={2.5} />
           </div>
           <div>
             <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Dept. CGPA Heatmap</h2>
@@ -154,11 +162,11 @@ export default function DeptHeatmap() {
 
       {/* ── Batch-wise contributor counter ── */}
       {(heatmapView.visibleBatches.length > 0 || heatmapView.pendingBatches.length > 0) && (
-        <div style={{ marginTop: '16px', padding:'12px', background:'var(--bg-input)', borderRadius:'var(--radius-md)', fontSize: 'var(--fs-xs)' }}>
+        <div style={{ marginTop: '16px', padding:'12px', background:'rgba(255,255,255,0.04)', borderRadius:'var(--radius-md)', fontSize: 'var(--fs-xs)' }}>
           <strong style={{ color: 'var(--text-primary)', fontSize:'11px' }}>Collected Data:</strong>
           <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', marginTop:'6px' }}>
             {[...heatmapView.visibleBatches, ...heatmapView.pendingBatches].sort((a,b)=>Number(b.batchNo)-Number(a.batchNo)).map((batch) => (
-              <span key={batch.batchNo} style={{ display:'inline-flex', alignItems:'center', gap:'4px', background:'var(--bg-card)', padding:'3px 10px', borderRadius:'12px', fontSize:'11px' }}>
+              <span key={batch.batchNo} style={{ display:'inline-flex', alignItems:'center', gap:'4px', background:'rgba(255,255,255,0.025)', padding:'3px 10px', borderRadius:'12px', fontSize:'11px' }}>
                 <span style={{fontWeight:'600'}}>{batch.label}</span>
                 <span style={{ fontWeight:'bold', color:batch.contributorCount >= MIN_BATCH_CONTRIBUTORS ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>
                   {batch.contributorCount}
@@ -170,7 +178,7 @@ export default function DeptHeatmap() {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-4 items-center justify-center p-3" style={{ background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', fontSize: '11px', marginTop: '20px' }}>
+      <div className="flex flex-wrap gap-4 items-center justify-center p-3" style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 'var(--radius-md)', fontSize: '11px', marginTop: '20px' }}>
         <span style={{ color: 'var(--text-tertiary)', fontWeight: 'bold' }}>Heatmap Legend:</span>
         <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '2px', background: 'var(--accent-emerald)' }}></span> High CGPA (3.5+)</div>
         <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '2px', background: 'var(--accent-blue)' }}></span> Moderate (3.2-3.5)</div>

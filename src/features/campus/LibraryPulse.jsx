@@ -189,7 +189,7 @@ export default function LibraryPulse() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2" style={{ background: 'var(--bg-input)', padding: '6px 12px', borderRadius: 'var(--radius-md)' }}>
+        <div className="flex items-center gap-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', padding: '6px 12px', borderRadius: 'var(--radius-md)' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Live Occupancy:</span>
           <span style={{ fontWeight: 'bold', fontSize: 'var(--fs-sm)', color: 'var(--accent-blue)' }}>
             {occupancyPercentage}%
@@ -201,7 +201,7 @@ export default function LibraryPulse() {
       {/* Check-in control */}
       <div
         className="flex justify-between items-center mb-6"
-        style={{ background: 'var(--bg-input)', padding: '12px 16px', borderRadius: 'var(--radius-lg)', flexWrap: 'wrap', gap: '8px' }}
+        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', padding: '12px 16px', borderRadius: 'var(--radius-lg)', flexWrap: 'wrap', gap: '8px' }}
       >
         <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
           {status || 'Tap to share your location and update the live library count.'}

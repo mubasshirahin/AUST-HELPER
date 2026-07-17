@@ -7,15 +7,29 @@
   margin: 0 auto;
 }
 
-/* ─── Hero Header ─── */
+/* ═══════════════════════════════════════════════════════════════
+   Hero Shell — Premium Glass-morphism
+   ═══════════════════════════════════════════════════════════════ */
 .settings-hero {
   position: relative;
-  border-radius: var(--radius-xl, 20px);
+  border-radius: var(--radius-xl);
   border: 1px solid var(--border-primary);
   background: var(--bg-card);
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.04) inset,
+    var(--shadow-md);
   animation: settingsHeroIn 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.settings-hero:hover {
+  border-color: color-mix(in srgb, var(--accent-purple) 30%, var(--border-primary));
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.06) inset,
+    0 0 0 1px color-mix(in srgb, var(--accent-purple) 10%, transparent),
+    0 8px 40px -8px color-mix(in srgb, var(--accent-purple) 12%, transparent),
+    var(--shadow-lg);
 }
 
 @keyframes settingsHeroIn {
@@ -23,6 +37,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── Hero: Background layers ─── */
 .settings-hero-bg {
   position: absolute;
   inset: 0;
@@ -34,55 +49,177 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(color-mix(in srgb, var(--accent-purple) 8%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--accent-purple) 8%, transparent) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(135deg, black 0%, transparent 70%);
 }
 
+.settings-hero-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent-purple) 60%, transparent),
+    transparent
+  );
+  animation: heroShimmer 4s ease-in-out infinite 1s;
+}
+
+@keyframes heroShimmer {
+  0% { left: -60%; opacity: 0; }
+  30% { opacity: 1; }
+  100% { left: 110%; opacity: 0; }
+}
+
+/* ─── Hero: Floating Orbs ─── */
+.settings-hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+  animation: settingsOrbFloat 10s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.settings-hero-orb-1 {
+  width: 260px;
+  height: 260px;
+  top: -100px;
+  right: -50px;
+  background: radial-gradient(circle, rgba(167,139,250,0.14) 0%, transparent 70%);
+}
+
+.settings-hero-orb-2 {
+  width: 180px;
+  height: 180px;
+  bottom: -70px;
+  left: 6%;
+  background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%);
+  animation-delay: -4.5s;
+}
+
+.settings-hero-orb-3 {
+  width: 120px;
+  height: 120px;
+  top: 40%;
+  left: 45%;
+  background: radial-gradient(circle, rgba(167,139,250,0.06) 0%, transparent 70%);
+  animation-delay: -2s;
+  filter: blur(48px);
+}
+
+@keyframes settingsOrbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(8px, -12px) scale(1.04); }
+  66% { transform: translate(-6px, 6px) scale(0.97); }
+}
+
+/* ─── Hero: Content ─── */
 .settings-hero-content {
   position: relative;
   padding: var(--sp-6) var(--sp-6) var(--sp-5);
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
 }
 
 .settings-hero-title-row {
   display: flex;
   align-items: flex-start;
   gap: var(--sp-4);
-  animation: fadeInUp 0.5s ease 0.1s both;
 }
 
 .settings-hero-icon {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
-  min-width: 52px;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-amber));
-  color: #fff;
+  background: color-mix(in srgb, var(--accent-purple) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-purple) 22%, transparent);
+  color: var(--accent-purple);
   flex-shrink: 0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.settings-hero:hover .settings-hero-icon {
+  transform: rotate(-6deg) scale(1.08);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent-purple) 30%, transparent);
 }
 
 .settings-hero-title {
-  margin: 0;
-  font-size: clamp(1.5rem, 4vw, 2rem);
-  font-weight: var(--fw-bold);
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-purple) 100%);
+  margin: 0 0 var(--sp-1);
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  color: var(--text-primary);
+  animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) 0.1s both;
+}
+
+.settings-hero-name {
+  display: inline-block;
+  background: linear-gradient(
+    135deg,
+    var(--accent-purple) 0%,
+    var(--accent-amber) 100%
+  );
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: brightness(1.05);
+  transition: filter 0.3s ease;
+}
+
+.settings-hero:hover .settings-hero-name {
+  filter: brightness(1.15) drop-shadow(0 0 12px color-mix(in srgb, var(--accent-purple) 40%, transparent));
 }
 
 .settings-hero-subtitle {
-  margin: 6px 0 0;
+  margin: 0;
   font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
   color: var(--text-secondary);
-  max-width: 520px;
-  line-height: 1.5;
+  max-width: 440px;
+  line-height: 1.6;
+  animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) 0.18s both;
+}
+
+/* ─── Hero: Status row ─── */
+.settings-hero-status-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) 0.28s both;
+}
+
+.settings-hero-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-emerald);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-emerald) 22%, transparent);
+  animation: statusPulse 2.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-emerald) 22%, transparent); }
+  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent-emerald) 8%, transparent); }
+}
+
+.settings-hero-status-text {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
 }
 
 /* ─── Layout ─── */
@@ -93,11 +230,14 @@
 .settings-panel {
   min-height: 400px;
   overflow: hidden;
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-xl, 20px);
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-xl);
   padding: var(--sp-5) var(--sp-6);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06);
+  animation: dash-enter 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.24s both;
 }
 
 .profile-panel-header {
@@ -107,8 +247,10 @@
   gap: var(--sp-4);
   margin: calc(var(--sp-5) * -1) calc(var(--sp-5) * -1) var(--sp-5);
   padding: var(--sp-5);
-  background: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 .profile-panel-header h3 {
@@ -193,17 +335,18 @@
   flex-direction: column;
   gap: var(--sp-4);
   padding: var(--sp-5);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.14);
+  transition: border-color 0.24s ease, box-shadow 0.24s ease;
 }
 
-.settings-quick-change:hover,
-.profile-details-form:hover {
-  border-color: var(--border-primary);
-  box-shadow: var(--shadow-md);
+.settings-quick-change:hover {
+  border-color: color-mix(in srgb, var(--accent-purple) 22%, var(--border-primary));
+  box-shadow: 0 8px 24px -6px color-mix(in srgb, var(--accent-purple) 12%, transparent);
 }
 
 .profile-editor {
@@ -211,9 +354,18 @@
   align-items: center;
   gap: var(--sp-4);
   padding: var(--sp-4);
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-lg);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  transition: border-color 0.24s ease, box-shadow 0.24s ease;
+}
+
+.profile-editor:hover {
+  border-color: color-mix(in srgb, var(--accent-purple) 22%, var(--border-primary));
+  box-shadow: 0 8px 24px -6px color-mix(in srgb, var(--accent-purple) 12%, transparent);
 }
 
 .profile-photo-picker {
@@ -278,11 +430,18 @@
   align-items: end;
   gap: var(--sp-3);
   padding: var(--sp-4);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.14);
+  transition: border-color 0.24s ease, box-shadow 0.24s ease;
+}
+
+.profile-details-form:hover {
+  border-color: color-mix(in srgb, var(--accent-purple) 22%, var(--border-primary));
+  box-shadow: 0 8px 24px -6px color-mix(in srgb, var(--accent-purple) 12%, transparent);
 }
 
 .profile-details-form label {
@@ -353,16 +512,19 @@
 
 .profile-read-grid > div {
   padding: var(--sp-4);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.14);
+  transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.24s cubic-bezier(0.4,0,0.2,1);
 }
 
 .profile-read-grid > div:hover {
-  border-color: var(--border-primary);
-  box-shadow: var(--shadow-md);
+  border-color: color-mix(in srgb, var(--accent-purple) 22%, var(--border-primary));
+  box-shadow: 0 8px 24px -6px color-mix(in srgb, var(--accent-purple) 12%, transparent);
+  transform: translateY(-2px);
 }
 
 .profile-read-grid span {
@@ -394,15 +556,20 @@
 
 .profile-summary-grid > div {
   padding: var(--sp-3) var(--sp-4);
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: var(--radius-md);
-  transition: border-color var(--transition-base), background var(--transition-base);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+  transition: border-color 0.24s ease, background 0.24s ease, transform 0.24s cubic-bezier(0.4,0,0.2,1), box-shadow 0.24s ease;
 }
 
 .profile-summary-grid > div:hover {
-  border-color: var(--border-primary);
-  background: var(--bg-card-hover);
+  border-color: color-mix(in srgb, var(--accent-purple) 18%, var(--border-primary));
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--accent-purple) 10%, transparent);
+  transform: translateY(-1px);
 }
 
 .profile-summary-grid span {
@@ -425,54 +592,101 @@
 .profile-linked-social {
   margin-top: var(--sp-5);
 }
-.profile-linked-social h4 {
+
+.profile-linked-social-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-2);
+}
+
+.profile-linked-social h4,
+.profile-linked-social-header h4 {
   font-size: var(--fs-sm);
   font-weight: var(--fw-bold);
-  margin-bottom: var(--sp-2);
+  margin: 0;
 }
 .profile-linked-social-list {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
 }
+
+/* ─── Linked Account Pills — Refined Minimalist ─── */
 .profile-linked-social-item {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-md);
+  padding: 5px 12px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-full);
   font-size: var(--fs-xs);
   color: var(--text-secondary);
-}
-.profile-linked-social-item svg {
-  flex-shrink: 0;
+  text-decoration: none;
+  transition:
+    border-color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
 }
 
-/* ─── Linked Account Buttons ─── */
+.profile-linked-social-item:hover {
+  border-color: color-mix(in srgb, var(--accent-purple) 28%, var(--border-primary));
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-purple) 10%, transparent),
+              0 4px 16px -4px color-mix(in srgb, var(--accent-purple) 14%, transparent);
+  transform: translateY(-1px);
+}
+
+.profile-linked-social-item.is-clickable:hover {
+  cursor: pointer;
+}
+
+/* ─── Connected/Disconnect status dot ─── */
+.profile-linked-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-emerald);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-emerald) 18%, transparent);
+  flex-shrink: 0;
+  transition: box-shadow 0.3s ease;
+}
+
+.profile-linked-social-item:hover .profile-linked-status-dot {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-emerald) 30%, transparent),
+              0 0 6px color-mix(in srgb, var(--accent-emerald) 20%, transparent);
+}
+
+/* ─── Add account button ─── */
 .profile-linked-add-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border: 1.5px dashed var(--text-tertiary);
   border-radius: var(--radius-full);
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
   padding: 0;
 }
 
 .profile-linked-add-btn:hover {
-  border-color: var(--accent-blue);
-  color: var(--accent-blue);
-  background: var(--accent-blue-glow);
+  border-color: var(--accent-purple);
+  color: var(--accent-purple);
+  background: color-mix(in srgb, var(--accent-purple) 10%, transparent);
   transform: scale(1.08);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent-purple) 18%, transparent);
 }
 
+/* ─── Remove account button ─── */
 .profile-linked-remove-btn {
   display: inline-flex;
   align-items: center;
@@ -485,22 +699,25 @@
   color: var(--text-tertiary);
   cursor: pointer;
   opacity: 0;
-  transition: all var(--transition-base);
+  transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
   padding: 0;
   pointer-events: none;
 }
 
-.profile-linked-social-item-connected:hover .profile-linked-remove-btn {
+.profile-linked-social-item-connected:hover .profile-linked-remove-btn,
+.profile-linked-social-item:hover .profile-linked-remove-btn {
   opacity: 1;
   pointer-events: auto;
 }
 
 .profile-linked-remove-btn:hover {
-  background: var(--accent-rose-glow);
+  background: color-mix(in srgb, var(--accent-rose) 12%, transparent);
   color: var(--accent-rose);
   transform: scale(1.12);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-rose) 16%, transparent);
 }
 
+/* ─── Copy button ─── */
 .profile-linked-copy-btn {
   display: inline-flex;
   align-items: center;
@@ -512,25 +729,27 @@
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
   font-size: inherit;
   font-family: inherit;
 }
 
 .profile-linked-copy-btn:hover {
-  background: var(--bg-card-hover);
+  background: color-mix(in srgb, var(--accent-blue) 10%, transparent);
   color: var(--accent-blue);
 }
 
 .profile-linked-copy-btn svg {
   flex-shrink: 0;
   opacity: 0.7;
+  transition: opacity 0.22s ease;
 }
 
 .profile-linked-copy-btn:hover svg {
   opacity: 1;
 }
 
+/* ─── Modal close button ─── */
 .profile-linked-modal-close {
   display: inline-flex;
   align-items: center;
@@ -542,15 +761,16 @@
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
 }
 
 .profile-linked-modal-close:hover {
-  background: var(--bg-input);
-  color: var(--text-primary);
+  background: color-mix(in srgb, var(--accent-rose) 10%, transparent);
+  color: var(--accent-rose);
   transform: rotate(90deg);
 }
 
+/* ─── Provider grid & buttons in modal ─── */
 .profile-linked-provider-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -562,23 +782,25 @@
   align-items: center;
   gap: var(--sp-2);
   padding: 12px 14px;
-  border: 1px solid var(--border-primary);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-md);
-  background: var(--bg-input);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: var(--text-primary);
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
   text-align: left;
   position: relative;
 }
 
 .profile-linked-provider-btn:hover:not(:disabled) {
-  border-color: var(--provider-color, var(--accent-blue));
-  background: color-mix(in srgb, var(--provider-color, var(--accent-blue)) 8%, var(--bg-input));
+  border-color: var(--provider-color, var(--accent-purple));
+  background: color-mix(in srgb, var(--provider-color, var(--accent-purple)) 10%, var(--bg-card));
   transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--provider-color, var(--accent-purple)) 16%, transparent);
 }
 
 .profile-linked-provider-btn.is-connected {
@@ -589,35 +811,60 @@
   opacity: 0.7;
 }
 
+/* ─── Connected badge — refined minimalist pill ─── */
 .profile-linked-provider-btn .connected-badge {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  font-size: 9px;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--accent-emerald);
+  background: color-mix(in srgb, var(--accent-emerald) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-emerald) 25%, transparent);
+  transition: all 0.22s ease;
 }
 
+.profile-linked-provider-btn:hover .connected-badge {
+  background: color-mix(in srgb, var(--accent-emerald) 20%, transparent);
+  border-color: color-mix(in srgb, var(--accent-emerald) 40%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-emerald) 16%, transparent);
+}
+
+/* ─── Modal overlay & modal — Glass-morphism ─── */
 .profile-linked-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: fadeIn 0.15s ease;
+  animation: fadeIn 0.18s ease;
 }
 
 .profile-linked-modal {
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(20,20,30,0.95) 0%, rgba(15,15,25,0.92) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: var(--radius-xl);
   padding: var(--sp-5);
   width: min(440px, 92vw);
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-lg);
-  animation: modalSlideUp 0.2s ease;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.06) inset,
+    0 8px 40px -8px rgba(0,0,0,0.5);
+  animation: modalSlideUp 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .profile-linked-modal-header {
@@ -639,8 +886,33 @@
 }
 
 @keyframes modalSlideUp {
-  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ─── Staggered entrance animations — Settings ─── */
+.profile-read-grid > div:nth-child(1) {
+  animation: dash-enter-card 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+.profile-read-grid > div:nth-child(2) {
+  animation: dash-enter-card 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+
+.profile-summary-grid > div:nth-child(1) { animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both; }
+.profile-summary-grid > div:nth-child(2) { animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both; }
+.profile-summary-grid > div:nth-child(3) { animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.24s both; }
+.profile-summary-grid > div:nth-child(4) { animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.30s both; }
+.profile-summary-grid > div:nth-child(5) { animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.36s both; }
+
+/* ─── Reduced-motion — instant, no movement ─── */
+@media (prefers-reduced-motion: reduce) {
+  .profile-read-grid > div,
+  .profile-summary-grid > div,
+  .settings-panel {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 @media (max-width: 768px) {
@@ -687,10 +959,12 @@
   grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
   gap: 6px;
   padding: 6px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-secondary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: var(--radius-md);
-  transition: border-color var(--transition-base), background var(--transition-base);
+  transition: border-color 0.24s ease, background 0.24s ease;
 }
 
 .quick-option-grid.wide-options {
@@ -711,7 +985,11 @@
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
   scrollbar-color: var(--accent-blue) transparent;
-  background: var(--bg-card);
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-md);
 }
 
 .batch-option-slider::-webkit-scrollbar {
@@ -732,8 +1010,10 @@
   flex-direction: column;
   gap: var(--sp-2);
   padding: var(--sp-3);
-  background: var(--bg-card);
-  border: 1px solid var(--border-secondary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: var(--radius-md);
 }
 
@@ -863,6 +1143,22 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   Entrance Animations — self-contained (mirrors dashboard-premium.css)
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes dash-enter {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes dash-enter-subtle {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes dash-enter-card {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 @media (max-width: 768px) {
   .settings-hero-content {
     padding: var(--sp-5) var(--sp-4);
@@ -913,7 +1209,34 @@
   }
 }
 
-/* Minimalist Monochrome Settings Styles */
+[data-theme="light"] .profile-read-grid > div {
+  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.7) 100%);
+  border: 1px solid rgba(9,9,11,0.1);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+[data-theme="light"] .profile-summary-grid > div {
+  background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.65) 100%);
+  border: 1px solid rgba(9,9,11,0.08);
+}
+
+[data-theme="light"] .settings-panel {
+  background: linear-gradient(135deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.72) 100%);
+  border: 1px solid rgba(9,9,11,0.1);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+[data-theme="light"] .settings-hero-orb { display: none; }
+
+[data-theme="light"] .profile-linked-social-item {
+  background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.65) 100%);
+  border: 1px solid rgba(9,9,11,0.1);
+}
+
+[data-theme="light"] .profile-linked-provider-btn {
+  background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.65) 100%);
+  border: 1px solid rgba(9,9,11,0.1);
+}
 [data-theme="minimalist-monochrome"] .profile-panel-header {
   background: var(--bg-secondary);
   border-bottom: 2px solid var(--border-primary);

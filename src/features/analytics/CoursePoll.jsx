@@ -72,7 +72,7 @@ function Leaderboard({ title, icon, accent, rows, totalVoters }) {
               key={row.code}
               className="flex items-center gap-3 p-3"
               style={{
-                background: 'var(--bg-input)',
+                background: 'rgba(255,255,255,0.04)',
                 border: `1px solid ${index === 0 ? accent : 'var(--border-primary)'}`,
                 borderRadius: 'var(--radius-md)',
               }}
@@ -148,12 +148,20 @@ export default function CoursePoll() {
 
   if (voted) {
     return (
-      <div className="glass-card-static animate-fadeInUp">
+      <div className="course-poll-wrapper animate-fadeInUp" style={{
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 'var(--radius-xl)',
+        padding: 'var(--sp-5)',
+        boxShadow: '0 4px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06)',
+      }}>
         <div className="mb-6">
           <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Best &amp; Worst Courses</h2>
         </div>
 
-        <div className="flex items-center gap-3 mb-6" style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)' }}>
+        <div className="flex items-center gap-3 mb-6" style={{ padding: '16px', background: 'rgba(255,255,255,0.04)', borderRadius: 'var(--radius-md)' }}>
           <CheckCircle size={20} style={{ color: 'var(--accent-emerald)', flexShrink: 0 }} />
           <div>
             <p style={{ fontWeight: 'bold', margin: 0 }}>Your vote has been recorded</p>
@@ -184,7 +192,15 @@ export default function CoursePoll() {
   }
 
   return (
-    <div className="glass-card-static animate-fadeInUp">
+    <div className="animate-fadeInUp" style={{
+      background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 'var(--radius-xl)',
+      padding: 'var(--sp-5)',
+      boxShadow: '0 4px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06)',
+    }}>
       <div className="mb-6">
         <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Best &amp; Worst Courses</h2>
         <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>

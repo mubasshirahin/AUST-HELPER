@@ -461,8 +461,8 @@ function FloorShowcase({ floorData, selectedFloor }) {
                 ) : (
                   <div className="floor-plan-no-image-fallback">
                     <svg style={{ width: '100%', height: '420px' }}>
-                      <rect x="10%" y="20%" width="80%" height="60%" fill="none" stroke="var(--border-secondary)" strokeWidth="2" strokeDasharray="4 4" rx="8" />
-                      <rect x="25%" y="40%" width="50%" height="20%" fill="none" stroke="var(--border-primary)" strokeWidth="1" />
+                      <rect x="10%" y="20%" width="80%" height="60%" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="2" strokeDasharray="4 4" rx="8" />
+                      <rect x="25%" y="40%" width="50%" height="20%" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
                       {floorData.rooms.map((room) => (
                         <g key={room.id} style={{ cursor: 'pointer' }}>
                           <circle cx={`${room.x}%`} cy={`${room.y}%`} r="14" fill={getRoomColor(room.type)} opacity="0.18" />
@@ -589,12 +589,12 @@ function FloorShowcase({ floorData, selectedFloor }) {
               <li>Use <strong>125%</strong> or <strong>150%</strong> to read labels clearly</li>
               <li>Tap <strong>Fullscreen</strong> for a bigger view</li>
               {editMode && (
-                <li style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed var(--border-secondary)' }}>
+                <li style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed rgba(255,255,255,0.08)' }}>
                   <strong>Edit mode:</strong> Drag box to move. Drag corners to resize. Use top handle to rotate.
                   <button
                     type="button"
                     className="btn btn-sm"
-                    style={{ marginTop: '6px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11px', padding: '4px 8px', background: 'var(--bg-input)', color: 'var(--text-secondary)', border: '1px solid var(--border-secondary)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+                    style={{ marginTop: '6px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11px', padding: '4px 8px', background: 'rgba(255,255,255,0.04)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
                     onClick={resetPositions}
                   >
                     <RotateCcw size={12} /> Reset All Positions

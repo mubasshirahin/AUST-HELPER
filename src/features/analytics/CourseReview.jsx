@@ -144,7 +144,15 @@ export default function CourseReview() {
   };
 
   return (
-    <div className="glass-card-static course-reviews-container animate-fadeInUp">
+    <div className="course-reviews-container animate-fadeInUp" style={{
+      background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 'var(--radius-xl)',
+      padding: 'var(--sp-5)',
+      boxShadow: '0 4px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06)',
+    }}>
       <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
         <div>
           <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Course Reviews</h2>
@@ -301,7 +309,7 @@ export default function CourseReview() {
                     setFormError('');
                   }}
                   style={{
-                    background: isSelected ? 'var(--accent-blue-glow)' : 'var(--bg-input)',
+                    background: isSelected ? 'var(--accent-blue-glow)' : 'rgba(255,255,255,0.04)',
                     border: isSelected ? '1px solid var(--accent-blue)' : '1px solid var(--border-primary)',
                     borderRadius: 'var(--radius-lg)',
                     padding: '16px',
@@ -342,8 +350,8 @@ export default function CourseReview() {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: selectedCourse ? 'flex-start' : 'center',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-primary)',
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(255,255,255,0.08)',
           }}
         >
           {selectedCourse ? (
@@ -400,7 +408,7 @@ export default function CourseReview() {
                       <div
                         key={comment.id}
                         style={{
-                          background: 'var(--bg-input)',
+                          background: 'rgba(255,255,255,0.04)',
                           borderRadius: 'var(--radius-md)',
                           padding: '10px 12px',
                         }}

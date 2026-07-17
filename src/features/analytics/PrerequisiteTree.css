@@ -27,8 +27,8 @@
 .prereq-search-input {
   width: 100%;
   padding: 9px 12px 9px 34px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-lg);
   color: var(--text-primary);
   font-size: var(--fs-sm);
@@ -37,8 +37,8 @@
 }
 
 .prereq-search-input:focus {
-  border-color: var(--accent-purple);
-  box-shadow: 0 0 0 3px var(--accent-purple-glow);
+  border-color: var(--accent-amber);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-amber) 13%, transparent);
 }
 
 .prereq-search-input::placeholder {
@@ -61,8 +61,8 @@
   font-size: var(--fs-xs);
   color: var(--text-tertiary);
   padding: 6px 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-full);
   white-space: nowrap;
 }
@@ -72,8 +72,8 @@
   align-items: center;
   gap: 4px;
   padding: 7px 14px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-lg);
   color: var(--text-secondary);
   font-size: var(--fs-xs);
@@ -84,15 +84,15 @@
 }
 
 .prereq-action-btn:hover {
-  border-color: var(--accent-purple);
-  color: var(--accent-purple);
-  background: var(--accent-purple-glow);
+  border-color: var(--accent-amber);
+  color: var(--accent-amber);
+  background: color-mix(in srgb, var(--accent-amber) 10%, transparent);
 }
 
 .prereq-action-btn.active {
-  border-color: var(--accent-purple);
-  color: var(--accent-purple);
-  background: var(--accent-purple-glow);
+  border-color: var(--accent-amber);
+  color: var(--accent-amber);
+  background: color-mix(in srgb, var(--accent-amber) 10%, transparent);
 }
 
 .prereq-action-btn:disabled {
@@ -101,9 +101,9 @@
 }
 
 .prereq-action-btn:disabled:hover {
-  border-color: var(--border-primary);
+  border-color: rgba(255,255,255,0.08);
   color: var(--text-secondary);
-  background: var(--bg-card);
+  background: rgba(255,255,255,0.04);
 }
 
 /* ─── Zoom Controls ─── */
@@ -111,7 +111,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  border: 1px solid var(--border-primary);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
@@ -125,8 +125,8 @@
 .prereq-zoom-reset {
   min-width: 48px;
   justify-content: center;
-  border-left: 1px solid var(--border-primary) !important;
-  border-right: 1px solid var(--border-primary) !important;
+  border-left: 1px solid rgba(255,255,255,0.08) !important;
+  border-right: 1px solid rgba(255,255,255,0.08) !important;
 }
 
 .prereq-zoom-pct {
@@ -139,7 +139,7 @@
 /* pop the % readout when zoom changes */
 .prereq-zoom-pct.is-zooming {
   animation: pt-pct-pop 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-  color: var(--accent-purple);
+  color: var(--accent-amber);
 }
 
 @keyframes pt-pct-pop {
@@ -154,8 +154,8 @@
   color: var(--text-tertiary);
   text-align: center;
   padding: 6px 12px;
-  background: var(--bg-tertiary);
-  border: 1px dashed var(--border-secondary);
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(255,255,255,0.06);
   border-radius: var(--radius-lg);
   line-height: 1.5;
 }
@@ -167,14 +167,15 @@
 
 /* ─── Canvas ─── */
 .prereq-canvas {
-  background: var(--bg-card);
-  background-image:
-    radial-gradient(ellipse at 20% 0%, color-mix(in srgb, var(--pt-root) 7%, transparent), transparent 55%),
-    radial-gradient(ellipse at 80% 100%, color-mix(in srgb, var(--pt-category) 6%, transparent), transparent 55%);
-  border: 1px solid var(--border-primary);
+  background: 
+    radial-gradient(ellipse at 20% 0%, color-mix(in srgb, var(--accent-amber) 6%, transparent), transparent 55%),
+    radial-gradient(ellipse at 80% 100%, color-mix(in srgb, var(--accent-cyan) 5%, transparent), transparent 55%);
+  background-color: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-xl);
   overflow: hidden;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.14);
 }
 
 .prereq-canvas.fullscreen {
@@ -359,8 +360,8 @@
   flex-wrap: wrap;
   gap: var(--sp-4);
   padding: var(--sp-3) var(--sp-4);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-lg);
   align-items: center;
 }
@@ -398,10 +399,11 @@
 
 /* ─── Course Detail ─── */
 .prereq-course-detail {
-  background: var(--bg-card);
-  border: 1px solid var(--accent-purple);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--accent-amber);
   border-radius: var(--radius-lg);
   padding: var(--sp-3) var(--sp-4);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent-amber) 14%, transparent);
   animation: slideDown 0.2s ease;
 }
 
@@ -420,8 +422,8 @@
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: var(--fs-sm);
   font-weight: var(--fw-bold);
-  color: var(--accent-purple);
-  background: var(--accent-purple-glow);
+  color: var(--accent-amber);
+  background: color-mix(in srgb, var(--accent-amber) 10%, transparent);
   padding: 2px 8px;
   border-radius: var(--radius-md);
 }

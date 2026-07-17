@@ -389,7 +389,15 @@ export default function ResultTable({ onResultsChange }) {
   };
 
   return (
-    <div className="glass-card-static result-table-container animate-fadeInUp">
+    <div className="result-table-container animate-fadeInUp" style={{
+      background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 'var(--radius-xl)',
+      padding: 'var(--sp-5)',
+      boxShadow: '0 4px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06)',
+    }}>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Academic Transcript Breakdown</h2>
@@ -411,7 +419,7 @@ export default function ResultTable({ onResultsChange }) {
               style={{
                 border: 'none', cursor: 'pointer', borderRadius: '6px', padding: '4px 12px',
                 fontSize: '11px', fontWeight: 'bold', whiteSpace: 'nowrap',
-                background: expandedSemester === sem.semester ? 'var(--accent-blue)' : 'var(--bg-input)',
+                background: expandedSemester === sem.semester ? 'var(--accent-blue)' : 'rgba(255,255,255,0.04)',
                 color: expandedSemester === sem.semester ? '#fff' : hasReal ? 'var(--text-primary)' : 'var(--text-tertiary)',
                 opacity: hasReal ? 1 : 0.45,
                 transition: 'all 0.15s'
@@ -435,11 +443,12 @@ export default function ResultTable({ onResultsChange }) {
             <div 
               key={sem.semester}
               style={{
-                border: '1px solid var(--border-primary)',
+                border: '1px solid rgba(255,255,255,0.07)',
                 borderRadius: 'var(--radius-lg)',
                 overflow: 'hidden',
-                background: 'var(--bg-card)',
-                transition: 'all var(--transition-base)'
+                background: 'rgba(255,255,255,0.02)',
+                transition: 'all var(--transition-base)',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
               }}
             >
               {/* Semester row header */}
@@ -451,7 +460,7 @@ export default function ResultTable({ onResultsChange }) {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   cursor: 'pointer',
-                  background: isExpanded ? 'var(--bg-input)' : 'transparent',
+                  background: isExpanded ? 'rgba(255,255,255,0.04)' : 'transparent',
                   transition: 'background var(--transition-fast)'
                 }}
               >
@@ -560,10 +569,10 @@ export default function ResultTable({ onResultsChange }) {
 
               {/* Collapsed table details */}
               {isExpanded && (
-                <div className="animate-fadeIn" style={{ borderTop: '1px solid var(--border-primary)', padding: '16px 20px', background: 'var(--bg-secondary)' }}>
+                <div className="animate-fadeIn" style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '16px 20px', background: 'rgba(255,255,255,0.015)' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-sm)' }}>
                     <thead>
-                      <tr style={{ borderBottom: '1px solid var(--border-primary)', textAlign: 'left' }}>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', textAlign: 'left' }}>
                         <th style={{ padding: '8px', color: 'var(--text-tertiary)', fontWeight: 'var(--fw-semibold)' }}>Course Code</th>
                         <th style={{ padding: '8px', color: 'var(--text-tertiary)', fontWeight: 'var(--fw-semibold)' }}>Course Title</th>
                         <th style={{ padding: '8px', color: 'var(--text-tertiary)', fontWeight: 'var(--fw-semibold)', textAlign: 'center' }}>Credits</th>
@@ -648,7 +657,7 @@ export default function ResultTable({ onResultsChange }) {
                                 ))}
                               </select>
                             ) : (
-                              <span className={`badge ${getGradeColor(course.grade)}`} style={{ padding: '2px 8px', minWidth: '38px', textAlign: 'center', justifyContent: 'center' }}>
+                              <span className={`badge ${getGradeColor(course.grade)}`} style={{ padding: '3px 10px', minWidth: '40px', textAlign: 'center', justifyContent: 'center', fontWeight: '700', letterSpacing: '0.03em' }}>
                                 {course.grade}
                               </span>
                             )}
@@ -673,7 +682,7 @@ export default function ResultTable({ onResultsChange }) {
                       ))}
                     </tbody>
                   </table>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '24px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border-primary)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '24px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                     <div style={{ textAlign: 'right' }}>
                       <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', display: 'block', fontWeight: 'var(--fw-semibold)' }}>SGPA</span>
                       <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-purple)' }}>{displaySemester.sgpa ?? '—'}</span>
@@ -714,7 +723,7 @@ export default function ResultTable({ onResultsChange }) {
                   key={template.id}
                   style={{
                     padding: '12px',
-                    background: 'var(--bg-input)',
+                    background: 'rgba(255,255,255,0.04)',
                     border: '1px solid var(--border-primary)',
                     borderRadius: 'var(--radius-md)',
                     cursor: 'pointer',
@@ -730,7 +739,7 @@ export default function ResultTable({ onResultsChange }) {
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = 'var(--border-primary)';
-                    e.currentTarget.style.background = 'var(--bg-input)';
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
                   }}
                 >
                   <div className="flex justify-between items-center">
@@ -779,7 +788,7 @@ export default function ResultTable({ onResultsChange }) {
                     key={template.id}
                     style={{
                       padding: '12px',
-                      background: 'var(--bg-input)',
+                      background: 'rgba(255,255,255,0.04)',
                       border: '1px solid var(--border-primary)',
                       borderRadius: 'var(--radius-md)',
                       cursor: 'pointer',
@@ -792,7 +801,7 @@ export default function ResultTable({ onResultsChange }) {
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = 'var(--border-primary)';
-                      e.currentTarget.style.background = 'var(--bg-input)';
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
                     }}
                   >
                     <div className="flex justify-between items-center">

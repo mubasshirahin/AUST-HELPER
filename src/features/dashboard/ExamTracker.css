@@ -13,13 +13,21 @@
 /* ─── Course Card ─── */
 .exam-course-card {
   border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background: var(--bg-card);
   padding: var(--sp-5);
+  transition: transform 0.22s cubic-bezier(0.4,0,0.2,1),
+              border-color 0.22s ease,
+              box-shadow 0.22s ease;
+}
+.exam-course-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent-blue) 28%, var(--border-primary));
+  box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--accent-blue) 14%, transparent);
 }
 .exam-course-card.editing {
   border-color: var(--accent-blue);
-  background: var(--accent-blue-glow);
+  background: color-mix(in srgb, var(--accent-blue) 6%, var(--bg-card));
 }
 
 .exam-course-header {

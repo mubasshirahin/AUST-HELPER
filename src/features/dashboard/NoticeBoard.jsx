@@ -41,7 +41,7 @@ export default function NoticeBoard() {
   };
 
   return (
-    <div className="glass-card-static notice-board animate-fadeInUp">
+    <div className="glass-card-static notice-board premium-card animate-fadeInUp">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="icon" style={{ backgroundColor: 'var(--accent-amber-glow)', color: 'var(--accent-amber)', padding: '6px', borderRadius: '8px' }}>
@@ -65,14 +65,14 @@ export default function NoticeBoard() {
           return (
             <div 
               key={notice.id}
-              className="notice-item"
+              className="notice-item premium-list-item"
               style={{
                 background: 'var(--bg-input)',
                 borderRadius: 'var(--radius-md)',
                 padding: '12px',
-                border: notice.pinned ? '1px solid var(--accent-amber-glow)' : '1px solid transparent',
+                border: notice.pinned ? '1px solid color-mix(in srgb, var(--accent-amber) 30%, transparent)' : '1px solid var(--border-primary)',
                 cursor: 'pointer',
-                transition: 'all var(--transition-base)'
+                transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
               }}
               onClick={() => toggleExpand(notice.id)}
             >

@@ -1,8 +1,11 @@
 .vb-selector {
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-xl);
   padding: var(--sp-5);
+  box-shadow: 0 4px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06);
   animation: fadeInUp 0.35s ease both;
 }
 
@@ -26,16 +29,17 @@
 .vb-card {
   display: flex;
   flex-direction: column;
-  border: 2px solid var(--border-primary);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  background: var(--bg-card);
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+  background: rgba(255,255,255,0.025);
 }
 
 .vb-card:hover {
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px var(--accent-blue-glow);
+  border-color: color-mix(in srgb, var(--accent-amber) 30%, transparent);
+  box-shadow: 0 8px 28px -8px color-mix(in srgb, var(--accent-amber) 14%, transparent);
+  transform: translateY(-2px);
 }
 
 .vb-card-main {
@@ -59,12 +63,19 @@
   width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
-  background: var(--accent-blue-glow);
-  color: var(--accent-blue);
+  background: color-mix(in srgb, var(--accent-amber) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-amber) 20%, transparent);
+  color: var(--accent-amber);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vb-card:hover .vb-card-icon {
+  transform: scale(1.06);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent-amber) 20%, transparent);
 }
 
 .vb-card-info {
@@ -105,40 +116,58 @@
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  font-weight: var(--fw-medium);
-  padding: 3px 8px;
+  font-weight: var(--fw-semibold);
+  padding: 4px 10px;
   border-radius: var(--radius-full);
+  letter-spacing: 0.03em;
+  transition: all 0.2s ease;
 }
 
 .vb-card-status.connected {
-  background: var(--accent-emerald-glow);
+  background: rgba(52,211,153,0.12);
+  border: 1px solid rgba(52,211,153,0.25);
   color: var(--accent-emerald);
+  box-shadow: 0 0 8px rgba(52,211,153,0.1);
+}
+
+.vb-card-status.connected:hover {
+  box-shadow: 0 0 14px rgba(52,211,153,0.15);
 }
 
 .vb-card-status.no-drive {
-  background: var(--bg-input);
-  color: var(--text-tertiary);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-secondary);
+}
+
+.vb-card-status.no-drive:hover {
+  border-color: color-mix(in srgb, var(--accent-amber) 25%, transparent);
+  color: var(--accent-amber);
+  background: color-mix(in srgb, var(--accent-amber) 8%, transparent);
 }
 
 .vb-card-disconnect {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-sm);
-  background: transparent;
+  padding: 3px 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-full);
+  background: rgba(255,255,255,0.03);
   color: var(--text-tertiary);
-  font-size: 10px;
+  font-size: 9px;
+  font-weight: var(--fw-semibold);
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
+  letter-spacing: 0.03em;
 }
 
 .vb-card-disconnect:hover {
-  border-color: var(--accent-rose);
+  border-color: rgba(251,113,133,0.35);
   color: var(--accent-rose);
-  background: var(--accent-rose-glow);
+  background: rgba(251,113,133,0.1);
+  box-shadow: 0 0 10px rgba(251,113,133,0.12);
 }
 
 .vb-drive-input {
@@ -153,9 +182,10 @@
 }
 
 .vb-form {
-  border: 1px dashed var(--border-primary);
+  border: 1px dashed rgba(255,255,255,0.1);
   border-radius: var(--radius-lg);
   padding: var(--sp-4);
+  background: rgba(255,255,255,0.02);
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
@@ -179,19 +209,19 @@
 .vb-input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid var(--border-primary);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-md);
-  background: var(--bg-input);
+  background: rgba(255,255,255,0.04);
   color: var(--text-primary);
   font-size: var(--fs-sm);
   font-family: inherit;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .vb-input:focus {
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px var(--accent-blue-glow);
+  border-color: var(--accent-amber);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-amber) 12%, transparent);
 }
 
 .vb-input::placeholder {
@@ -203,9 +233,9 @@
   align-items: center;
   gap: var(--sp-1);
   padding: 8px 16px;
-  border: 1px dashed var(--border-primary);
+  border: 1px dashed rgba(255,255,255,0.1);
   border-radius: var(--radius-lg);
-  background: transparent;
+  background: rgba(255,255,255,0.02);
   color: var(--text-tertiary);
   font-size: var(--fs-sm);
   font-family: inherit;
@@ -216,7 +246,8 @@
 }
 
 .vb-add-btn:hover {
-  border-color: var(--accent-blue);
-  color: var(--accent-blue);
-  background: var(--accent-blue-glow);
+  border-color: var(--accent-amber);
+  color: var(--accent-amber);
+  background: color-mix(in srgb, var(--accent-amber) 8%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent-amber) 10%, transparent);
 }

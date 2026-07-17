@@ -8,14 +8,29 @@
 }
 
 /* ─── Hero Header (matches Dashboard / Community pattern) ─── */
+/* ═══════════════════════════════════════════════════════════════
+   Hero Shell — Premium Glass-morphism
+   ═══════════════════════════════════════════════════════════════ */
 .messages-hero {
   position: relative;
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-primary);
   background: var(--bg-card);
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.04) inset,
+    var(--shadow-md);
   animation: messagesHeroIn 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.messages-hero:hover {
+  border-color: color-mix(in srgb, var(--accent-cyan) 30%, var(--border-primary));
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.06) inset,
+    0 0 0 1px color-mix(in srgb, var(--accent-cyan) 10%, transparent),
+    0 8px 40px -8px color-mix(in srgb, var(--accent-cyan) 12%, transparent),
+    var(--shadow-lg);
 }
 
 @keyframes messagesHeroIn {
@@ -34,46 +49,71 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(color-mix(in srgb, var(--accent-cyan) 6%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--accent-cyan) 6%, transparent) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(135deg, black 0%, transparent 70%);
+}
+
+.messages-hero-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent-cyan) 60%, transparent),
+    transparent
+  );
+  animation: heroShimmer 4s ease-in-out infinite 1s;
+}
+
+@keyframes heroShimmer {
+  0% { left: -60%; opacity: 0; }
+  30% { opacity: 1; }
+  100% { left: 110%; opacity: 0; }
 }
 
 .messages-hero-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.48;
-  animation: messagesFloat 8s ease-in-out infinite;
+  filter: blur(72px);
+  animation: messagesOrbFloat 10s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .messages-hero-orb-1 {
-  width: 240px;
-  height: 240px;
-  top: -90px;
-  right: -30px;
-  background: radial-gradient(circle, var(--accent-cyan) 0%, transparent 70%);
+  width: 260px;
+  height: 260px;
+  top: -100px;
+  right: -50px;
+  background: radial-gradient(circle, rgba(6,182,212,0.14) 0%, transparent 70%);
 }
 
 .messages-hero-orb-2 {
-  width: 200px;
-  height: 200px;
+  width: 180px;
+  height: 180px;
   bottom: -70px;
-  left: 8%;
-  background: radial-gradient(circle, var(--accent-blue) 0%, transparent 70%);
-  animation-delay: -3.5s;
+  left: 6%;
+  background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+  animation-delay: -4.5s;
 }
 
-@keyframes messagesFloat {
+@keyframes messagesOrbFloat {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-10px, -8px) scale(1.05); }
+  33% { transform: translate(8px, -12px) scale(1.04); }
+  66% { transform: translate(-6px, 6px) scale(0.97); }
 }
 
 .messages-hero-content {
   position: relative;
   padding: var(--sp-6) var(--sp-6) var(--sp-5);
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
 }
 
 .messages-hero-title-row {
@@ -83,40 +123,57 @@
 }
 
 .messages-hero-icon {
-  width: 52px;
-  height: 52px;
-  min-width: 52px;
-  border-radius: var(--radius-lg);
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--accent-cyan), #06b6d4);
-  color: #fff;
+  background: color-mix(in srgb, var(--accent-cyan) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-cyan) 22%, transparent);
+  color: var(--accent-cyan);
+  flex-shrink: 0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.messages-hero:hover .messages-hero-icon {
+  transform: rotate(-6deg) scale(1.08);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent-cyan) 30%, transparent);
 }
 
 .messages-hero-title {
-  font-size: var(--fs-2xl);
-  font-weight: var(--fw-bold);
-  letter-spacing: -0.03em;
-  line-height: 1.2;
-  margin: 0 0 6px;
-  animation: fadeInUp 0.5s ease 0.15s both;
+  margin: 0 0 var(--sp-1);
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  color: var(--text-primary);
+  animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) 0.1s both;
 }
 
-.messages-hero-title-highlight {
-  background: linear-gradient(135deg, var(--accent-cyan), #06b6d4, var(--accent-blue));
+.messages-hero-name {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  filter: brightness(1.05);
+  transition: filter 0.3s ease;
+}
+
+.messages-hero:hover .messages-hero-name {
+  filter: brightness(1.15) drop-shadow(0 0 12px color-mix(in srgb, var(--accent-cyan) 40%, transparent));
 }
 
 .messages-hero-subtitle {
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
   margin: 0;
-  max-width: 520px;
-  line-height: 1.5;
-  animation: fadeInUp 0.5s ease 0.2s both;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: var(--text-secondary);
+  max-width: 440px;
+  line-height: 1.6;
+  animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) 0.18s both;
 }
 
 /* ─── Quick Stats Row (matches Dashboard pattern) ─── */
@@ -128,6 +185,7 @@
 }
 
 /* ─── Quick Stat Card (matches Dashboard exact classes) ─── */
+/* ─── Quick Stat Cards — Glass-morphism ─── */
 .messages-quick-stat-card {
   position: relative;
   display: flex;
@@ -136,13 +194,16 @@
   padding: var(--sp-4) var(--sp-4);
   overflow: hidden;
   transition:
-    transform 0.3s cubic-bezier(0.34, 1.3, 0.64, 1),
-    box-shadow 0.3s ease;
+    transform 0.24s cubic-bezier(0.4,0,0.2,1),
+    box-shadow 0.24s ease,
+    border-color 0.24s ease;
   cursor: default;
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
 .messages-quick-stat-card:hover {
@@ -227,6 +288,7 @@
 }
 
 /* ─── Main Messages Layout ─── */
+/* ─── Main Messages Layout — Glass ─── */
 .messages-page {
   height: calc(100vh - 140px);
   min-height: 520px;
@@ -241,13 +303,15 @@
   min-height: 0;
 }
 
-/* ─── Conversation List ─── */
+/* ─── Conversation List — Glass sidebar ─── */
 .messages-list {
-  border-right: 1px solid var(--border-primary);
+  border-right: 1px solid rgba(255,255,255,0.08);
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: var(--bg-secondary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-lg) 0 0 var(--radius-lg);
   overflow: hidden;
 }
@@ -476,11 +540,14 @@
 }
 
 /* ─── Chat Thread ─── */
+/* ─── Chat Thread — Glass ─── */
 .messages-chat {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: var(--bg-secondary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.005) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
   position: relative;
 }
@@ -1616,51 +1683,60 @@ mark.chat-highlight {
 }
 
 /* ─── Responsive ─── */
-/* ─── Notification Toggle Button ─── */
+/* --- Notification Toggle Button --- */
 .notif-toggle-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  border: 1px solid var(--border-secondary);
-  background: transparent;
-  color: var(--text-secondary);
+  border: 1px solid rgba(255,255,255,0.1);
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--accent-emerald);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
   margin-left: 6px;
   padding: 0;
 }
 
 .notif-toggle-btn:hover {
-  background: var(--bg-input);
-  color: var(--accent-cyan);
-  border-color: var(--accent-cyan);
+  background: linear-gradient(135deg, rgba(52,211,153,0.15), rgba(52,211,153,0.05));
+  color: var(--accent-emerald);
+  border-color: rgba(52,211,153,0.3);
+  box-shadow: 0 0 14px rgba(52,211,153,0.2);
+  transform: scale(1.05);
 }
 
 .notif-toggle-btn.notif-off {
   color: var(--text-tertiary);
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 .notif-toggle-btn.notif-off:hover {
   opacity: 1;
+  color: var(--accent-rose);
+  border-color: rgba(251,113,133,0.3);
+  box-shadow: 0 0 14px rgba(251,113,133,0.2);
 }
 
-/* ─── Connection Status Banner ─── */
+/* --- Connection Status Banner --- */
 .connection-status-banner {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
   padding: var(--sp-2) var(--sp-4);
-  background: var(--accent-amber-glow);
-  border: 1px solid color-mix(in srgb, var(--accent-amber) 20%, transparent);
-  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(251,113,133,0.12), rgba(251,113,133,0.04));
+  border: 1px solid rgba(251,113,133,0.2);
+  border-radius: var(--radius-full);
   font-size: var(--fs-xs);
-  color: var(--accent-amber);
+  color: var(--accent-rose);
   font-weight: var(--fw-medium);
-  animation: fadeInUp 0.3s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeInUp 0.4s ease both;
 }
 
 .connection-status-banner svg {

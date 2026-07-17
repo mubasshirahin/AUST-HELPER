@@ -162,37 +162,41 @@ export default function CGPAGraph() {
         <>
       {/* Visual Analytics Info Cards */}
       <div className="grid-3">
-        <div className="glass-card stat-card">
+        <div className="cgpa-summary-card">
           <div className="flex justify-between items-center">
-            <span className="stat-label">Current CGPA</span>
-            <TrendingUp size={18} style={{ color: 'var(--accent-blue)' }} />
+            <span className="stat-label" style={{fontSize:'var(--fs-xs)',textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--text-tertiary)',fontWeight:'var(--fw-semibold)'}}>Current CGPA</span>
+            <TrendingUp size={16} style={{ color: 'var(--accent-amber)', opacity: 0.85 }} />
           </div>
-          <span className="stat-value" style={{ color: 'var(--accent-blue)' }}>{currentCgpa?.toFixed(2)}</span>
-          <span className="stat-change positive">From saved transcript</span>
+          <span className="stat-value cgpa-summary-value" style={{ color: 'var(--accent-amber)' }}>{currentCgpa?.toFixed(2)}</span>
         </div>
 
-        <div className="glass-card stat-card">
+        <div className="cgpa-summary-card">
           <div className="flex justify-between items-center">
-            <span className="stat-label">Best Semester Result</span>
-            <Award size={18} style={{ color: 'var(--accent-purple)' }} />
+            <span className="stat-label" style={{fontSize:'var(--fs-xs)',textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--text-tertiary)',fontWeight:'var(--fw-semibold)'}}>Best Semester</span>
+            <Award size={16} style={{ color: 'var(--accent-blue)', opacity: 0.85 }} />
           </div>
-          <span className="stat-value" style={{ color: 'var(--accent-purple)' }}>{bestSem.gpa}</span>
-          <span className="stat-change" style={{ color: 'var(--text-secondary)' }}>{bestSem.sem}</span>
+          <span className="stat-value cgpa-summary-value" style={{ color: 'var(--accent-blue)' }}>{bestSem.gpa}</span>
+          <span className="stat-change cgpa-summary-sub" style={{ color: 'var(--text-secondary)' }}>{bestSem.sem}</span>
         </div>
 
-        <div className="glass-card stat-card">
+        <div className="cgpa-summary-card">
           <div className="flex justify-between items-center">
-            <span className="stat-label">Credits Completed</span>
-            <CheckCircle size={18} style={{ color: 'var(--accent-emerald)' }} />
+            <span className="stat-label" style={{fontSize:'var(--fs-xs)',textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--text-tertiary)',fontWeight:'var(--fw-semibold)'}}>Credits Completed</span>
+            <CheckCircle size={16} style={{ color: 'var(--accent-emerald)', opacity: 0.85 }} />
           </div>
-          <span className="stat-value" style={{ color: 'var(--accent-emerald)' }}>{creditsCompleted.toFixed(1)}</span>
-          <span className="stat-change positive">Graded credits</span>
+          <span className="stat-value cgpa-summary-value" style={{ color: 'var(--accent-emerald)' }}>{creditsCompleted.toFixed(1)}</span>
         </div>
       </div>
 
       {/* CGPA Chart */}
-      <div className="glass-card-static" style={{ height: '350px' }}>
-        <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'var(--fw-bold)', marginBottom: '16px' }}>Academic Progression Trend</h3>
+      <div className="glass-card-static" style={{ 
+        height: '350px',
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 'var(--radius-xl)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.06)',
+      }}>
+        <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'var(--fw-bold)', marginBottom: '16px', letterSpacing: '-0.01em' }}>Academic Progression Trend</h3>
         <div style={{ height: '280px', position: 'relative' }}>
           <Line data={chartData} options={options} />
         </div>

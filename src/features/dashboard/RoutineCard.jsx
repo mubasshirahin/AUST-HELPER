@@ -177,21 +177,7 @@ export default function RoutineCard() {
   }, [selectedDay, weekDays, classesForDay, currentTime]);
 
   return (
-    <div className="glass-card-static routine-card animate-fadeInUp">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2">
-          <div className="icon" style={{ backgroundColor: 'var(--accent-blue-glow)', color: 'var(--accent-blue)', padding: '6px', borderRadius: '8px' }}>
-            <Calendar size={20} />
-          </div>
-          <div>
-            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>AUST Semester Schedule</p>
-          </div>
-        </div>
-        <div className="routine-live-indicator">
-          <span className="routine-live-dot" />
-          <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 'var(--fw-medium)' }}>Live</span>
-        </div>
-      </div>
+    <div className="glass-card-static routine-card premium-card animate-fadeInUp">
 
       <div className="tabs mb-4" style={{ display: 'flex', overflowX: 'auto', gap: '4px', padding: '4px' }}>
         {weekDays.map((day) => (
@@ -220,17 +206,17 @@ export default function RoutineCard() {
             return (
               <div
                 key={cls.id}
-                className="routine-item"
+                className="routine-item premium-list-item"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   padding: '12px 16px',
                   borderRadius: 'var(--radius-md)',
                   background: 'var(--bg-input)',
-                  borderLeft: `4px solid ${accentColor}`,
+                  borderLeft: `3px solid ${accentColor}`,
                   position: 'relative',
                   overflow: 'hidden',
-                  transition: 'transform var(--transition-base)',
+                  transition: 'transform 0.2s cubic-bezier(0.4,0,0.2,1), background 0.2s ease',
                 }}
               >
                 {isNow && (

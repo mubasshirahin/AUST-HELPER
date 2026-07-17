@@ -1,5 +1,6 @@
 /* ============================================
    SemesterTracker — Theory + Lab Mark Sheet
+   Premium Dark-Grid Edition
    ============================================ */
 
 /* ── Wrapper ── */
@@ -8,6 +9,13 @@
   flex-direction: column;
   gap: var(--sp-4);
   width: 100%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-xl);
+  padding: var(--sp-5);
+  box-shadow: 0 4px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
 /* ── Section Heading ── */
@@ -28,14 +36,14 @@
 }
 
 .theory-icon {
-  background: var(--accent-blue-glow);
-  border: 1px solid var(--border-focus);
-  color: var(--accent-blue);
+  background: color-mix(in srgb, var(--accent-amber) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-amber) 22%, transparent);
+  color: var(--accent-amber);
 }
 
 .lab-icon {
-  background: var(--accent-emerald-glow);
-  border: 1px solid color-mix(in srgb, var(--accent-emerald) 30%, transparent);
+  background: color-mix(in srgb, var(--accent-emerald) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-emerald) 22%, transparent);
   color: var(--accent-emerald);
 }
 
@@ -56,7 +64,12 @@
 /* ── Divider ── */
 .st-divider {
   height: 1px;
-  background: var(--border-primary);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent-amber) 18%, transparent),
+    color-mix(in srgb, var(--border-primary) 50%, transparent) 50%,
+    transparent
+  );
   margin: var(--sp-2) 0;
 }
 
@@ -67,9 +80,9 @@
   gap: var(--sp-3);
   flex-wrap: wrap;
   padding: var(--sp-2) var(--sp-3);
-  background: var(--bg-tertiary);
+  background: rgba(255,255,255,0.03);
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-secondary);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
 .st-legend-item {
@@ -88,7 +101,7 @@
 }
 
 .st-legend-sep {
-  color: var(--border-primary);
+  color: rgba(255,255,255,0.08);
   margin: 0 var(--sp-1);
 }
 
@@ -102,7 +115,7 @@
   text-align: center;
   gap: var(--sp-3);
 }
-.st-empty-icon { color: var(--text-tertiary); opacity: 0.3; }
+.st-empty-icon { color: var(--text-tertiary); opacity: 0.25; }
 .st-empty h3 { font-size: var(--fs-md); color: var(--text-secondary); font-weight: var(--fw-semibold); }
 .st-empty p  { font-size: var(--fs-sm); color: var(--text-tertiary); max-width: 300px; line-height: 1.5; }
 
@@ -113,9 +126,9 @@
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  border: 1px solid var(--border-primary);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
 }
 
 .st-table {
@@ -128,13 +141,13 @@
 /* ── TH ── */
 .st-th {
   padding: var(--sp-3);
-  background: var(--bg-tertiary);
+  background: rgba(255,255,255,0.03);
   font-size: 0.62rem;
   font-weight: var(--fw-semibold);
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--text-tertiary);
-  border-bottom: 2px solid var(--border-primary);
+  border-bottom: 2px solid rgba(255,255,255,0.08);
   white-space: nowrap;
   text-align: center;
   position: sticky;
@@ -147,12 +160,12 @@
   min-width: 180px;
   max-width: 230px;
   padding-left: var(--sp-4);
-  border-right: 2px solid var(--border-primary);
+  border-right: 2px solid rgba(255,255,255,0.08);
 }
 
 .st-th-mark {
   min-width: 68px;
-  border-left: 1.5px solid var(--border-secondary);
+  border-left: 1.5px solid rgba(255,255,255,0.04);
 }
 
 .st-th-inner {
@@ -168,41 +181,41 @@
 
 .st-th-best2 {
   min-width: 68px;
-  border-left: 2px solid var(--border-primary);
+  border-left: 2px solid rgba(255,255,255,0.08);
   color: var(--accent-cyan);
   font-size: 0.6rem;
 }
 .st-th-total {
   min-width: 80px;
-  border-left: 1px solid var(--border-secondary);
+  border-left: 1px solid rgba(255,255,255,0.04);
   color: var(--accent-amber);
 }
 .st-th-grade {
   min-width: 72px;
-  border-left: 1px solid var(--border-secondary);
+  border-left: 1px solid rgba(255,255,255,0.04);
   color: var(--accent-emerald);
 }
 .st-th-action {
   width: 36px;
-  border-left: 1px solid var(--border-secondary);
+  border-left: 1px solid rgba(255,255,255,0.04);
 }
 
 /* ── TR / TD ── */
-.st-row:not(:last-child) .st-td { border-bottom: 1.5px solid var(--border-secondary); }
-.st-row:hover .st-td            { background: var(--bg-card-hover); }
-.st-row:hover .st-td-course     { background: var(--bg-card-hover); }
+.st-row:not(:last-child) .st-td { border-bottom: 1.5px solid rgba(255,255,255,0.04); }
+.st-row:hover .st-td            { background: color-mix(in srgb, var(--accent-amber) 3%, var(--bg-card-hover)); }
+.st-row:hover .st-td-course     { background: color-mix(in srgb, var(--accent-amber) 3%, var(--bg-card-hover)); }
 
 .st-td {
   padding: 0;
-  background: var(--bg-card);
+  background: rgba(255,255,255,0.015);
   vertical-align: middle;
   transition: background var(--transition-fast);
 }
 
 .st-td-course {
   padding: var(--sp-3) var(--sp-4);
-  border-right: 2.5px solid var(--border-primary);
-  background: var(--bg-card);
+  border-right: 2.5px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.015);
 }
 
 .st-course-code {
@@ -228,7 +241,7 @@
 .st-td-input {
   text-align: center;
   position: relative;
-  border-left: 1px solid var(--border-secondary);
+  border-left: 1px solid rgba(255,255,255,0.04);
   transition: background var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -281,7 +294,7 @@
 
 /* ── Computed / Best2 ── */
 .st-td-computed {
-  border-left: 2px solid var(--border-primary);
+  border-left: 2px solid rgba(255,255,255,0.08);
   text-align: center;
   padding: var(--sp-2);
 }
@@ -314,7 +327,7 @@
 .st-total-bar {
   width: 52px;
   height: 3px;
-  background: var(--border-primary);
+  background: rgba(255,255,255,0.06);
   border-radius: var(--radius-full);
   overflow: hidden;
 }
@@ -327,7 +340,7 @@
 
 /* ── Grade ── */
 .st-td-grade {
-  border-left: 1px solid var(--border-secondary);
+  border-left: 1px solid rgba(255,255,255,0.04);
   text-align: center;
   padding: var(--sp-2);
 }
@@ -356,7 +369,7 @@
 
 /* ── Delete ── */
 .st-td-del {
-  border-left: 1px solid var(--border-secondary);
+  border-left: 1px solid rgba(255,255,255,0.04);
   text-align: center;
   padding: var(--sp-2);
 }
@@ -392,8 +405,8 @@
   padding: 1px 6px;
   font-family: monospace;
   font-size: 0.63rem;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
   border-bottom-width: 2px;
   border-radius: 3px;
   color: var(--text-secondary);
@@ -410,25 +423,25 @@
 }
 
 .st-lab-card {
-  border: 1px solid var(--border-primary);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-md);
-  background: var(--bg-card);
+  background: rgba(255,255,255,0.015);
   overflow: hidden;
   transition: border-color var(--transition-base);
 }
 
 .st-lab-card:hover {
-  border-color: color-mix(in srgb, var(--accent-emerald) 30%, transparent);
+  border-color: color-mix(in srgb, var(--accent-amber) 25%, transparent);
 }
 
 /* Card header */
 .st-lab-card-header {
   padding: var(--sp-2) var(--sp-3);
-  border-bottom: 1px solid var(--border-secondary);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
-  background: var(--bg-tertiary);
+  background: rgba(255,255,255,0.025);
 }
 
 .st-lab-title-row {
@@ -459,8 +472,8 @@
   gap: 4px;
   padding: 4px 10px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border-primary);
-  background: var(--bg-input);
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
   color: var(--text-secondary);
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
@@ -468,14 +481,14 @@
   transition: all var(--transition-fast);
 }
 .st-icon-btn:hover {
-  border-color: var(--accent-blue);
-  color: var(--accent-blue);
-  background: var(--accent-blue-glow);
+  border-color: var(--accent-amber);
+  color: var(--accent-amber);
+  background: color-mix(in srgb, var(--accent-amber) 10%, transparent);
 }
 .st-icon-btn.active {
-  border-color: var(--accent-emerald);
-  color: var(--accent-emerald);
-  background: var(--accent-emerald-glow);
+  border-color: var(--accent-amber);
+  color: var(--accent-amber);
+  background: color-mix(in srgb, var(--accent-amber) 10%, transparent);
 }
 .st-icon-btn.danger:hover {
   border-color: var(--accent-rose);
@@ -500,11 +513,11 @@
 /* ── Setup Panel ── */
 .st-setup-panel {
   padding: var(--sp-2) var(--sp-3);
-  border-top: 1px solid var(--border-secondary);
+  border-top: 1px solid rgba(255,255,255,0.06);
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
-  background: var(--bg-secondary);
+  background: rgba(255,255,255,0.015);
 }
 
 .st-setup-heading {
@@ -526,8 +539,8 @@
   gap: 4px;
   padding: 3px 10px;
   border-radius: var(--radius-full);
-  border: 1px solid var(--border-primary);
-  background: var(--bg-input);
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.04);
   color: var(--text-secondary);
   font-size: 0.6rem;
   font-weight: var(--fw-medium);
@@ -541,9 +554,9 @@
   background: var(--accent-cyan-glow);
 }
 .st-type-btn.active {
-  border-color: var(--accent-emerald);
-  background: var(--accent-emerald-glow);
-  color: var(--accent-emerald);
+  border-color: var(--accent-amber);
+  background: color-mix(in srgb, var(--accent-amber) 10%, transparent);
+  color: var(--accent-amber);
 }
 .st-type-check { position: absolute; top: -4px; right: -4px; background: var(--accent-emerald); border-radius: 50%; padding: 1px; color: white; }
 
@@ -551,10 +564,10 @@
 .st-draft-list {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border-primary);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: var(--bg-card);
+  background: rgba(255,255,255,0.02);
 }
 
 .st-draft-header-row {
@@ -562,13 +575,13 @@
   align-items: center;
   gap: var(--sp-3);
   padding: var(--sp-2) var(--sp-3);
-  background: var(--bg-tertiary);
+  background: rgba(255,255,255,0.03);
   font-size: 0.6rem;
   font-weight: var(--fw-semibold);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-tertiary);
-  border-bottom: 1px solid var(--border-secondary);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
 .st-draft-row {
@@ -576,7 +589,7 @@
   align-items: center;
   gap: var(--sp-3);
   padding: var(--sp-2) var(--sp-3);
-  border-bottom: 1px solid var(--border-secondary);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
   transition: background var(--transition-fast);
 }
 .st-draft-row:last-of-type { border-bottom: none; }
@@ -600,8 +613,8 @@
 
 .st-draft-input {
   padding: var(--sp-1) var(--sp-2);
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-sm);
   font-size: var(--fs-xs);
   color: var(--text-primary);
@@ -610,7 +623,7 @@
   transition: border-color var(--transition-fast);
 }
 .st-draft-input:focus {
-  border-color: var(--accent-blue);
+  border-color: var(--accent-amber);
   outline: none;
 }
 
@@ -628,8 +641,8 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--sp-2) var(--sp-3);
-  background: var(--bg-tertiary);
-  border-top: 2px solid var(--border-primary);
+  background: rgba(255,255,255,0.03);
+  border-top: 2px solid rgba(255,255,255,0.08);
   font-size: var(--fs-xs);
   font-weight: var(--fw-semibold);
   color: var(--text-secondary);
@@ -740,8 +753,8 @@
 
 /* ── Quiz config per course ── */
 .st-quiz-config input {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
 }
@@ -759,12 +772,12 @@
   left: 50%;
   transform: translate(-50%, -50%);
   background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: var(--radius-lg);
   padding: 24px;
   max-width: 360px;
   width: 90%;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
   z-index: 100000;
 }
 .st-modal-message {

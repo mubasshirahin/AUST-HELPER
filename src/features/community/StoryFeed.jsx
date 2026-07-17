@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, Send } from 'lucide-react';
+import { MessageSquare, Send, Lightbulb, Smile, Heart, Flame } from 'lucide-react';
 
 const STORAGE_KEY = 'austwise_posts';
 const REACTIONS_KEY = 'austwise_reactions';
@@ -15,13 +15,13 @@ const getVisitorId = () => {
 };
 
 const categoryMeta = {
-  confession: { icon: '💬', color: '#a855f7', label: 'Confession' },
-  funny:      { icon: '😂', color: '#f59e0b', label: 'Funny' },
-  helpful:    { icon: '💡', color: '#10b981', label: 'Helpful' },
-  appreciation: { icon: '🙏', color: '#f43f5e', label: 'Appreciation' },
+  confession: { Icon: MessageSquare, color: '#a855f7', label: 'Confession' },
+  funny:      { Icon: Smile, color: '#f59e0b', label: 'Funny' },
+  helpful:    { Icon: Lightbulb, color: '#10b981', label: 'Helpful' },
+  appreciation: { Icon: Heart, color: '#f43f5e', label: 'Appreciation' },
 };
 
-const reactionEmojis = { laugh: '😂', heart: '❤️', fire: '🔥' };
+const reactionIcons = { laugh: Smile, heart: Heart, fire: Flame };
 
 const getTimeAgo = (timestamp) => {
   const diff = Date.now() - timestamp;
@@ -128,7 +128,7 @@ export default function StoryFeed() {
       {/* Create post form */}
       <form onSubmit={handlePostSubmit} className="story-feed-form">
         <div className="story-feed-form-header">
-          <span className="form-header-icon">💬</span>
+          <span className="form-header-icon"><MessageSquare size={16} /></span>
           <span>Share something anonymously</span>
         </div>
 
@@ -149,7 +149,7 @@ export default function StoryFeed() {
                   color: active ? meta.color : undefined,
                 }}
               >
-                {meta.icon} {meta.label}
+                <meta.Icon size={14} /> {meta.label}
               </button>
             );
           })}
@@ -163,7 +163,7 @@ export default function StoryFeed() {
           className="story-feed-textarea"
         />
         <div className="story-feed-form-footer">
-          <span className="story-feed-form-hint">⚠️ Keep reports civil. Posts are anonymous.</span>
+          <span className="story-feed-form-hint">Keep reports civil. Posts are anonymous.</span>
           <button type="submit" className="btn btn-primary btn-sm story-feed-form-submit">
             Post <Send size={12} />
           </button>
@@ -178,7 +178,7 @@ export default function StoryFeed() {
             onClick={() => setActiveFilter(cat)}
             className={`tag story-feed-filter-btn ${activeFilter === cat ? 'active' : ''}`}
           >
-            {cat === 'All' ? 'All' : `${categoryMeta[cat].icon} ${cat}`}
+            {cat === 'All' ? 'All' : (() => { const CIcon = categoryMeta[cat].Icon; return <><CIcon size={12} /> {cat}</>; })()}
           </button>
         ))}
       </div>
@@ -187,7 +187,7 @@ export default function StoryFeed() {
       <div className="story-feed-list">
         {filteredPosts.length === 0 && (
           <div className="story-feed-empty">
-            <div className="story-feed-empty-icon">💬</div>
+            <div className="story-feed-empty-icon"><MessageSquare size={24} /></div>
             <h4>No posts yet</h4>
             <p>
               {activeFilter === 'All'
@@ -210,7 +210,7 @@ export default function StoryFeed() {
                     color: meta.color,
                   }}
                 >
-                  {meta.icon} {post.category}
+                  <meta.Icon size={12} /> {post.category}
                 </span>
                 <span className="story-feed-post-time">{post.time}</span>
               </div>
@@ -219,7 +219,7 @@ export default function StoryFeed() {
 
               <div className="story-feed-post-footer">
                 <div className="story-feed-reactions">
-                  {Object.entries(reactionEmojis).map(([type, emoji]) => {
+                  {Object.entries(reactionIcons).map(([type, IconComponent]) => {
                     const hasReacted = (userReactions[visitorId] || []).includes(`${post.id}-${type}`);
                     return (
                       <button
@@ -232,7 +232,7 @@ export default function StoryFeed() {
                           fontWeight: hasReacted ? 600 : undefined,
                         }}
                       >
-                        {emoji} {post.reactions[type]}
+                        <IconComponent size={14} /> {post.reactions[type]}
                       </button>
                     );
                   })}

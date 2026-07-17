@@ -326,8 +326,8 @@
 
 /* ─── Story Feed (dashboard-style) ─── */
 .story-feed-container {
-  max-width: 700px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
   width: 100%;
   position: relative;
   overflow: hidden;

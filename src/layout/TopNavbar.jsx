@@ -1,6 +1,7 @@
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { getRoleLabel, getRoleBadgeClass, AUTH_ROLES } from '../utils/authStorage';
+import NavPomodoro from './NavPomodoro';
 import {
   Search, Bell, BellRing, Sun, Moon, Menu, Newspaper, Terminal, Check, User,
   Clock, Hourglass, AlertTriangle, CalendarCheck, Info, CheckCheck, Trash2,
@@ -189,7 +190,11 @@ export default function TopNavbar({ onMenuClick, onSearchOpen }) {
 
       </div>
 
-      <div className="topbar-mid">          <div className="topbar-search" onClick={() => onSearchOpen(true)} role="button" tabIndex={0}>
+      <div className="topbar-mid">
+        {/* ── Inline Pomodoro Timer (isolated component) ── */}
+        <NavPomodoro />
+
+        <div className="topbar-search" onClick={() => onSearchOpen(true)} role="button" tabIndex={0}>
           <Search size={16} />
           <input
             type="text"

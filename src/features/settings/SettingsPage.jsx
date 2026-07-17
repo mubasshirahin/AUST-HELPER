@@ -599,19 +599,33 @@ export default function SettingsPage() {
       <header className="settings-hero">
         <div className="settings-hero-bg" aria-hidden="true">
           <div className="settings-hero-grid" />
+          <div className="settings-hero-orb settings-hero-orb-1" />
+          <div className="settings-hero-orb settings-hero-orb-2" />
+          <div className="settings-hero-orb settings-hero-orb-3" />
+          <div className="settings-hero-shimmer" />
         </div>
         <div className="settings-hero-content">
           <div className="settings-hero-title-row">
             <div className="settings-hero-icon">
-              <Settings size={26} />
+              <Settings size={18} strokeWidth={2.5} />
             </div>
             <div>
-              <h1 className="settings-hero-title">Settings</h1>
+              <h1 className="settings-hero-title">
+                <span className="settings-hero-name">Settings</span>
+              </h1>
               <p className="settings-hero-subtitle">
                 Manage your profile, choose a theme, configure notifications, and more.
               </p>
             </div>
           </div>
+          {isAuthenticated && (
+            <div className="settings-hero-status-row">
+              <span className="settings-hero-status-dot" />
+              <span className="settings-hero-status-text">
+                {profilePercent === 100 ? 'Profile complete' : `Profile ${profilePercent}% complete`}
+              </span>
+            </div>
+          )}
         </div>
       </header>
 

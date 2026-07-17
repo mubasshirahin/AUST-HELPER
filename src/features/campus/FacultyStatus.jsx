@@ -57,7 +57,7 @@ export default function FacultyStatus() {
             className="glass-card"
             style={{
               padding: '16px 20px',
-              background: 'var(--bg-input)',
+              background: 'rgba(255,255,255,0.03)',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
@@ -84,7 +84,7 @@ export default function FacultyStatus() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-1 mt-4 pt-2" style={{ borderTop: '1px solid var(--border-secondary)' }}>
+            <div className="flex flex-wrap gap-1 mt-4 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
               {fac.expertise.map(exp => (
                 <span key={exp} className="badge badge-purple" style={{ fontSize: '9px', padding: '1px 5px' }}>{exp}</span>
               ))}

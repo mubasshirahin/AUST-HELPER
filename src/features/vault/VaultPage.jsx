@@ -87,15 +87,21 @@ export default function VaultPage() {
       <header className="vault-hero">
         <div className="vault-hero-bg" aria-hidden="true">
           <div className="vault-hero-grid" />
+          <div className="vault-hero-orb vault-hero-orb-1" />
+          <div className="vault-hero-orb vault-hero-orb-2" />
+          <div className="vault-hero-orb vault-hero-orb-3" />
+          <div className="vault-hero-shimmer" />
         </div>
 
         <div className="vault-hero-content">
           <div className="vault-hero-title-row">
             <div className="vault-hero-icon">
-              <Archive size={26} />
+              <Archive size={18} strokeWidth={2.5} />
             </div>
             <div>
-              <h1 className="vault-hero-title">Resource Vault</h1>
+              <h1 className="vault-hero-title">
+                <span className="vault-hero-name">Resource Vault</span>
+              </h1>
               <p className="vault-hero-subtitle">
                 {isReady
                   ? `${department} — Semester ${yearSem} · ${batch.batchName}`
@@ -103,30 +109,29 @@ export default function VaultPage() {
               </p>
             </div>
           </div>
-
-          {!isReady && (
-            <VaultStepProgress currentStep={selectionStep} />
-          )}
         </div>
       </header>
 
       {!isReady ? (
-        selectionStep === 'batch' ? (
-          <VaultBatchSelector
-            department={department}
-            yearSem={yearSem}
-            onSelectBatch={handleSelectBatch}
-          />
-        ) : (
-          <VaultSelection
-            department={department}
-            yearSem={yearSem}
-            onSelectDepartment={handleSelectDepartment}
-            onSelectYearSem={handleSelectYearSem}
-            onBackToDepartments={handleBackToDepartments}
-            onBackToSemesters={handleBackToSemesters}
-          />
-        )
+        <div className="vault-selection-box">
+          <VaultStepProgress currentStep={selectionStep} />
+          {selectionStep === 'batch' ? (
+            <VaultBatchSelector
+              department={department}
+              yearSem={yearSem}
+              onSelectBatch={handleSelectBatch}
+            />
+          ) : (
+            <VaultSelection
+              department={department}
+              yearSem={yearSem}
+              onSelectDepartment={handleSelectDepartment}
+              onSelectYearSem={handleSelectYearSem}
+              onBackToDepartments={handleBackToDepartments}
+              onBackToSemesters={handleBackToSemesters}
+            />
+          )}
+        </div>
       ) : (
         <div className="vault-workspace vault-workspace-enter">
           <div className="vault-sem-context-bar">

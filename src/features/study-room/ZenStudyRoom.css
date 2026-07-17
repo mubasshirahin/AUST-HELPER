@@ -1,0 +1,521 @@
+/* ═══════════════════════════════════════════════════════════════
+   ZEN STUDY ROOM — Distraction-Free Focus Mode
+   Deep dark ambient palette · minimal borders · center-focused
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Full-viewport take-over ─── */
+.zen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #020202;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+  animation: zenFadeIn 0.5s ease both;
+}
+
+@keyframes zenFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ─── Background layers ─── */
+.zen-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.zen-bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, black 30%, transparent 80%);
+  animation: zenGridPulse 8s ease-in-out infinite;
+}
+
+@keyframes zenGridPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.zen-bg-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%);
+}
+
+/* ─── Top bar ─── */
+.zen-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  z-index: 2;
+}
+
+.zen-exit-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.25);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+.zen-exit-btn:hover {
+  color: rgba(255,255,255,0.6);
+  border-color: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+}
+
+.zen-mode-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.03em;
+}
+
+.zen-session-counter {
+  font-size: 11px;
+  color: rgba(255,255,255,0.18);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Center: Timer ─── */
+.zen-center {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+/* Mode switch pill */
+.zen-mode-switch {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.zen-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255,255,255,0.3);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.zen-mode-btn:hover {
+  color: rgba(255,255,255,0.55);
+}
+
+.zen-mode-btn-active {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.9);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* Timer ring */
+.zen-timer-ring-wrapper {
+  position: relative;
+  width: 340px;
+  height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zen-timer-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.zen-timer-center {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.zen-timer-time {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 5.2rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: rgba(255,255,255,0.92);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(255,255,255,0.08);
+  animation: zenTimeIn 0.5s ease both;
+}
+
+@keyframes zenTimeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.zen-timer-mode-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.22);
+  text-transform: uppercase;
+}
+
+/* Controls */
+.zen-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.zen-ctrl-btn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.25s ease;
+}
+
+.zen-ctrl-btn:active {
+  transform: scale(0.94);
+}
+
+.zen-ctrl-btn-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.zen-ctrl-btn-icon:hover {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.55);
+}
+
+.zen-ctrl-btn-icon:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+}
+
+.zen-ctrl-btn-play {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #f97316;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 30px rgba(249,115,22,0.35), 0 0 60px rgba(249,115,22,0.1);
+  transition: all 0.3s ease;
+}
+
+.zen-ctrl-btn-play:hover {
+  box-shadow: 0 0 40px rgba(249,115,22,0.5), 0 0 80px rgba(249,115,22,0.15);
+  transform: scale(1.05);
+}
+
+.zen-ctrl-btn-pause {
+  background: rgba(255,255,255,0.1);
+  box-shadow: 0 0 20px rgba(255,255,255,0.05);
+}
+
+.zen-ctrl-btn-pause:hover {
+  background: rgba(255,255,255,0.14);
+  box-shadow: 0 0 30px rgba(255,255,255,0.08);
+}
+
+/* Hint */
+.zen-hint {
+  font-size: 11px;
+  color: rgba(255,255,255,0.12);
+  letter-spacing: 0.03em;
+}
+
+.zen-hint kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  font-family: inherit;
+  font-size: 10px;
+}
+
+/* ─── Bottom: Sound board ─── */
+.zen-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 20px 24px;
+  z-index: 2;
+}
+
+.zen-sound-board {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.zen-sound-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.zen-sound-label-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.zen-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 80px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.08);
+  outline: none;
+  cursor: pointer;
+}
+
+.zen-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s ease;
+}
+
+.zen-volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.3);
+}
+
+.zen-sound-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.zen-sound-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.zen-sound-btn:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.1);
+}
+
+.zen-sound-btn-active {
+  border-color: rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.06);
+}
+
+.zen-sound-btn-emoji {
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.zen-sound-btn-active .zen-sound-btn-emoji {
+  transform: scale(1.15);
+}
+
+.zen-sound-btn-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.zen-sound-btn-active .zen-sound-btn-label {
+  color: rgba(255,255,255,0.7);
+}
+
+.zen-sound-btn-dot {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: rgba(255,255,255,0.5);
+  animation: zenDotPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes zenDotPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* ─── Live counter ─── */
+.zen-live-counter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: zenFadeCounter 2s ease both;
+}
+
+@keyframes zenFadeCounter {
+  0% { opacity: 0; }
+  30% { opacity: 0.6; }
+  100% { opacity: 0.35; }
+}
+
+.zen-live-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 6px rgba(52,211,153,0.5);
+  animation: zenDotGlow 2s ease-in-out infinite;
+}
+
+@keyframes zenDotGlow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.zen-live-text {
+  font-size: 10px;
+  color: rgba(255,255,255,0.18);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 600px) {
+  .zen-timer-ring-wrapper {
+    width: 240px;
+    height: 240px;
+  }
+
+  .zen-timer-time {
+    font-size: 3.4rem;
+  }
+
+  .zen-controls {
+    gap: 14px;
+  }
+
+  .zen-ctrl-btn-play {
+    width: 52px;
+    height: 52px;
+  }
+
+  .zen-ctrl-btn-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .zen-bottom {
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+  }
+
+  .zen-sound-btns {
+    gap: 4px;
+  }
+
+  .zen-sound-btn {
+    padding: 8px 10px;
+  }
+
+  .zen-sound-btn-label {
+    display: none;
+  }
+
+  .zen-exit-btn span {
+    display: none;
+  }
+
+  .zen-topbar {
+    padding: 10px 12px;
+  }
+
+  .zen-mode-label {
+    font-size: 11px;
+  }
+
+  .zen-session-counter {
+    display: none;
+  }
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .zen-timer-time {
+    animation: none !important;
+  }
+
+  .zen-bg-grid {
+    animation: none !important;
+    opacity: 0.6;
+  }
+}

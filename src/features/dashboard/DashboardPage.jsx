@@ -18,6 +18,7 @@ import {
 import { getUserStorageItem, getCurrentUserId } from '../../utils/authStorage';
 import { useAuth } from '../../context/AuthContext';
 import './DashboardPage.css';
+import './dashboard-premium.css';
 
 const FOCUS_SECTIONS = {
   stats: ['stats', 'routine_day', 'deadlines', 'notices', 'notif'],
@@ -240,10 +241,46 @@ const focusModes = [
 
 function getGreeting() {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return { text: 'Good morning', period: 'morning' };
+  if (hour < 17) return { text: 'Good afternoon', period: 'afternoon' };
+  return { text: 'Good evening', period: 'evening' };
 }
+
+function getGreetingMeta(period) {
+  const now = new Date();
+  const day = now.toLocaleDateString('en-US', { weekday: 'long' });
+  const date = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const subtitles = {
+    morning: 'Rise and shine — your schedule is ready for today.',
+    afternoon: 'Keep the momentum going. You\'re doing great.',
+    evening: 'Welcome back. Here\'s your overview for tonight.',
+  };
+  return { day, date, subtitle: subtitles[period] };
+}
+
+const PERIOD_ICONS = {
+  morning: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" fill="currentColor" opacity="0.9"/>
+      <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+        stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  ),
+  afternoon: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="5" fill="currentColor" opacity="0.9"/>
+      <path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"
+        stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
+    </svg>
+  ),
+  evening: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+        fill="currentColor" opacity="0.9" stroke="currentColor" strokeWidth="1.5"
+        strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
+};
 
 function useAnimatedValue(target, duration = 900) {
   const [display, setDisplay] = useState('—');
@@ -406,24 +443,31 @@ export default function DashboardPage() {
 
   const isVisible = (key) => FOCUS_SECTIONS[focusMode].includes(key);
 
+  const greeting = useMemo(() => getGreeting(), []);
+  const greetingMeta = useMemo(() => getGreetingMeta(greeting.period), [greeting.period]);
+
   return (
     <div className={`dashboard-page dashboard-focus-${focusMode} animate-fadeIn`}>
 
-      <header className="dash-hero">
-        <div className="dash-hero-bg" aria-hidden="true">
-          <div className="dash-hero-grid" />
-        </div>
+      <header className="dash-hero" data-period={greeting.period}>
         <div className="dash-hero-content">
+          <div className="dash-hero-eyebrow">
+            <span className="dash-hero-period-icon">
+              {PERIOD_ICONS[greeting.period]}
+            </span>
+            <span className="dash-hero-date-label">
+              {greetingMeta.day} · {greetingMeta.date}
+            </span>
+          </div>
           <div className="dash-hero-title-row">
-            <div className="dash-hero-icon">
-              <Zap size={24} />
-            </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <h1 className="dash-hero-title">
-                {getGreeting()}, <span className="dash-hero-name">{firstName}</span>
+                {greeting.text},
+                <br />
+                <span className="dash-hero-name">{firstName}</span>
               </h1>
               <p className="dash-hero-subtitle">
-                Your academic day at a glance — stay on track, stay focused.
+                {greetingMeta.subtitle}
               </p>
             </div>
             <div className="dash-hero-widgets">
@@ -528,7 +572,7 @@ export default function DashboardPage() {
                   <span className="icon" style={{ background: 'var(--accent-blue-glow)', color: 'var(--accent-blue)' }}>
                     <Clock size={16} />
                   </span>
-                  Today's Routine
+                  Daily Flow
                 </h2>
               </div>
               <div className="dash-section">

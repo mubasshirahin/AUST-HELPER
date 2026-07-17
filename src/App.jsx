@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { RoutineProvider } from './context/RoutineContext';
+import { PomodoroProvider } from './context/PomodoroContext';
 import Sidebar from './layout/Sidebar';
 import TopNavbar from './layout/TopNavbar';
 import SearchModal from './layout/SearchModal';
@@ -37,6 +38,19 @@ const AdminPanelPage = lazy(() => import('./features/admin/AdminPanelPage'));
 const MessagesPage = lazy(() => import('./features/messages/MessagesPage'));
 const TerminalPage = lazy(() => import('./features/terminal/TerminalPage'));
 const WorkspacePage = lazy(() => import('./features/workspace/WorkspacePage'));
+const StudyRoomPage = lazy(() => import('./features/study-room/StudyRoomPage'));
+const ZenStudyRoom = lazy(() => import('./features/study-room/ZenStudyRoom'));
+const ExamChecklistPage = lazy(() => import('./features/exam-checklist/ExamChecklistPage'));
+const CPHubPage = lazy(() => import('./features/cp-hub/CPHubPage'));
+const MoneyTrackerPage = lazy(() => import('./features/money-tracker/MoneyTrackerPage'));
+const MessMealTrackerPage = lazy(() => import('./features/mess-meal/MessMealTrackerPage'));
+const AustBharaPage = lazy(() => import('./features/aust-bhara/AustBharaPage'));
+const CoverPageGeneratorPage = lazy(() => import('./features/cover-page-generator/CoverPageGeneratorPage'));
+const EmptyClassroomPage = lazy(() => import('./features/empty-classroom/EmptyClassroomPage'));
+const RoastCVPage = lazy(() => import('./features/roast-cv/RoastCVPage'));
+const CertificatePage = lazy(() => import('./features/certificate/CertificatePage'));
+const AutoAlarmPage = lazy(() => import('./features/auto-alarm/AutoAlarmPage'));
+const AustedditPage = lazy(() => import('./features/austeddit/AustedditPage'));
 const ShadowPage = lazy(() => import('./features/shadow/ShadowPage'));
 const ProPage = lazy(() => import('./features/pro/ProPage'));
 
@@ -102,6 +116,18 @@ function AppContent() {
                 <Route path="/admin/applications" element={<ProtectedAdminRoute><AdminPanelPage /></ProtectedAdminRoute>} />
                 <Route path="/admin/cr-sr-directory" element={<ProtectedAdminRoute><AdminPanelPage /></ProtectedAdminRoute>} />
                 <Route path="/workspace" element={<WorkspacePage />} />
+                <Route path="/study-room" element={<StudyRoomPage />} />
+                <Route path="/exam-checklist" element={<ExamChecklistPage />} />
+                <Route path="/cp-hub" element={<CPHubPage />} />
+                <Route path="/money-tracker" element={<MoneyTrackerPage />} />
+                <Route path="/mess-meal" element={<MessMealTrackerPage />} />
+                <Route path="/aust-bhara" element={<AustBharaPage />} />
+                <Route path="/cover-page-generator" element={<CoverPageGeneratorPage />} />
+                <Route path="/empty-classroom" element={<EmptyClassroomPage />} />
+                <Route path="/roast-cv" element={<RoastCVPage />} />
+                <Route path="/certificate" element={<CertificatePage />} />
+                <Route path="/auto-alarm" element={<AutoAlarmPage />} />
+                <Route path="/austeddit" element={<AustedditPage />} />
                 <Route path="/shadow" element={<ShadowPage />} />
                 <Route path="/pro" element={<ProPage />} />
                 <Route path="/login" element={<Navigate to="/" replace />} />
@@ -136,6 +162,19 @@ function AppShell() {
     '/terminal': 'Terminal',
     '/shadow': 'Shadow',
     '/workspace': 'Workspace',
+    '/zen': 'Zen Study Room',
+    '/study-room': 'Study Room',
+    '/exam-checklist': 'Exam Checklist',
+    '/cp-hub': 'CP Hub',
+    '/money-tracker': 'Money Tracker',
+    '/mess-meal': 'Mess Meal Tracker',
+    '/aust-bhara': 'Aust Bhara',
+    '/cover-page-generator': 'Cover Page Generator',
+    '/empty-classroom': 'Empty Classroom',
+    '/roast-cv': 'Roast CV',
+    '/certificate': 'Certificate',
+    '/auto-alarm': 'Auto Alarm',
+    '/austeddit': 'Austeddit',
   };
   const pageName = Object.entries(pageTitles).find(([path]) => location.pathname.startsWith(path))?.[1] || 'Dashboard';
   useEffect(() => { document.title = `AUSTWise — ${pageName}`; }, [location.pathname]);
@@ -158,12 +197,15 @@ function AppShell() {
     );
   }
 
-  // Terminal route — full screen overlay outside main layout
-  if (isAuthenticated && location.pathname === '/terminal') {
+  // Terminal / Zen routes — full screen overlays outside main layout
+  if (isAuthenticated && (location.pathname === '/terminal' || location.pathname === '/zen')) {
     return (
       <Suspense fallback={null}>
         <Routes>
           <Route path="/terminal" element={<TerminalPage />} />
+          <Route path="/zen" element={<ZenStudyRoom
+            onExit={() => { window.location.href = '/study-room'; }}
+          />} />
         </Routes>
       </Suspense>
     );
@@ -199,7 +241,9 @@ function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <AppShell />
+          <PomodoroProvider>
+            <AppShell />
+          </PomodoroProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

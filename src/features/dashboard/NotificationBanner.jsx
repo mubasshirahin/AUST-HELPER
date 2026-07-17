@@ -50,11 +50,12 @@ export default function NotificationBanner() {
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
-        padding: '12px 16px',
-        background: 'linear-gradient(135deg, rgba(99,145,255,0.12), rgba(176,151,93,0.10))',
-        border: '1px solid var(--border-primary)',
-        borderRadius: 'var(--radius-lg)',
+        padding: '14px 18px',
+        background: 'color-mix(in srgb, var(--accent-blue) 6%, var(--bg-card))',
+        border: '1px solid color-mix(in srgb, var(--accent-blue) 20%, var(--border-primary))',
+        borderRadius: 'var(--radius-xl)',
         marginBottom: '4px',
+        transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
       }}
     >
       <div style={{

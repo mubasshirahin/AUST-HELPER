@@ -41,14 +41,20 @@ export default function CampusPage() {
       <header className="campus-hero">
         <div className="campus-hero-bg" aria-hidden="true">
           <div className="campus-hero-grid" />
+          <div className="campus-hero-orb campus-hero-orb-1" />
+          <div className="campus-hero-orb campus-hero-orb-2" />
+          <div className="campus-hero-orb campus-hero-orb-3" />
+          <div className="campus-hero-shimmer" />
         </div>
         <div className="campus-hero-content">
           <div className="campus-hero-title-row">
             <div className="campus-hero-icon">
-              <Map size={26} />
+              <Map size={18} strokeWidth={2.5} />
             </div>
             <div>
-              <h1 className="campus-hero-title">Campus Hub</h1>
+              <h1 className="campus-hero-title">
+                <span className="campus-hero-name">Campus Hub</span>
+              </h1>
               <p className="campus-hero-subtitle">
                 Navigate buildings, review faculty office hours, and check live canteen/library occupancy.
               </p>

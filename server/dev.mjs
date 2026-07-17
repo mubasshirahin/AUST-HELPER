@@ -1320,7 +1320,11 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (vite) {
-    vite.middlewares(req, res);
+    // Don't route WebSocket upgrade requests through Vite — our custom WS server
+    // (wsServer.mjs) handles those via the http.Server 'upgrade' event.
+    if (req.headers['upgrade']?.toLowerCase() !== 'websocket') {
+      vite.middlewares(req, res);
+    }
     return;
   }
 

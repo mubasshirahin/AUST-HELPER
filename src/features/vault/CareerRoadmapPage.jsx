@@ -90,14 +90,20 @@ export default function CareerRoadmapPage() {
       <header className="crp-hero">
         <div className="crp-hero-bg" aria-hidden="true">
           <div className="crp-hero-grid" />
+          <div className="crp-hero-orb crp-hero-orb-1" />
+          <div className="crp-hero-orb crp-hero-orb-2" />
+          <div className="crp-hero-orb crp-hero-orb-3" />
+          <div className="crp-hero-shimmer" />
         </div>
         <div className="crp-hero-content">
           <div className="crp-hero-title-row">
             <div className="crp-hero-icon">
-              <Map size={24} />
+              <Map size={18} strokeWidth={2.5} />
             </div>
             <div>
-              <h1 className="crp-hero-title">Career Roadmaps</h1>
+              <h1 className="crp-hero-title">
+                <span className="crp-hero-title-accent">Career Roadmaps</span>
+              </h1>
               <p className="crp-hero-subtitle">
                 Step-by-step paths, curated skills, and real resources to land your dream tech role.
               </p>

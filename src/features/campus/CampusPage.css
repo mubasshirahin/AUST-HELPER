@@ -14,7 +14,19 @@
   border: 1px solid var(--border-primary);
   background: var(--bg-card);
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.04) inset,
+    var(--shadow-md);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.campus-hero:hover {
+  border-color: color-mix(in srgb, var(--accent-cyan) 30%, var(--border-primary));
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.06) inset,
+    0 0 0 1px color-mix(in srgb, var(--accent-cyan) 10%, transparent),
+    0 8px 40px -8px color-mix(in srgb, var(--accent-cyan) 12%, transparent),
+    var(--shadow-lg);
 }
 
 .campus-hero-bg {
@@ -28,10 +40,10 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(16, 185, 129, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: linear-gradient(to bottom, black 30%, transparent 100%);
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(135deg, black 0%, transparent 70%);
 }
 
 .campus-hero-orb {
@@ -59,71 +71,109 @@
   animation-delay: -3s;
 }
 
-@keyframes campusFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(12px, -8px) scale(1.05); }
+.campus-hero-orb-3 {
+  width: 140px;
+  height: 140px;
+  top: 50%;
+  left: 40%;
+  transform: translateY(-50%);
+  background: radial-gradient(circle, rgba(6,182,212,0.06) 0%, transparent 70%);
+  animation-delay: -2s;
+  filter: blur(48px);
+}
+
+.campus-hero-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent-cyan) 60%, transparent),
+    transparent
+  );
+  animation: heroShimmer 4s ease-in-out infinite 1s;
+}
+
+@keyframes heroShimmer {
+  0% { left: -60%; opacity: 0; }
+  30% { opacity: 1; }
+  100% { left: 110%; opacity: 0; }
 }
 
 .campus-hero-content {
   position: relative;
-  padding: var(--sp-6) var(--sp-6) var(--sp-5);
+  padding: var(--sp-5) var(--sp-6) var(--sp-4);
   z-index: 1;
 }
 
 .campus-hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: var(--radius-full);
-  font-size: 11px;
-  font-weight: var(--fw-semibold);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--accent-emerald);
-  background: var(--accent-emerald-glow);
-  border: 1px solid color-mix(in srgb, var(--accent-emerald) 25%, transparent);
-  margin-bottom: var(--sp-4);
-  animation: fadeInDown 0.5s ease forwards;
+  display: none;
 }
 
 .campus-hero-title-row {
   display: flex;
   align-items: flex-start;
   gap: var(--sp-4);
-  margin-bottom: var(--sp-5);
-  animation: fadeInUp 0.5s ease 0.1s both;
+  animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) 0.05s both;
 }
 
 .campus-hero-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan));
-  color: #fff;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--accent-cyan) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-cyan) 22%, transparent);
+  color: var(--accent-cyan);
   flex-shrink: 0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.campus-hero:hover .campus-hero-icon {
+  transform: rotate(-6deg) scale(1.08);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent-cyan) 30%, transparent);
 }
 
 .campus-hero-title {
   margin: 0;
-  font-size: clamp(1.5rem, 4vw, 2rem);
-  font-weight: var(--fw-bold);
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-emerald) 100%);
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  color: var(--text-primary);
+}
+
+.campus-hero-name {
+  display: inline-block;
+  background: linear-gradient(
+    135deg,
+    var(--accent-cyan) 0%,
+    var(--accent-emerald) 100%
+  );
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: brightness(1.05);
+  transition: filter 0.3s ease;
+}
+
+.campus-hero:hover .campus-hero-name {
+  filter: brightness(1.15) drop-shadow(0 0 12px color-mix(in srgb, var(--accent-cyan) 40%, transparent));
 }
 
 .campus-hero-subtitle {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   font-size: var(--fs-sm);
   color: var(--text-secondary);
   max-width: 520px;
-  line-height: 1.5;
+  line-height: 1.6;
+  animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) 0.12s both;
 }
 
 .campus-tabs {
@@ -192,10 +242,12 @@
 .floor-plan-hero {
   position: relative;
   border-radius: var(--radius-xl);
-  border: 1px solid var(--border-primary);
-  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
 .floor-plan-hero-bg {
@@ -209,10 +261,10 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(135deg, black 0%, transparent 70%);
 }
 
 .floor-plan-orb {
@@ -318,26 +370,24 @@
 }
 
 .floor-plan-hero-icon {
-  width: 52px;
-  height: 52px;
-  min-width: 52px;
-  border-radius: var(--radius-lg);
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-emerald));
-  color: #fff;
+  background: color-mix(in srgb, var(--accent-cyan) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-cyan) 22%, transparent);
+  color: var(--accent-cyan);
   }
 
 .floor-plan-title {
   font-size: var(--fs-2xl);
-  font-weight: var(--fw-bold);
+  font-weight: 800;
   letter-spacing: -0.03em;
   margin: 0 0 6px;
-  background: linear-gradient(135deg, var(--text-primary) 50%, var(--accent-cyan));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-primary);
 }
 
 .floor-plan-subtitle {
@@ -369,10 +419,10 @@
   flex-wrap: wrap;
   gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
 }
 
 .floor-plan-toolbar-label {
@@ -390,17 +440,17 @@
   display: flex;
   gap: 4px;
   padding: 3px;
-  background: var(--bg-input);
+  background: rgba(255,255,255,0.04);
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-primary);
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .floor-plan-view-switch {
   display: inline-flex;
   gap: 4px;
   padding: 3px;
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-full);
 }
 
@@ -422,8 +472,8 @@
 
 .floor-plan-view-option.active {
   color: var(--accent-cyan);
-  background: var(--bg-card);
-  box-shadow: var(--shadow-sm);
+  background: rgba(255,255,255,0.06);
+  box-shadow: 0 0 8px rgba(6,182,212,0.15);
 }
 
 .floor-plan-zoom-btn {
@@ -440,13 +490,13 @@
 
 .floor-plan-zoom-btn:hover {
   color: var(--text-primary);
-  background: var(--bg-secondary);
+  background: rgba(255,255,255,0.05);
 }
 
 .floor-plan-zoom-btn.active {
-  background: var(--bg-card);
+  background: rgba(255,255,255,0.06);
   color: var(--accent-cyan);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 0 8px rgba(6,182,212,0.15);
 }
 
 .floor-plan-fullscreen-btn {
@@ -455,9 +505,9 @@
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  border: 1px solid var(--border-primary);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-md);
-  background: var(--bg-input);
+  background: rgba(255,255,255,0.03);
   font-size: var(--fs-xs);
   font-weight: var(--fw-semibold);
   color: var(--text-secondary);
@@ -474,14 +524,14 @@
 /* ─── Large image viewport ─── */
 .floor-plan-viewport {
   position: relative;
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-xl);
   overflow: auto;
   min-height: min(78vh, 820px);
   max-height: min(85vh, 900px);
   padding: var(--sp-4);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   -webkit-overflow-scrolling: touch;
 }
 
@@ -555,8 +605,8 @@
 }
 
 .floor-plan-no-image-fallback {
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: var(--radius-lg);
   overflow: hidden;
   animation: floorPlanImageIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
@@ -1073,9 +1123,10 @@
   text-align: center;
   font-size: 11px;
   color: var(--text-tertiary);
-  background: color-mix(in srgb, var(--bg-card) 90%, transparent);
+  background: rgba(255,255,255,0.04);
   border-radius: var(--radius-full);
   backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.05);
 }
 
 /* ─── Sidebar ─── */
@@ -1089,10 +1140,10 @@
 
 .floor-plan-sidebar-card {
   padding: var(--sp-4) var(--sp-5);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
 
 .floor-plan-sidebar-card:first-child {
@@ -1157,8 +1208,8 @@
   width: 100%;
   padding: var(--sp-3);
   border-radius: var(--radius-md);
-  background: var(--bg-input);
-  border: 1px solid var(--border-secondary);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
   transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
   text-align: left;
@@ -1167,8 +1218,9 @@
 }
 
 .floor-plan-location-item:hover {
-  border-color: color-mix(in srgb, var(--accent-cyan) 35%, var(--border-primary));
+  border-color: color-mix(in srgb, var(--accent-cyan) 25%, transparent);
   transform: translateX(2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .floor-plan-location-item.active {
@@ -1245,8 +1297,8 @@
 
 .map-canvas-wrapper {
   position: relative;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-lg);
   overflow: hidden;
   min-height: 380px;
@@ -1260,10 +1312,10 @@
 
 .map-legend-card {
   padding: var(--sp-4) var(--sp-5);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
 
 /* ─── Faculty Cards ─── */
@@ -1275,17 +1327,18 @@
 
 .faculty-card {
   padding: var(--sp-4) var(--sp-5);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
   cursor: pointer;
 }
 
 .faculty-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--border-focus);
+  box-shadow: 0 8px 28px -8px color-mix(in srgb, var(--accent-amber) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent-amber) 25%, transparent);
+  transform: translateY(-2px);
 }
 
 /* ─── Library Pulse ─── */
@@ -1297,15 +1350,17 @@
 
 .library-zone-card {
   padding: var(--sp-4) var(--sp-5);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-base);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
 }
 
 .library-zone-card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 8px 28px -8px color-mix(in srgb, var(--accent-emerald) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent-emerald) 25%, transparent);
+  transform: translateY(-2px);
 }
 
 /* ─── Canteen Menu ─── */
@@ -1317,20 +1372,21 @@
 
 .canteen-item-card {
   padding: var(--sp-4) var(--sp-5);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-3);
-  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
 }
 
 .canteen-item-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--border-focus);
+  box-shadow: 0 8px 28px -8px color-mix(in srgb, var(--accent-rose) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent-rose) 25%, transparent);
+  transform: translateY(-2px);
 }
 
 /* ─── Position Editor ─── */
@@ -1371,8 +1427,8 @@
   width: 100%;
   height: 6px;
   border-radius: var(--radius-full);
-  background: var(--bg-input);
-  border: 1px solid var(--border-secondary);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
   outline: none;
   -webkit-appearance: none;
   appearance: none;
@@ -1385,7 +1441,7 @@
   height: 16px;
   border-radius: 50%;
   background: var(--accent-rose);
-  border: 2px solid var(--bg-card);
+  border: 2px solid rgba(20,20,22,0.95);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-rose) 35%, transparent);
   cursor: grab;
 }
@@ -1395,7 +1451,7 @@
   height: 16px;
   border-radius: 50%;
   background: var(--accent-rose);
-  border: 2px solid var(--bg-card);
+  border: 2px solid rgba(20,20,22,0.95);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-rose) 35%, transparent);
   cursor: grab;
 }

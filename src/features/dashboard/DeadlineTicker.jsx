@@ -122,7 +122,7 @@ export default function DeadlineTicker() {
   const hasUrgent = displayDeadlines.some(dl => dl.urgent);
 
   return (
-    <div className="glass-card-static deadline-ticker animate-fadeInUp">
+    <div className="glass-card-static deadline-ticker premium-card animate-fadeInUp">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="icon" style={{ backgroundColor: 'var(--accent-rose-glow)', color: 'var(--accent-rose)', padding: '6px', borderRadius: '8px' }}>
@@ -153,12 +153,13 @@ export default function DeadlineTicker() {
           return (
             <div 
               key={dl.id}
-              className="flex justify-between items-center p-3"
+              className="flex justify-between items-center p-3 premium-list-item"
               style={{
                 background: 'var(--bg-input)',
                 borderRadius: 'var(--radius-md)',
                 borderLeft: `3px solid ${dl.urgent ? 'var(--accent-rose)' : dl.color}`,
-                animation: dl.urgent ? 'countdownPulse 2s infinite' : 'none'
+                animation: dl.urgent ? 'countdownPulse 2s infinite' : 'none',
+                transition: 'background 0.18s ease, transform 0.18s ease',
               }}
             >
               <div style={{ flex: 1, minWidth: 0, paddingRight: '12px' }}>

@@ -1030,3 +1030,83 @@
 [data-theme="sketchbook"] .theme-menu-check {
   color: var(--accent-blue);
 }
+
+/* ─── Navbar Pomodoro Timer ─── */
+.nav-pom {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-full);
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  flex-shrink: 0;
+}
+
+.nav-pom-mode {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-pom-mode:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.nav-pom-mode-active {
+  color: var(--accent-rose);
+  background: var(--accent-rose-glow);
+}
+
+.nav-pom-time {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  min-width: 44px;
+  text-align: center;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.nav-pom-ctrl {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-pom-ctrl:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.nav-pom-reset {
+  opacity: 0.5;
+}
+
+.nav-pom-reset:hover {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .nav-pom {
+    display: none;
+  }
+}

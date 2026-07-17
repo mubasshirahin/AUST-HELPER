@@ -77,11 +77,19 @@ export default function SyllabusProgress() {
   const overallPct = totalTopics > 0 ? Math.round((totalDone / totalTopics) * 100) : 0;
 
   return (
-    <div className="glass-card-static syllabus-progress-container animate-fadeInUp">
+    <div className="syllabus-progress-container animate-fadeInUp" style={{
+      background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 'var(--radius-xl)',
+      padding: 'var(--sp-5)',
+      boxShadow: '0 4px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06)',
+    }}>
       <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <div className="icon" style={{ backgroundColor: 'var(--accent-emerald-glow)', color: 'var(--accent-emerald)', padding: '6px', borderRadius: '8px' }}>
-            <BookCheck size={18} />
+          <div className="icon" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-emerald) 14%, transparent)', color: 'var(--accent-emerald)', padding: '6px', borderRadius: '8px', border: '1px solid color-mix(in srgb, var(--accent-emerald) 22%, transparent)' }}>
+            <BookCheck size={16} strokeWidth={2.5} />
           </div>
           <div>
             <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Syllabus Completion</h2>
@@ -101,21 +109,27 @@ export default function SyllabusProgress() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '20px' }}>
         {SEMESTER_COURSES.map(s => (
           <button
             key={s.semester}
             onClick={() => handleSemChange(s.semester)}
             style={{
-              padding: '6px 16px',
+              padding: '5px 14px',
               borderRadius: '20px',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              border: selectedSem === s.semester ? '2px solid var(--accent-emerald)' : '2px solid var(--border-primary)',
-              background: selectedSem === s.semester ? 'var(--accent-emerald-glow)' : 'var(--bg-input)',
-              color: selectedSem === s.semester ? 'var(--accent-emerald)' : 'var(--text-secondary)',
+              fontSize: '11px',
+              fontWeight: '700',
+              border: selectedSem === s.semester 
+                ? '1px solid var(--accent-amber)' 
+                : '1px solid rgba(255,255,255,0.08)',
+              background: selectedSem === s.semester 
+                ? 'linear-gradient(135deg, rgba(245,158,11,0.14), rgba(245,158,11,0.05))'
+                : 'rgba(255,255,255,0.04)',
+              color: selectedSem === s.semester ? 'var(--accent-amber)' : 'var(--text-secondary)',
               cursor: 'pointer',
-              transition: 'all 0.2s',
+              transition: 'all 0.18s ease',
+              letterSpacing: selectedSem === s.semester ? '0.02em' : '0',
+              boxShadow: selectedSem === s.semester ? '0 0 12px rgba(245,158,11,0.12)' : 'none',
             }}
           >
             Sem {s.semester}

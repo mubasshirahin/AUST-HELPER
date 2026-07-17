@@ -55,15 +55,29 @@
   display: none;
 }
 
-/* ─── Hero Header (matches Dashboard / Community pattern) ─── */
+/* ═══════════════════════════════════════════════════════════════
+   Hero Shell — Premium Glass-morphism
+   ═══════════════════════════════════════════════════════════════ */
 .marketplace-hero {
   position: relative;
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-primary);
   background: var(--bg-card);
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.04) inset,
+    var(--shadow-md);
   animation: mpHeroIn 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.marketplace-hero:hover {
+  border-color: color-mix(in srgb, var(--accent-amber) 30%, var(--border-primary));
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.06) inset,
+    0 0 0 1px color-mix(in srgb, var(--accent-amber) 10%, transparent),
+    0 8px 40px -8px color-mix(in srgb, var(--accent-amber) 12%, transparent),
+    var(--shadow-lg);
 }
 
 @keyframes mpHeroIn {
@@ -82,46 +96,71 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(color-mix(in srgb, var(--accent-blue) 6%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--accent-blue) 6%, transparent) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(135deg, black 0%, transparent 70%);
+}
+
+.marketplace-hero-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent-amber) 60%, transparent),
+    transparent
+  );
+  animation: heroShimmer 4s ease-in-out infinite 1s;
+}
+
+@keyframes heroShimmer {
+  0% { left: -60%; opacity: 0; }
+  30% { opacity: 1; }
+  100% { left: 110%; opacity: 0; }
 }
 
 .marketplace-hero-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(64px);
-  opacity: 0.45;
-  animation: mpFloat 9s ease-in-out infinite;
+  filter: blur(72px);
+  animation: mpOrbFloat 10s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .marketplace-hero-orb-1 {
-  width: 220px;
-  height: 220px;
-  top: -80px;
-  right: -40px;
-  background: radial-gradient(circle, var(--accent-amber) 0%, transparent 70%);
+  width: 260px;
+  height: 260px;
+  top: -100px;
+  right: -50px;
+  background: radial-gradient(circle, rgba(245,158,11,0.14) 0%, transparent 70%);
 }
 
 .marketplace-hero-orb-2 {
   width: 180px;
   height: 180px;
-  bottom: -60px;
+  bottom: -70px;
   left: 6%;
-  background: radial-gradient(circle, var(--accent-purple) 0%, transparent 70%);
-  animation-delay: -4s;
+  background: radial-gradient(circle, rgba(167,139,250,0.08) 0%, transparent 70%);
+  animation-delay: -4.5s;
 }
 
-@keyframes mpFloat {
+@keyframes mpOrbFloat {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(12px, -8px) scale(1.05); }
+  33% { transform: translate(8px, -12px) scale(1.04); }
+  66% { transform: translate(-6px, 6px) scale(0.97); }
 }
 
 .marketplace-hero-content {
   position: relative;
   padding: var(--sp-6) var(--sp-6) var(--sp-5);
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
 }
 
 .marketplace-hero-title-row {
@@ -131,40 +170,57 @@
 }
 
 .marketplace-hero-icon {
-  width: 52px;
-  height: 52px;
-  min-width: 52px;
-  border-radius: var(--radius-lg);
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--accent-amber), #f59e0b);
-  color: #fff;
+  background: color-mix(in srgb, var(--accent-amber) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-amber) 22%, transparent);
+  color: var(--accent-amber);
+  flex-shrink: 0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.marketplace-hero:hover .marketplace-hero-icon {
+  transform: rotate(-6deg) scale(1.08);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent-amber) 30%, transparent);
 }
 
 .marketplace-hero-title {
-  font-size: var(--fs-2xl);
-  font-weight: var(--fw-bold);
-  letter-spacing: -0.03em;
-  line-height: 1.2;
-  margin: 0 0 6px;
-  animation: fadeInUp 0.5s ease 0.15s both;
+  margin: 0 0 var(--sp-1);
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  color: var(--text-primary);
+  animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) 0.1s both;
 }
 
-.marketplace-hero-title-highlight {
-  background: linear-gradient(135deg, var(--accent-amber), #f59e0b, var(--accent-purple));
+.marketplace-hero-name {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--accent-amber) 0%, var(--accent-purple) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  filter: brightness(1.05);
+  transition: filter 0.3s ease;
+}
+
+.marketplace-hero:hover .marketplace-hero-name {
+  filter: brightness(1.15) drop-shadow(0 0 12px color-mix(in srgb, var(--accent-amber) 40%, transparent));
 }
 
 .marketplace-hero-subtitle {
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
   margin: 0;
-  max-width: 520px;
-  line-height: 1.5;
-  animation: fadeInUp 0.5s ease 0.2s both;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: var(--text-secondary);
+  max-width: 440px;
+  line-height: 1.6;
+  animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) 0.18s both;
 }
 
 /* ─── Exchange Kits ─── */
@@ -188,29 +244,31 @@
   gap: var(--sp-5);
 }
 
-/* ─── Unified Marketplace Card ─── */
+/* ─── Unified Marketplace Card — Glass-morphism ─── */
 .mp-card {
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.14);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: box-shadow var(--transition-base), border-color var(--transition-base), transform var(--transition-base);
+  transition: box-shadow 0.24s ease, border-color 0.24s ease, transform 0.24s cubic-bezier(0.4,0,0.2,1);
 }
 
 .mp-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--border-focus);
-  transform: translateY(-2px);
+  box-shadow: 0 8px 28px -6px color-mix(in srgb, var(--accent-amber) 12%, transparent);
+  border-color: color-mix(in srgb, var(--accent-amber) 22%, var(--border-primary));
+  transform: translateY(-3px);
 }
 
 .mp-card-image {
   width: 100%;
   height: 160px;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  border-bottom: 1px solid rgba(255,255,255,0.06);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -253,6 +311,7 @@
   letter-spacing: 0.06em;
   padding: 2px 8px;
   border-radius: var(--radius-full);
+  border: 1px solid rgba(255,255,255,0.08);
   white-space: nowrap;
 }
 
@@ -297,9 +356,9 @@
   font-size: 0.58rem;
   padding: 1px 6px;
   border-radius: var(--radius-full);
-  background: var(--bg-tertiary);
+  background: rgba(255,255,255,0.04);
   color: var(--text-secondary);
-  border: 1px solid var(--border-primary);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
 .mp-card-description {
@@ -329,12 +388,14 @@
 
 .mp-card-footer {
   padding: var(--sp-3) var(--sp-4);
-  border-top: 1px solid var(--border-secondary);
+  border-top: 1px solid rgba(255,255,255,0.06);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-2);
-  background: var(--bg-tertiary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.005) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .mp-card-seller {
@@ -354,12 +415,19 @@
   gap: 4px;
   padding: 3px 10px;
   border-radius: var(--radius-full);
-  background: var(--accent-amber-glow);
+  background: color-mix(in srgb, var(--accent-amber) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-amber) 22%, transparent);
   color: var(--accent-amber);
   font-size: 0.65rem;
   font-weight: var(--fw-bold);
   width: fit-content;
   margin-top: var(--sp-1);
+  transition: all 0.22s ease;
+}
+
+.mp-card-topic:hover {
+  background: color-mix(in srgb, var(--accent-amber) 20%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent-amber) 16%, transparent);
 }
 
 .mp-card-response-count {
@@ -437,11 +505,13 @@
 
 .mp-card-available {
   background: color-mix(in srgb, var(--accent-emerald) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-emerald) 22%, transparent);
   color: var(--accent-emerald);
 }
 
 .mp-card-occupied {
   background: color-mix(in srgb, var(--accent-rose) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-rose) 22%, transparent);
   color: var(--accent-rose);
 }
 

@@ -7,15 +7,27 @@
   margin: 0 auto;
 }
 
-/* ─── Hero Header ─── */
+/* ─── Hero: Shell ─── */
 .grade-hero {
   position: relative;
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-primary);
   background: var(--bg-card);
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.04) inset,
+    var(--shadow-md);
   animation: gradeHeroIn 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.grade-hero:hover {
+  border-color: color-mix(in srgb, var(--accent-blue) 30%, var(--border-primary));
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.06) inset,
+    0 0 0 1px color-mix(in srgb, var(--accent-blue) 10%, transparent),
+    0 8px 40px -8px color-mix(in srgb, var(--accent-blue) 12%, transparent),
+    var(--shadow-lg);
 }
 
 @keyframes gradeHeroIn {
@@ -23,6 +35,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── Hero: Background layers ─── */
 .grade-hero-bg {
   position: absolute;
   inset: 0;
@@ -34,63 +47,82 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(168, 85, 247, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(168, 85, 247, 0.05) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: linear-gradient(to bottom, black 35%, transparent 100%);
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(135deg, black 0%, transparent 70%);
+}
+
+.grade-hero-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent-blue) 60%, transparent),
+    transparent
+  );
+  animation: heroShimmer 4s ease-in-out infinite 1s;
+}
+
+@keyframes heroShimmer {
+  0% { left: -60%; opacity: 0; }
+  30% { opacity: 1; }
+  100% { left: 110%; opacity: 0; }
 }
 
 .grade-hero-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.48;
-  animation: gradeFloat 8s ease-in-out infinite;
+  filter: blur(72px);
+  animation: gradeFloat 10s ease-in-out infinite;
 }
 
 .grade-hero-orb-1 {
-  width: 220px;
-  height: 220px;
-  top: -80px;
-  right: -30px;
-  background: radial-gradient(circle, var(--accent-purple) 0%, transparent 70%);
+  width: 280px;
+  height: 280px;
+  top: -120px;
+  right: -60px;
+  background: radial-gradient(circle, rgba(167,139,250,0.16) 0%, transparent 70%);
 }
 
 .grade-hero-orb-2 {
-  width: 180px;
-  height: 180px;
-  bottom: -60px;
-  left: 12%;
-  background: radial-gradient(circle, var(--accent-rose) 0%, transparent 70%);
-  animation-delay: -3.5s;
+  width: 200px;
+  height: 200px;
+  bottom: -80px;
+  left: 4%;
+  background: radial-gradient(circle, rgba(245,158,11,0.10) 0%, transparent 70%);
+  animation-delay: -4.5s;
+}
+
+.grade-hero-orb-3 {
+  width: 140px;
+  height: 140px;
+  top: 50%;
+  left: 40%;
+  transform: translateY(-50%);
+  background: radial-gradient(circle, rgba(167,139,250,0.08) 0%, transparent 70%);
+  animation-delay: -2s;
+  filter: blur(48px);
 }
 
 @keyframes gradeFloat {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-10px, -8px) scale(1.05); }
+  33% { transform: translate(10px, -14px) scale(1.04); }
+  66% { transform: translate(-8px, 6px) scale(0.97); }
 }
 
+/* ─── Hero: Content ─── */
 .grade-hero-content {
   position: relative;
   padding: var(--sp-6) var(--sp-6) var(--sp-5);
   z-index: 1;
-}
-
-.grade-hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: var(--radius-full);
-  font-size: 11px;
-  font-weight: var(--fw-semibold);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--accent-purple);
-  background: var(--accent-purple-glow);
-  border: 1px solid color-mix(in srgb, var(--accent-purple) 25%, transparent);
-  margin-bottom: var(--sp-4);
-  animation: fadeInUp 0.5s ease 0.1s both;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
 }
 
 .grade-hero-title-row {
@@ -100,53 +132,103 @@
 }
 
 .grade-hero-icon {
-  width: 52px;
-  height: 52px;
-  min-width: 52px;
-  border-radius: var(--radius-lg);
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-rose));
-  color: #fff;
-  
+  background: color-mix(in srgb, var(--accent-amber) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-amber) 22%, transparent);
+  color: var(--accent-amber);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-
+.grade-hero:hover .grade-hero-icon {
+  transform: rotate(-6deg) scale(1.08);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent-amber) 30%, transparent);
+}
 
 .grade-hero-title {
-  font-size: var(--fs-2xl);
-  font-weight: var(--fw-bold);
-  letter-spacing: -0.03em;
-  line-height: 1.2;
-  margin: 0 0 6px;
-  background: linear-gradient(135deg, var(--text-primary) 60%, var(--accent-purple));
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  margin: 0 0 var(--sp-1);
+  color: var(--text-primary);
+  animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) 0.1s both;
+}
+
+.grade-hero-name {
+  display: inline-block;
+  background: linear-gradient(
+    135deg,
+    var(--accent-amber) 0%,
+    var(--accent-blue) 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: fadeInUp 0.5s ease 0.15s both;
+  filter: brightness(1.05);
+  transition: filter 0.3s ease;
+}
+
+.grade-hero:hover .grade-hero-name {
+  filter: brightness(1.15) drop-shadow(0 0 12px color-mix(in srgb, var(--accent-amber) 40%, transparent));
 }
 
 .grade-hero-subtitle {
   font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
   color: var(--text-secondary);
   margin: 0;
-  max-width: 520px;
-  line-height: 1.5;
-  animation: fadeInUp 0.5s ease 0.2s both;
+  max-width: 440px;
+  line-height: 1.6;
+  animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) 0.18s both;
+}
+
+/* ─── Hero: Status row ─── */
+.grade-hero-status-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) 0.28s both;
+}
+
+.grade-hero-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-amber);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-amber) 22%, transparent);
+  animation: statusPulse 2.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-amber) 22%, transparent); }
+  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent-amber) 8%, transparent); }
+}
+
+.grade-hero-status-text {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
 }
 
 /* ─── Content swap animation ─── */
 .analytics-content-area {
-  animation: gradeContentSwap 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: gradeContentSwap 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 @keyframes gradeContentSwap {
-  from { opacity: 0; transform: translateY(12px) scale(0.99); }
+  from { opacity: 0; transform: translateY(14px) scale(0.986); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ─── CGPA Graph ─── */
+/* ─── CGPA Summary Cards ─── */
 .cgpa-summary-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -156,14 +238,16 @@
 
 .cgpa-summary-card {
   padding: var(--sp-4) var(--sp-5);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.06);
   transition:
-    box-shadow 0.3s ease,
-    transform 0.3s cubic-bezier(0.34, 1.3, 0.64, 1),
-    border-color 0.3s ease;
+    transform 0.24s cubic-bezier(0.4,0,0.2,1),
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
   position: relative;
   overflow: hidden;
 }
@@ -175,16 +259,18 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+  background: linear-gradient(90deg, var(--accent-amber), var(--accent-blue));
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.4s ease;
 }
 
 .cgpa-summary-card:hover {
-  box-shadow: var(--shadow-md);
   transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--accent-purple) 25%, var(--border-primary));
+  border-color: color-mix(in srgb, var(--accent-amber) 28%, var(--border-primary));
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.04) inset,
+    0 8px 28px -8px color-mix(in srgb, var(--accent-amber) 14%, transparent);
 }
 
 .cgpa-summary-card:hover::after {
@@ -202,10 +288,14 @@
 
 .cgpa-summary-value {
   font-size: var(--fs-2xl);
-  font-weight: var(--fw-bold);
-  letter-spacing: -0.025em;
-  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg, var(--text-primary) 55%, var(--text-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .cgpa-summary-sub {
@@ -223,17 +313,18 @@
 
 .target-result-card {
   padding: var(--sp-5);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-lg);
   text-align: center;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.14);
+  transition: transform 0.24s cubic-bezier(0.4,0,0.2,1), box-shadow 0.24s ease, border-color 0.24s ease;
 }
 
 .target-result-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  border-color: color-mix(in srgb, var(--accent-amber) 22%, var(--border-primary));
+  box-shadow: 0 8px 24px -6px color-mix(in srgb, var(--accent-amber) 12%, transparent);
 }
 
 /* ─── Syllabus Progress ─── */
@@ -245,19 +336,19 @@
 
 .syllabus-course-card {
   padding: var(--sp-4) var(--sp-5);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.14);
   transition:
-    box-shadow 0.3s ease,
-    border-color 0.3s ease,
-    transform 0.3s cubic-bezier(0.34, 1.3, 0.64, 1);
+    border-color 0.24s ease,
+    box-shadow 0.24s ease,
+    transform 0.24s cubic-bezier(0.4,0,0.2,1);
 }
 
 .syllabus-course-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--border-focus);
+  border-color: color-mix(in srgb, var(--accent-amber) 22%, var(--border-primary));
+  box-shadow: 0 8px 24px -6px color-mix(in srgb, var(--accent-amber) 12%, transparent);
   transform: translateY(-2px);
 }
 
@@ -284,7 +375,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--border-primary);
-  background: var(--bg-tertiary);
+  background: rgba(255,255,255,0.03);
   white-space: nowrap;
 }
 
@@ -303,7 +394,7 @@
 }
 
 .result-table tr:hover td {
-  background: var(--bg-card-hover);
+  background: color-mix(in srgb, var(--accent-amber) 4%, var(--bg-card-hover));
 }
 
 /* ─── Course Review ─── */
@@ -315,34 +406,183 @@
 
 .review-card {
   padding: var(--sp-5);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.14);
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
   transition:
-    box-shadow 0.3s ease,
-    border-color 0.3s ease,
-    transform 0.3s cubic-bezier(0.34, 1.3, 0.64, 1);
+    border-color 0.24s ease,
+    box-shadow 0.24s ease,
+    transform 0.24s cubic-bezier(0.4,0,0.2,1);
 }
 
 .review-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--border-focus);
+  border-color: color-mix(in srgb, var(--accent-amber) 22%, var(--border-primary));
+  box-shadow: 0 8px 24px -6px color-mix(in srgb, var(--accent-amber) 12%, transparent);
   transform: translateY(-2px);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Staggered Entrance Animations
+   Replay on each tab switch via analytics-content-area key change.
+   Uses keyframes from dashboard-premium.css (dash-enter, etc).
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── CGPA summary cards (3 stat cards) ── */
+.cgpa-summary-card:nth-child(1) {
+  animation: dash-enter-card 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.04s both;
+}
+.cgpa-summary-card:nth-child(2) {
+  animation: dash-enter-card 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.11s both;
+}
+.cgpa-summary-card:nth-child(3) {
+  animation: dash-enter-card 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
+}
+
+/* ── CGPA chart card ── */
+.cgpagraph-container > .glass-card-static:only-of-type {
+  animation: dash-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.24s both;
+}
+
+/* ── Result table: semester row stagger ── */
+.result-table-container > div:nth-child(3) > div:nth-child(1) {
+  animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.06s both;
+}
+.result-table-container > div:nth-child(3) > div:nth-child(2) {
+  animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+.result-table-container > div:nth-child(3) > div:nth-child(3) {
+  animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
+}
+.result-table-container > div:nth-child(3) > div:nth-child(4) {
+  animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.24s both;
+}
+.result-table-container > div:nth-child(3) > div:nth-child(5) {
+  animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.30s both;
+}
+.result-table-container > div:nth-child(3) > div:nth-child(6) {
+  animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.36s both;
+}
+.result-table-container > div:nth-child(3) > div:nth-child(7) {
+  animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.42s both;
+}
+.result-table-container > div:nth-child(3) > div:nth-child(8) {
+  animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.48s both;
+}
+
+/* ── Semester Tracker: theory section cascade ── */
+.st-wrapper .st-section-header:first-of-type {
+  animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.02s both;
+}
+.st-wrapper .st-legend {
+  animation: dash-enter-subtle 0.32s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
+}
+.st-wrapper .st-table-scroll:first-of-type {
+  animation: dash-enter 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+
+/* ── Semester Tracker: lab section cascade ── */
+.st-wrapper .st-section-header:nth-of-type(2) {
+  animation: dash-enter-subtle 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+.st-lab-card:nth-child(1) { animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both; }
+.st-lab-card:nth-child(2) { animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.23s both; }
+.st-lab-card:nth-child(3) { animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.28s both; }
+.st-lab-card:nth-child(4) { animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.33s both; }
+.st-lab-card:nth-child(5) { animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.38s both; }
+.st-lab-card:nth-child(6) { animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.43s both; }
+
+/* ── Syllabus Progress: course card stagger ── */
+.syllabus-course-card:nth-child(1) { animation: dash-enter-card 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.06s both; }
+.syllabus-course-card:nth-child(2) { animation: dash-enter-card 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both; }
+.syllabus-course-card:nth-child(3) { animation: dash-enter-card 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both; }
+.syllabus-course-card:nth-child(4) { animation: dash-enter-card 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.24s both; }
+.syllabus-course-card:nth-child(5) { animation: dash-enter-card 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.30s both; }
+.syllabus-course-card:nth-child(6) { animation: dash-enter-card 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.36s both; }
+
+/* ── Course Reviews: review card stagger ── */
+.course-reviews-container .grid-2 > div:first-child > div:nth-child(1) {
+  animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+.course-reviews-container .grid-2 > div:first-child > div:nth-child(2) {
+  animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.14s both;
+}
+.course-reviews-container .grid-2 > div:first-child > div:nth-child(3) {
+  animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.20s both;
+}
+.course-reviews-container .grid-2 > div:first-child > div:nth-child(4) {
+  animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.26s both;
+}
+.course-reviews-container .grid-2 > div:first-child > div:nth-child(5) {
+  animation: dash-enter-card 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.32s both;
+}
+
+/* ── Prerequisite Tree: sections cascade ── */
+.prereq-toolbar {
+  animation: dash-enter-subtle 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.02s both;
+}
+.prereq-canvas {
+  animation: dash-enter 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+.prereq-legend {
+  animation: dash-enter-subtle 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.14s both;
+}
+
+/* ── Dept Heatmap: section cascade ── */
+.dept-heatmap-container > div:first-child {
+  animation: dash-enter-subtle 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.02s both;
+}
+
+/* ── Course Poll: leaderboard stagger ── */
+.course-poll-wrapper .grid-2 > .glass-card-static:nth-child(1) {
+  animation: dash-enter 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+.course-poll-wrapper .grid-2 > .glass-card-static:nth-child(2) {
+  animation: dash-enter 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+
+/* ── Reduced-motion: instant, no movement ── */
+@media (prefers-reduced-motion: reduce) {
+  .cgpa-summary-card,
+  .cgpagraph-container > .glass-card-static,
+  .result-table-container > div:nth-child(3) > div,
+  .st-wrapper .st-section-header,
+  .st-wrapper .st-legend,
+  .st-wrapper .st-table-scroll,
+  .st-lab-card,
+  .syllabus-course-card,
+  .prereq-toolbar,
+  .prereq-canvas,
+  .prereq-legend,
+  .dept-heatmap-container > div:first-child,
+  .course-reviews-container .grid-2 > div:first-child > div,
+  .course-poll-wrapper .grid-2 > .glass-card-static {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 /* ─── Responsive ─── */
 @media (max-width: 768px) {
   .grade-hero-content {
-    padding: var(--sp-5);
+    padding: var(--sp-5) var(--sp-4) var(--sp-4);
+    gap: var(--sp-3);
   }
 
   .grade-hero-title {
-    font-size: var(--fs-xl);
+    font-size: clamp(1.4rem, 6vw, 1.9rem);
   }
+
+  .grade-hero-title-row {
+    flex-direction: column;
+    gap: var(--sp-3);
+  }
+
+  .grade-hero-orb-3 { display: none; }
 
   .cgpa-summary-cards {
     grid-template-columns: 1fr;
@@ -352,6 +592,12 @@
   .syllabus-grid,
   .review-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .grade-hero-content {
+    padding: var(--sp-4) var(--sp-3) var(--sp-3);
   }
 }
 

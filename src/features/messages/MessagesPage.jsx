@@ -1002,15 +1002,16 @@ export default function MessagesPage() {
             <div className="messages-hero-grid" />
             <div className="messages-hero-orb messages-hero-orb-1" />
             <div className="messages-hero-orb messages-hero-orb-2" />
+            <div className="messages-hero-shimmer" />
           </div>
           <div className="messages-hero-content">
             <div className="messages-hero-title-row">
               <div className="messages-hero-icon">
-                <Mail size={24} />
+                <Mail size={18} strokeWidth={2.5} />
               </div>
               <div>
                 <h1 className="messages-hero-title">
-                  <span className="messages-hero-title-highlight">Messages</span>
+                  <span className="messages-hero-name">Messages</span>
                 </h1>
                 <p className="messages-hero-subtitle">
                   Chat with alumni, classmates, and mentors — stay connected with the AUST community.
@@ -1041,15 +1042,16 @@ export default function MessagesPage() {
           <div className="messages-hero-grid" />
           <div className="messages-hero-orb messages-hero-orb-1" />
           <div className="messages-hero-orb messages-hero-orb-2" />
+          <div className="messages-hero-shimmer" />
         </div>
         <div className="messages-hero-content">
           <div className="messages-hero-title-row">
             <div className="messages-hero-icon">
-              <Mail size={24} />
+              <Mail size={18} strokeWidth={2.5} />
             </div>
             <div>
               <h1 className="messages-hero-title">
-                <span className="messages-hero-title-highlight">Messages</span>
+                <span className="messages-hero-name">Messages</span>
               </h1>
               <p className="messages-hero-subtitle">
                 Chat with alumni, classmates, and mentors — stay connected with the AUST community.

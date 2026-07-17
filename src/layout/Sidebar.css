@@ -199,6 +199,19 @@
 .sidebar:not(.collapsed) .nav-item:nth-child(10) { animation-delay: 0.20s; }
 .sidebar:not(.collapsed) .nav-item:nth-child(11) { animation-delay: 0.22s; }
 .sidebar:not(.collapsed) .nav-item:nth-child(12) { animation-delay: 0.24s; }
+.sidebar:not(.collapsed) .nav-item:nth-child(13) { animation-delay: 0.26s; }
+.sidebar:not(.collapsed) .nav-item:nth-child(14) { animation-delay: 0.28s; }
+.sidebar:not(.collapsed) .nav-item:nth-child(15) { animation-delay: 0.30s; }
+.sidebar:not(.collapsed) .nav-item:nth-child(16) { animation-delay: 0.32s; }
+.sidebar:not(.collapsed) .nav-item:nth-child(17) { animation-delay: 0.34s; }
+.sidebar:not(.collapsed) .nav-item:nth-child(18) { animation-delay: 0.36s; }
+.sidebar:not(.collapsed) .nav-item:nth-child(19) { animation-delay: 0.38s; }
+.sidebar:not(.collapsed) .nav-item:nth-child(20) { animation-delay: 0.40s; }
+.sidebar:not(.collapsed) .nav-item:nth-child(21) { animation-delay: 0.42s; }
+.sidebar:not(.collapsed) .nav-item:nth-child(22) { animation-delay: 0.44s; }
+.sidebar:not(.collapsed) .nav-item:nth-child(23) { animation-delay: 0.46s; }
+.sidebar:not(.collapsed) .nav-item:nth-child(24) { animation-delay: 0.48s; }
+.sidebar:not(.collapsed) .nav-item:nth-child(25) { animation-delay: 0.50s; }
 
 @keyframes navItemFadeIn {
   from {

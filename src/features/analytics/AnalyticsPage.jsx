@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { TrendingUp, Layers, Grid3x3, Trophy, FlaskConical, GitBranch } from 'lucide-react';
 import CGPAGraph from './CGPAGraph';
 import SemesterTracker from './SemesterTracker';
@@ -39,22 +39,31 @@ export default function AnalyticsPage() {
     }
   };
 
+  const heroSubtitle = useMemo(() => {
+    const tab = gradeLabTabs.find(t => t.id === activeTab);
+    return tab ? `Explore ${tab.desc} across all semesters` : 'Track historical grades, simulate what-if scenarios, and view syllabus completion.';
+  }, [activeTab]);
+
   return (
     <div className="analytics-page animate-fadeIn">
       <header className="grade-hero">
         <div className="grade-hero-bg" aria-hidden="true">
           <div className="grade-hero-grid" />
+          <div className="grade-hero-orb grade-hero-orb-1" />
+          <div className="grade-hero-orb grade-hero-orb-2" />
+          <div className="grade-hero-orb grade-hero-orb-3" />
+          <div className="grade-hero-shimmer" />
         </div>
         <div className="grade-hero-content">
           <div className="grade-hero-title-row">
             <div className="grade-hero-icon">
-              <FlaskConical size={24} />
+              <FlaskConical size={18} strokeWidth={2.5} />
             </div>
             <div>
-              <h1 className="grade-hero-title">Grade Lab</h1>
-              <p className="grade-hero-subtitle">
-                Track historical grades, simulate what-if scenarios, and view syllabus completion.
-              </p>
+              <h1 className="grade-hero-title">
+                <span className="grade-hero-name">Grade Lab</span>
+              </h1>
+              <p className="grade-hero-subtitle">{heroSubtitle}</p>
             </div>
           </div>
         </div>

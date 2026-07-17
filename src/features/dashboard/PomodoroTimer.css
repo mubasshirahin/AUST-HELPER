@@ -1,0 +1,128 @@
+/* ─── Pomodoro Timer Dashboard Widget ─── */
+.pom-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.pom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.pom-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.pom-header-icon {
+  width: 26px; height: 26px;
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-rose-glow);
+  color: var(--accent-rose);
+}
+
+.pom-header-title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+}
+
+.pom-sessions {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Mode switch */
+.pom-mode-row {
+  display: flex;
+  gap: 2px;
+  width: 100%;
+  padding: 2px;
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+}
+
+.pom-mode-btn {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 5px 8px;
+  border: none; border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 11px; font-weight: var(--fw-medium); font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pom-mode-btn:hover { color: var(--text-primary); }
+.pom-mode-active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-weight: var(--fw-semibold);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Timer ring */
+.pom-ring-wrap {
+  position: relative;
+  width: 80px; height: 80px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.pom-ring-svg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+}
+
+.pom-time {
+  position: relative; z-index: 1;
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+}
+
+/* Controls */
+.pom-ctrls {
+  display: flex; align-items: center; gap: var(--sp-3);
+}
+
+.pom-ctrl {
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.pom-ctrl:active { transform: scale(0.93); }
+
+.pom-ctrl-sm {
+  width: 32px; height: 32px; border-radius: 50%;
+  color: var(--text-tertiary);
+  background: var(--bg-input);
+}
+
+.pom-ctrl-sm:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+
+.pom-ctrl-play {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--accent-rose); color: #fff;
+  box-shadow: 0 2px 12px rgba(251,113,133,0.3);
+}
+
+.pom-ctrl-play:hover { box-shadow: 0 4px 16px rgba(251,113,133,0.4); }
+
+.pom-ctrl-pause {
+  background: var(--bg-input); color: var(--text-primary);
+  box-shadow: none;
+}
+
+.pom-ctrl-pause:hover { background: var(--bg-tertiary); }

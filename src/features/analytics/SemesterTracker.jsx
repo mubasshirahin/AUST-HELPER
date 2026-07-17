@@ -561,11 +561,16 @@ export default function SemesterTracker() {
         {availableSemesters.map((sem) => (
           <button key={sem} onClick={() => setSelectedSemester(sem)}
             style={{
-              border: 'none', cursor: 'pointer', borderRadius: '6px', padding: '4px 12px',
-              fontSize: '11px', fontWeight: 'bold', whiteSpace: 'nowrap',
-              background: selectedSemester === sem ? 'var(--accent-purple)' : 'var(--bg-input)',
-              color: selectedSemester === sem ? '#fff' : 'var(--text-primary)',
-              transition: 'all 0.15s'
+              border: selectedSemester === sem ? '1px solid var(--accent-amber)' : '1px solid rgba(255,255,255,0.08)',
+              cursor: 'pointer', borderRadius: '8px', padding: '5px 14px',
+              fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap',
+              background: selectedSemester === sem 
+                ? 'linear-gradient(135deg, rgba(245,158,11,0.18), rgba(245,158,11,0.06))'
+                : 'rgba(255,255,255,0.04)',
+              color: selectedSemester === sem ? 'var(--accent-amber)' : 'var(--text-secondary)',
+              transition: 'all 0.18s ease',
+              letterSpacing: selectedSemester === sem ? '0.02em' : '0',
+              boxShadow: selectedSemester === sem ? '0 0 12px rgba(245,158,11,0.12)' : 'none',
             }}>
             {formatSemesterLabel(sem)}
           </button>

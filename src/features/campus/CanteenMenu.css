@@ -58,8 +58,8 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-full);
   font-size: 11px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -125,8 +125,8 @@
   display: flex;
   gap: 4px;
   padding: 3px;
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-md);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -152,14 +152,14 @@
 
 .canteen-cat-btn:hover {
   color: var(--text-primary);
-  background: var(--bg-secondary);
+  background: rgba(255,255,255,0.05);
 }
 
 .canteen-cat-btn.active {
-  background: var(--bg-card);
+  background: rgba(255,255,255,0.06);
   color: var(--accent-blue);
   font-weight: var(--fw-semibold);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 0 8px rgba(59,130,246,0.15);
 }
 
 /* ─── Add Item Button ─── */
@@ -187,15 +187,15 @@
 }
 
 .canteen-add-btn-close {
-  background: var(--bg-input);
+  background: rgba(255,255,255,0.04);
   color: var(--text-secondary);
-  border: 1px solid var(--border-primary);
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .canteen-add-btn-close:hover {
   background: color-mix(in srgb, var(--accent-blue) 12%, transparent);
   color: var(--accent-blue);
-  border-color: color-mix(in srgb, var(--accent-blue) 30%, var(--border-primary));
+  border-color: color-mix(in srgb, var(--accent-blue) 30%, transparent);
 }
 
 /* ─── Add Item Form ─── */
@@ -206,8 +206,8 @@
   flex-wrap: wrap;
   padding: var(--sp-4);
   margin-bottom: var(--sp-4);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-lg);
   animation: fadeInUp 0.25s ease both;
 }
@@ -262,8 +262,8 @@
   padding: 32px;
   text-align: center;
   color: var(--text-secondary);
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-lg);
   font-size: var(--fs-sm);
 }
@@ -271,8 +271,8 @@
 /* ─── Food Card ─── */
 .canteen-food-card {
   padding: var(--sp-4);
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
@@ -282,8 +282,8 @@
 }
 
 .canteen-food-card:hover {
-  border-color: var(--border-focus);
-  box-shadow: var(--shadow-md);
+  border-color: color-mix(in srgb, var(--accent-amber) 25%, transparent);
+  box-shadow: 0 8px 28px -8px color-mix(in srgb, var(--accent-amber) 14%, transparent);
   transform: translateY(-2px);
 }
 
@@ -353,7 +353,7 @@
   align-items: center;
   margin-top: var(--sp-5);
   padding-top: var(--sp-2);
-  border-top: 1px solid var(--border-secondary);
+  border-top: 1px solid rgba(255,255,255,0.06);
   font-size: 11px;
 }
 
@@ -378,7 +378,7 @@
   align-items: center;
   color: var(--text-secondary);
   background: none;
-  border: 1px solid var(--border-secondary);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-md);
   padding: 6px 10px;
   cursor: pointer;
@@ -404,7 +404,7 @@
 /* ─── Food Feedback Panel ─── */
 .canteen-feedback-panel {
   margin-top: 10px;
-  border-top: 1px solid var(--border-secondary);
+  border-top: 1px solid rgba(255,255,255,0.06);
   padding-top: 10px;
 }
 
@@ -413,7 +413,7 @@
   gap: 4px;
   margin-bottom: var(--sp-3);
   padding: 2px;
-  background: var(--bg-card);
+  background: rgba(255,255,255,0.03);
   border-radius: var(--radius-md);
 }
 
@@ -438,10 +438,10 @@
 }
 
 .canteen-feedback-tab.active {
-  background: var(--bg-input);
+  background: rgba(255,255,255,0.06);
   color: var(--accent-blue);
   font-weight: var(--fw-semibold);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 0 8px rgba(59,130,246,0.15);
 }
 
 .canteen-feedback-error {
@@ -504,7 +504,7 @@
 }
 
 .canteen-review-card {
-  background: var(--bg-card);
+  background: rgba(255,255,255,0.04);
   border-radius: var(--radius-sm);
   padding: 8px;
 }
@@ -593,9 +593,11 @@
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  background: var(--bg-primary);
+  background: linear-gradient(135deg, rgba(20,20,22,0.98) 0%, rgba(18,18,20,0.98) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-radius: var(--radius-xl);
-  border: 1px solid var(--border-primary);
+  border: 1px solid rgba(255,255,255,0.1);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
   animation: overlayScaleIn 0.2s ease-out;
 }
@@ -605,7 +607,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid var(--border-secondary);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
   flex-shrink: 0;
 }
 
@@ -620,7 +622,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  border: 1px solid var(--border-primary);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--text-secondary);
@@ -655,7 +657,7 @@
   padding: 8px 12px;
   font-weight: var(--fw-bold);
   color: var(--text-secondary);
-  border-bottom: 2px solid var(--border-primary);
+  border-bottom: 2px solid rgba(255,255,255,0.1);
 }
 
 .canteen-ref-table th.center {
@@ -664,7 +666,7 @@
 
 .canteen-ref-table td {
   padding: 6px 12px;
-  border-bottom: 1px solid var(--border-secondary);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
   color: var(--text-primary);
 }
 
