@@ -91,8 +91,8 @@ export default function DeptHeatmap() {
           <h3>No batch data visible yet</h3>
           <p style={{ maxWidth: '520px', margin: '0 auto' }}>
             {heatmapView.pendingBatches.length > 0
-              ? `${heatmapView.pendingBatches.length} batch(es) are collecting CGPA Tracker saves. Each batch needs ${MIN_BATCH_CONTRIBUTORS}+ students before its row appears.`
-              : `Save semester results in CGPA Tracker (with batch set in Settings). Once ${MIN_BATCH_CONTRIBUTORS}+ students from the same batch contribute, averages will show here.`}
+              ? `${heatmapView.pendingBatches.length} batch(es) are collecting CGPA Bol saves. Each batch needs ${MIN_BATCH_CONTRIBUTORS}+ students before its row appears.`
+              : `Save semester results in CGPA Bol (with batch set in Settings). Once ${MIN_BATCH_CONTRIBUTORS}+ students from the same batch contribute, averages will show here.`}
           </p>
         </div>
       ) : (
@@ -149,7 +149,7 @@ export default function DeptHeatmap() {
                         {gpa !== null ? gpa.toFixed(2) : '—'}
                         <div className="tooltip">
                           {batch.label} • {formatSemesterLabel(semIdx + 1)}:{' '}
-                          {gpa !== null ? `${gpa} avg CGPA` : `Needs ${MIN_CELL_CONTRIBUTORS}+ CGPA Tracker entries`}
+                          {gpa !== null ? `${gpa} avg CGPA` : `Needs ${MIN_CELL_CONTRIBUTORS}+ CGPA Bol entries`}
                         </div>
                       </div>
                     ))}

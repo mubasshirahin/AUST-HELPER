@@ -157,7 +157,7 @@ export default function CGPAGraph() {
           <div className="empty-state">
             <TrendingUp size={42} />
             <h3>No grade data yet</h3>
-            <p>Add your semester results below to build your CGPA tracker.</p>
+            <p>Add your semester results below to build your CGPA Bol.</p>
           </div>
         </div>
       )}

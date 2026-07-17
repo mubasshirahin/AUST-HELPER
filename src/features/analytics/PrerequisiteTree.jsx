@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom';
 import {
   Search, Maximize2, Minimize2, ZoomIn, ZoomOut,
-  ChevronsDownUp, ChevronsUpDown, GitBranch
+  ChevronsDownUp, ChevronsUpDown, GitBranch, RotateCcw
 } from 'lucide-react';
 import './PrerequisiteTree.css';
 
@@ -265,6 +265,8 @@ export default function PrerequisiteTree() {
   const panStartRef = useRef({ x: 0, y: 0 });
   const panOffsetRef = useRef({ x: 0, y: 0 });
   const zoomTimerRef = useRef(null);
+  const [nodeOffsets, setNodeOffsets] = useState(() => new Map());
+  const dragRef = useRef(null);
 
   const { scale, x: panX, y: panY } = view;
 
@@ -292,6 +294,30 @@ export default function PrerequisiteTree() {
   );
 
   const visibleCourses = nodes.filter((n) => n.node.code).length;
+
+  // ─── Apply user offsets to nodes and edges (dragging) ───
+  const offsetNodes = useMemo(() => {
+    return nodes.map(n => ({
+      ...n,
+      x: n.x + (nodeOffsets.get(n.node.id)?.dx || 0),
+      y: n.y + (nodeOffsets.get(n.node.id)?.dy || 0),
+    }));
+  }, [nodes, nodeOffsets]);
+
+  const offsetEdges = useMemo(() => {
+    return edges.map(e => {
+      const [parentId, childId] = e.id.split('->');
+      const pOff = nodeOffsets.get(parentId) || { dx: 0, dy: 0 };
+      const cOff = nodeOffsets.get(childId) || { dx: 0, dy: 0 };
+      return {
+        ...e,
+        x1: e.x1 + pOff.dx,
+        y1: e.y1 + pOff.dy,
+        x2: e.x2 + cOff.dx,
+        y2: e.y2 + cOff.dy,
+      };
+    });
+  }, [edges, nodeOffsets]);
 
   // ─── Expand / collapse ───
   const toggleNode = useCallback((node) => {
@@ -400,6 +426,81 @@ export default function PrerequisiteTree() {
     }
   }, [isPanning, panX, panY]);
 
+  // ─── Cleanup function for drag listeners ───
+  const dragCleanupRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (dragCleanupRef.current) {
+        dragCleanupRef.current();
+        dragCleanupRef.current = null;
+      }
+    };
+  }, []);
+
+  // ─── Draggable nodes ───
+  const handleNodeMouseDown = useCallback((e, node) => {
+    if (e.button !== 0) return; // left-click only
+    e.stopPropagation();
+    const currentOffset = nodeOffsets.get(node.id) || { dx: 0, dy: 0 };
+    const drag = {
+      nodeId: node.id,
+      startX: e.clientX,
+      startY: e.clientY,
+      offsetX: currentOffset.dx,
+      offsetY: currentOffset.dy,
+      moved: false,
+    };
+    dragRef.current = drag;
+
+    const handleMove = (ev) => {
+      if (!dragRef.current) return;
+      const dx = ev.clientX - dragRef.current.startX;
+      const dy = ev.clientY - dragRef.current.startY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+        dragRef.current.moved = true;
+      }
+      if (!dragRef.current.moved) return;
+      // Capture ref values locally BEFORE setState (React 18 batches functional updaters)
+      const { nodeId, offsetX, offsetY } = dragRef.current;
+      setNodeOffsets((prev) => {
+        const next = new Map(prev);
+        next.set(nodeId, {
+          dx: offsetX + dx,
+          dy: offsetY + dy,
+        });
+        return next;
+      });
+      document.body.style.cursor = 'move';
+    };
+
+    const handleUp = () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+      dragCleanupRef.current = null;
+      document.body.style.cursor = '';
+      const drag = dragRef.current;
+      dragRef.current = null;
+      if (drag?.moved) {
+        setSelected(node);
+      } else {
+        toggleNode(node);
+      }
+    };
+
+    dragCleanupRef.current = () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+  }, [nodeOffsets, toggleNode]);
+
+  const resetNodePositions = useCallback(() => {
+    setNodeOffsets(new Map());
+  }, []);
+
   // ─── Keyboard shortcuts ───
   useEffect(() => {
     const handleKey = (e) => {
@@ -456,6 +557,15 @@ export default function PrerequisiteTree() {
           <ChevronsDownUp size={14} />
           <span>Collapse All</span>
         </button>
+        <button
+          className="prereq-action-btn"
+          onClick={resetNodePositions}
+          title="Reset all node positions"
+          disabled={nodeOffsets.size === 0}
+        >
+          <RotateCcw size={13} />
+          <span>Reset Positions</span>
+        </button>
 
         {/* Zoom Controls */}
         <div className="prereq-zoom-group">
@@ -496,9 +606,10 @@ export default function PrerequisiteTree() {
       {/* Hint */}
       <div className="prereq-hint">
         <span>
-          💡 <strong>Click</strong> a node to expand / collapse its children &bull;
+          💡 <strong>Click</strong> a node to expand / collapse &bull;
+          <strong>Drag</strong> any node to reposition &bull;
           <strong> Scroll</strong> to zoom &bull;
-          <strong> Drag</strong> to pan
+          <strong> Drag</strong> canvas to pan
         </span>
       </div>
 
@@ -533,7 +644,7 @@ export default function PrerequisiteTree() {
             >
               {/* Edges */}
               <g className="pt-edges">
-                {edges.map((e) => {
+                {offsetEdges.map((e) => {
                   const midX = (e.x1 + e.x2) / 2;
                   return (
                     <path
@@ -547,7 +658,7 @@ export default function PrerequisiteTree() {
 
               {/* Nodes */}
               <g className="pt-nodes">
-                {nodes.map(({ node, x, y, w }) => {
+                {offsetNodes.map(({ node, x, y, w }) => {
                   const hasChildren = !!node.children?.length;
                   const isOpen = effectiveExpanded.has(node.id);
                   const isMatch = matchedIds.has(node.id);
@@ -564,7 +675,7 @@ export default function PrerequisiteTree() {
                         dim ? 'pt-node--dim' : '',
                       ].join(' ')}
                       transform={`translate(${x}, ${y - NODE_H / 2})`}
-                      onClick={() => toggleNode(node)}
+                      onMouseDown={(e) => handleNodeMouseDown(e, node)}
                     >
                       <rect className="pt-node-rect" width={w} height={NODE_H} rx={9} />
                       <text className="pt-node-text" x={14} y={NODE_H / 2 + 4}>

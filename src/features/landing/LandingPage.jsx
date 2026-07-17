@@ -800,9 +800,9 @@ const mockScreens = [
     icon: BarChart3,
     elements: [
       // Tab bar
-      { type: 'mini-tabs', tabs: ['CGPA', 'Semester', 'Heatmap', 'Reviews'], active: 0 },
+      { type: 'mini-tabs', tabs: ['CGPA', 'Semester View', 'Heatmap', 'Reviews'], active: 0 },
       // CGPA chart
-      { type: 'label', text: 'CGPA Tracker' },
+      { type: 'label', text: 'CGPA Bol' },
       { type: 'chart', bars: [55, 62, 58, 71, 68, 78, 75], labels: ['1.1','1.2','2.1','2.2','3.1','3.2','4.1'] },
       // Stats row
       { type: 'stats-row', stats: [
@@ -1173,7 +1173,7 @@ const beforeAfterData = {
   after: [
     { icon: Bell, text: 'Smart notifications for every deadline', color: 'var(--accent-emerald)' },
     { icon: Archive, text: '1,200+ past papers organized by course', color: 'var(--accent-emerald)' },
-    { icon: TrendingUp, text: 'Interactive CGPA tracker with graphs', color: 'var(--accent-emerald)' },
+    { icon: TrendingUp, text: 'Interactive CGPA Bol with graphs', color: 'var(--accent-emerald)' },
     { icon: Map, text: 'Full weekly schedule with room numbers', color: 'var(--accent-emerald)' },
     { icon: Activity, text: 'Live library pulse & canteen crowd index', color: 'var(--accent-emerald)' },
     { icon: Users, text: 'Find seniors, alumni & batchmates instantly', color: 'var(--accent-emerald)' },
