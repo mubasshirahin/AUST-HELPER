@@ -38,6 +38,7 @@ const MessagesPage = lazy(() => import('./features/messages/MessagesPage'));
 const TerminalPage = lazy(() => import('./features/terminal/TerminalPage'));
 const WorkspacePage = lazy(() => import('./features/workspace/WorkspacePage'));
 const ShadowPage = lazy(() => import('./features/shadow/ShadowPage'));
+const ProPage = lazy(() => import('./features/pro/ProPage'));
 
 import './App.css';
 
@@ -102,6 +103,7 @@ function AppContent() {
                 <Route path="/admin/cr-sr-directory" element={<ProtectedAdminRoute><AdminPanelPage /></ProtectedAdminRoute>} />
                 <Route path="/workspace" element={<WorkspacePage />} />
                 <Route path="/shadow" element={<ShadowPage />} />
+                <Route path="/pro" element={<ProPage />} />
                 <Route path="/login" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>

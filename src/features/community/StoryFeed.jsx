@@ -124,14 +124,16 @@ export default function StoryFeed() {
   };
 
   return (
-    <div className="glass-card-static story-feed-container animate-fadeInUp" style={{ maxWidth: '700px', margin: '0 auto' }}>
-      
+    <div className="glass-card-static story-feed-container animate-fadeInUp">
       {/* Create post form */}
-      <form onSubmit={handlePostSubmit} className="mb-6 p-4" style={{ background: 'var(--bg-input)', borderRadius: 'var(--radius-xl)' }}>
-        <h3 style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', marginBottom: '8px' }}>Share something anonymously</h3>
+      <form onSubmit={handlePostSubmit} className="story-feed-form">
+        <div className="story-feed-form-header">
+          <span className="form-header-icon">💬</span>
+          <span>Share something anonymously</span>
+        </div>
 
         {/* Category selector */}
-        <div className="flex gap-1.5 mb-3 flex-wrap">
+        <div className="story-feed-category-row">
           {postCategories.map(cat => {
             const meta = categoryMeta[cat];
             const active = selectedCategory === cat;
@@ -140,17 +142,11 @@ export default function StoryFeed() {
                 key={cat}
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
+                className="story-feed-category-btn"
                 style={{
-                  textTransform: 'capitalize',
-                  fontSize: '11px',
-                  padding: '4px 10px',
-                  borderRadius: 'var(--radius-full)',
-                  border: active ? `2px solid ${meta.color}` : '2px solid transparent',
-                  background: active ? meta.color + '20' : 'var(--bg-secondary)',
-                  color: active ? meta.color : 'var(--text-secondary)',
-                  fontWeight: active ? '600' : '400',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
+                  borderColor: active ? meta.color : undefined,
+                  background: active ? meta.color + '20' : undefined,
+                  color: active ? meta.color : undefined,
                 }}
               >
                 {meta.icon} {meta.label}
@@ -164,124 +160,76 @@ export default function StoryFeed() {
           value={newPostContent}
           onChange={(e) => setNewPostContent(e.target.value)}
           rows="3"
-          style={{
-            width: '100%',
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--border-primary)',
-            borderRadius: 'var(--radius-md)',
-            padding: '12px',
-            color: 'var(--text-primary)',
-            fontSize: 'var(--fs-sm)',
-            resize: 'none',
-            outline: 'none',
-            marginBottom: '10px',
-            fontFamily: 'inherit',
-          }}
+          className="story-feed-textarea"
         />
-        <div className="flex justify-between items-center">
-          <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>⚠️ Keep reports civil. Posts are anonymous.</span>
-          <button type="submit" className="btn btn-primary btn-sm" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+        <div className="story-feed-form-footer">
+          <span className="story-feed-form-hint">⚠️ Keep reports civil. Posts are anonymous.</span>
+          <button type="submit" className="btn btn-primary btn-sm story-feed-form-submit">
             Post <Send size={12} />
           </button>
         </div>
       </form>
 
       {/* Category filters */}
-      <div className="flex gap-1.5 mb-6 overflow-x-auto pb-1">
+      <div className="story-feed-filters">
         {filterCategories.map(cat => (
           <button
             key={cat}
             onClick={() => setActiveFilter(cat)}
-            className={`tag ${activeFilter === cat ? 'active' : ''}`}
-            style={{ textTransform: 'capitalize' }}
+            className={`tag story-feed-filter-btn ${activeFilter === cat ? 'active' : ''}`}
           >
             {cat === 'All' ? 'All' : `${categoryMeta[cat].icon} ${cat}`}
           </button>
         ))}
       </div>
 
-      {/* Post feeds lists */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* Post feed list */}
+      <div className="story-feed-list">
         {filteredPosts.length === 0 && (
-          <div style={{
-            textAlign: 'center',
-            padding: '48px 20px',
-            color: 'var(--text-tertiary)',
-            fontSize: '13px',
-            background: 'var(--bg-input)',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px dashed var(--border-secondary)',
-          }}>
-            {activeFilter === 'All'
-              ? 'No posts yet. Be the first to share!'
-              : `No ${activeFilter} posts yet. Be the first to share one!`}
+          <div className="story-feed-empty">
+            <div className="story-feed-empty-icon">💬</div>
+            <h4>No posts yet</h4>
+            <p>
+              {activeFilter === 'All'
+                ? 'Be the first to share something!'
+                : `No ${activeFilter} posts yet. Be the first to share one!`}
+            </p>
           </div>
         )}
         {filteredPosts.map(post => {
           const meta = categoryMeta[post.category] || categoryMeta.confession;
           return (
-            <div
-              key={post.id}
-              className="p-4 animate-fadeIn"
-              style={{
-                background: 'var(--bg-input)',
-                borderRadius: 'var(--radius-lg)',
-                border: '1px solid var(--border-primary)',
-              }}
-            >
-              <div className="flex justify-between items-center mb-3">
-                <span style={{
-                  textTransform: 'capitalize',
-                  fontSize: '9px',
-                  fontWeight: '600',
-                  background: meta.color + '20',
-                  color: meta.color,
-                  padding: '3px 10px',
-                  borderRadius: '12px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}>
+            <div key={post.id} className="story-feed-post animate-fadeIn">
+              {/* Shine overlay */}
+              <div className="post-shine" aria-hidden="true" />
+              <div className="story-feed-post-header">
+                <span
+                  className="story-feed-post-category"
+                  style={{
+                    background: meta.color + '20',
+                    color: meta.color,
+                  }}
+                >
                   {meta.icon} {post.category}
                 </span>
-                <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>{post.time}</span>
+                <span className="story-feed-post-time">{post.time}</span>
               </div>
 
-              <p style={{
-                fontSize: '13px',
-                color: 'var(--text-primary)',
-                lineHeight: '1.6',
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-              }}>
-                {post.content}
-              </p>
+              <p className="story-feed-post-content">{post.content}</p>
 
-              <div className="flex justify-between items-center mt-4 pt-3" style={{
-                borderTop: '1px solid var(--border-secondary)',
-                fontSize: '11px',
-                color: 'var(--text-secondary)',
-              }}>
-                <div className="flex gap-2">
+              <div className="story-feed-post-footer">
+                <div className="story-feed-reactions">
                   {Object.entries(reactionEmojis).map(([type, emoji]) => {
                     const hasReacted = (userReactions[visitorId] || []).includes(`${post.id}-${type}`);
                     return (
                       <button
                         key={type}
                         onClick={() => handleReact(post.id, type)}
+                        className="story-feed-reaction-btn"
                         style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          background: hasReacted ? meta.color + '20' : 'var(--bg-secondary)',
-                          color: hasReacted ? meta.color : 'var(--text-secondary)',
-                          padding: '4px 10px',
-                          borderRadius: 'var(--radius-full)',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          transition: 'all 0.15s ease',
-                          fontWeight: hasReacted ? '600' : '400',
+                          background: hasReacted ? meta.color + '20' : undefined,
+                          color: hasReacted ? meta.color : undefined,
+                          fontWeight: hasReacted ? 600 : undefined,
                         }}
                       >
                         {emoji} {post.reactions[type]}
@@ -290,7 +238,7 @@ export default function StoryFeed() {
                   })}
                 </div>
 
-                <span className="flex items-center gap-1">
+                <span className="story-feed-comment-count">
                   <MessageSquare size={12} /> {post.comments}
                 </span>
               </div>

@@ -792,18 +792,68 @@ export default function WorkspacePage() {
 
   return (
     <div className="workspace-page animate-fadeIn">
-      {/* Header */}
-      <div className="workspace-header">
-        <div className="workspace-header-left">
-          <div className="workspace-header-icon"><ExternalLink size={22} /></div>
-          <div>
-            <h1 className="page-title">Workspace</h1>
-            <p className="page-description">
-              Connect multiple Google Classroom accounts and choose which courses to track.
-            </p>
+      {/* Hero Header */}
+      <header className="workspace-hero">
+        <div className="workspace-hero-bg" aria-hidden="true">
+          <div className="workspace-hero-grid" />
+          <div className="workspace-hero-orb workspace-hero-orb-1" />
+          <div className="workspace-hero-orb workspace-hero-orb-2" />
+        </div>
+        <div className="workspace-hero-content">
+          <div className="workspace-hero-title-row">
+            <div className="workspace-hero-icon">
+              <ExternalLink size={24} />
+            </div>
+            <div>
+              <h1 className="workspace-hero-title">
+                <span className="workspace-hero-title-highlight">Workspace</span>
+              </h1>
+              <p className="workspace-hero-subtitle">
+                Connect multiple Google Classroom accounts and choose which courses to track.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
+
+      {/* Quick Stats Row */}
+      {accounts.length > 0 && (
+        <div className="workspace-stats-row animate-fadeInUp" style={{ animationDelay: '0.25s' }}>
+          <div className="workspace-quick-stat-card">
+            <div className="workspace-quick-stat-shine" aria-hidden="true" />
+            <div className="workspace-quick-stat-icon" style={{ background: 'var(--accent-blue-glow)', color: 'var(--accent-blue)' }}>
+              <Users size={18} />
+            </div>
+            <div className="workspace-quick-stat-body">
+              <span className="workspace-quick-stat-value" style={{ color: 'var(--accent-blue)' }}>{accounts.length}</span>
+              <span className="workspace-quick-stat-label">Connected Accounts</span>
+            </div>
+            <div className="workspace-quick-stat-bar" style={{ background: 'var(--accent-blue)' }} aria-hidden="true" />
+          </div>
+          <div className="workspace-quick-stat-card">
+            <div className="workspace-quick-stat-shine" aria-hidden="true" />
+            <div className="workspace-quick-stat-icon" style={{ background: 'var(--accent-amber-glow)', color: 'var(--accent-amber)' }}>
+              <BookOpen size={18} />
+            </div>
+            <div className="workspace-quick-stat-body">
+              <span className="workspace-quick-stat-value" style={{ color: 'var(--accent-amber)' }}>{visibleCourses.length}</span>
+              <span className="workspace-quick-stat-label">Visible Courses</span>
+            </div>
+            <div className="workspace-quick-stat-bar" style={{ background: 'var(--accent-amber)' }} aria-hidden="true" />
+          </div>
+          <div className="workspace-quick-stat-card">
+            <div className="workspace-quick-stat-shine" aria-hidden="true" />
+            <div className="workspace-quick-stat-icon" style={{ background: 'var(--accent-emerald-glow)', color: 'var(--accent-emerald)' }}>
+              <ExternalLink size={18} />
+            </div>
+            <div className="workspace-quick-stat-body">
+              <span className="workspace-quick-stat-value" style={{ color: 'var(--accent-emerald)' }}>{accounts.reduce((sum, a) => sum + (a.courses || []).length, 0)}</span>
+              <span className="workspace-quick-stat-label">Total Courses</span>
+            </div>
+            <div className="workspace-quick-stat-bar" style={{ background: 'var(--accent-emerald)' }} aria-hidden="true" />
+          </div>
+        </div>
+      )}
 
       {needsConfig && (
         <div className="workspace-config-warning">

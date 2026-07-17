@@ -18,7 +18,7 @@ export default function AboutUsPage() {
         <p className="info-page-subtitle">Built for AUST students, by AUST students.</p>
 
         <h2>Our Mission</h2>
-        <p>AUSTWise was created to solve the everyday problems that AUST students face — from missing deadlines and hunting for past papers to finding affordable housing near campus. We believe technology should make student life simpler, not more complicated.</p>
+        <p>AUSTWise was created to solve the everyday problems that AUST students face — from missing deadlines and hunting for past paper to finding affordable housing near campus. We believe technology should make student life simpler, not more complicated.</p>
 
         <h2>What Makes Us Different</h2>
         <p>Every feature in AUSTWise exists because a real AUST student faced a real problem. We do not build features for the sake of it — we build solutions to real pain points. The result is a platform that actually understands what students need.</p>

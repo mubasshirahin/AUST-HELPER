@@ -230,6 +230,8 @@ export default function ClubPortal() {
                 className={`clubs-card animate-fadeInUp ${club.joined ? 'clubs-card-joined' : ''}`}
                 style={{ animationDelay: `${(idx % 6) * 60}ms` }}
               >
+                {/* Shine overlay — matches dashboard pattern */}
+                <div className="card-shine" aria-hidden="true" />
                 {/* Top accent bar */}
                 <div className="clubs-card-accent" style={{ background: club.color }} />
 

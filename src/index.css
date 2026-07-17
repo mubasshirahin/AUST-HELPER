@@ -68,15 +68,18 @@
   --z-toast: 500;
 }
 
-/* ─── Dark Theme (Default) ─── */
+/* ─── Dark Theme (Default) — Enhanced ───
+     Deep charcoal, vibrant orange-gold accent, subtle light-blue glow,
+     rich dark-to-black gradients, and glowing card edges.
+     ───────────────────────────────────────────────────────────────────── */
 [data-theme="dark"] {
   --bg-primary: #08090a;
   --bg-secondary: #111113;
   --bg-tertiary: #1a1a1d;
   --bg-card: #121214;
   --bg-card-hover: #18181b;
-  --bg-glass: #111113;
-  --bg-glass-heavy: #111113;
+  --bg-glass: rgba(17, 17, 19, 0.85);
+  --bg-glass-heavy: rgba(17, 17, 19, 0.92);
   --bg-input: #1a1a1d;
 
   --text-primary: #fafafa;
@@ -86,51 +89,54 @@
 
   --border-primary: rgba(244, 244, 245, 0.08);
   --border-secondary: rgba(244, 244, 245, 0.045);
-  --border-focus: rgba(176, 151, 93, 0.38);
+  --border-focus: rgba(245, 158, 11, 0.45);
 
-  --accent-blue: #b0975d;
-  --accent-blue-glow: rgba(176, 151, 93, 0.14);
-  --accent-purple: #8f8675;
-  --accent-purple-glow: rgba(143, 134, 117, 0.13);
-  --accent-amber: #c9a66b;
-  --accent-amber-glow: rgba(201, 166, 107, 0.14);
-  --accent-emerald: #6fa386;
-  --accent-emerald-glow: rgba(111, 163, 134, 0.13);
-  --accent-rose: #bf7a7a;
-  --accent-rose-glow: rgba(191, 122, 122, 0.13);
-  --accent-cyan: #7c9aa3;
-  --accent-cyan-glow: rgba(124, 154, 163, 0.13);
-  --accent-orange: #b8875f;
-  --accent-orange-glow: rgba(184, 135, 95, 0.13);
+  /* Vibrant orange-gold accent palette */
+  --accent-blue: #f59e0b;
+  --accent-blue-glow: rgba(245, 158, 11, 0.14);
+  --accent-purple: #8b7e74;
+  --accent-purple-glow: rgba(139, 126, 116, 0.13);
+  --accent-amber: #f59e0b;
+  --accent-amber-glow: rgba(245, 158, 11, 0.14);
+  --accent-emerald: #34d399;
+  --accent-emerald-glow: rgba(52, 211, 153, 0.13);
+  --accent-rose: #fb7185;
+  --accent-rose-glow: rgba(251, 113, 133, 0.13);
+  --accent-cyan: #22d3ee;
+  --accent-cyan-glow: rgba(34, 211, 238, 0.13);
+  --accent-orange: #f97316;
+  --accent-orange-glow: rgba(249, 115, 22, 0.14);
 
-  --gradient-primary: linear-gradient(135deg, #b0975d 0%, #a58f68 100%);
-  --gradient-secondary: linear-gradient(135deg, #18181b 0%, #111113 100%);
-  --gradient-accent: linear-gradient(135deg, #9a8a68 0%, #7c9aa3 100%);
-  --gradient-warm: linear-gradient(135deg, #b8875f 0%, #bf7a7a 100%);
-  --gradient-success: linear-gradient(135deg, #6fa386 0%, #7c9aa3 100%);
-  --gradient-glass: linear-gradient(135deg, rgba(176, 151, 93, 0.06) 0%, rgba(255, 255, 255, 0.015) 100%);
+  /* Warmer, richer gradients */
+  --gradient-primary: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #f97316 100%);
+  --gradient-secondary: linear-gradient(135deg, #1c1c1f 0%, #111113 100%);
+  --gradient-accent: linear-gradient(135deg, #f59e0b 0%, #22d3ee 100%);
+  --gradient-warm: linear-gradient(135deg, #f97316 0%, #fb7185 100%);
+  --gradient-success: linear-gradient(135deg, #34d399 0%, #22d3ee 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(245, 158, 11, 0.07) 0%, rgba(34, 211, 238, 0.03) 100%);
 
+  /* Shadows with ambient glow */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.18);
   --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.22);
   --shadow-xl: 0 18px 44px rgba(0, 0, 0, 0.28);
-  --shadow-glow-blue: 0 6px 18px rgba(0, 0, 0, 0.18);
-  --shadow-glow-purple: 0 6px 18px rgba(0, 0, 0, 0.18);
-  --shadow-glow-amber: 0 6px 18px rgba(0, 0, 0, 0.18);
+  --shadow-glow-blue: 0 0 24px rgba(245, 158, 11, 0.14);
+  --shadow-glow-purple: 0 0 24px rgba(139, 126, 116, 0.12);
+  --shadow-glow-amber: 0 0 24px rgba(245, 158, 11, 0.14);
 
   --scrollbar-track: #0f0f12;
   --scrollbar-thumb: #27272a;
-  --scrollbar-thumb-hover: #3f3f46;
+  --scrollbar-thumb-hover: #52525b;
 
-  --status-online: #6fa386;
-  --status-away: #c9a66b;
+  --status-online: #34d399;
+  --status-away: #f59e0b;
   --status-offline: #71717a;
-  --status-busy: #bf7a7a;
+  --status-busy: #fb7185;
 
-  --danger: #bf5f5f;
-  --warning: #c9a66b;
-  --success: #6fa386;
-  --info: #9a8a68;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --success: #34d399;
+  --info: #22d3ee;
 }
 
   /* ─── Light Theme ─── */

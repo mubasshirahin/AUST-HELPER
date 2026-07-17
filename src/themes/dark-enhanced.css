@@ -1,0 +1,393 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   DARK (ENHANCED) —  "Futuristic Minimalism" personality layer
+   ────────────────────────────────────────────────────────────────────────────
+   Enhances the default dark theme with:
+   • Deep charcoal background + precise grid pattern overlay
+   • Subtle ambient orange-gold & light-blue orbs (fixed, behind content)
+   • Smooth dark-to-black gradients on surfaces
+   • Glowing card edges on interaction
+   • Premium glass effects for cards and modals
+
+   Scoped to [data-theme="dark"] so no other theme is affected.
+   Lives in its own file (imported from main.jsx after index.css) purely to
+   keep the design system organized.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Ambient grid background + glow orbs ─── */
+[data-theme="dark"] body {
+  background-color: var(--bg-primary);
+  background-image:
+    /* Precise grid pattern — subtle, low-opacity */
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    /* Warm ambient glow — top-center amber */
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(245, 158, 11, 0.06), transparent 60%),
+    /* Cool ambient glow — bottom-right light blue */
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(34, 211, 238, 0.04), transparent 50%);
+  background-size:
+    48px 48px,
+    48px 48px,
+    100% 100%,
+    100% 100%;
+  background-attachment: fixed;
+  background-repeat: repeat, repeat, no-repeat, no-repeat;
+}
+
+/* ─── Ambient orbs — fixed, behind content, soft blur ─── */
+[data-theme="dark"] body::before,
+[data-theme="dark"] body::after {
+  content: '';
+  position: fixed;
+  border-radius: 9999px;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(120px);
+}
+
+[data-theme="dark"] body::before {
+  top: -200px;
+  right: -100px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.10), transparent 70%);
+  animation: darkOrbFloat 12s ease-in-out infinite alternate;
+}
+
+[data-theme="dark"] body::after {
+  bottom: -200px;
+  left: -100px;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.07), transparent 70%);
+  animation: darkOrbFloat 16s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes darkOrbFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(20px, -15px) scale(1.08); }
+  100% { transform: translate(-10px, 10px) scale(0.95); }
+}
+
+/* Keep app chrome above the ambience */
+[data-theme="dark"] #root { position: relative; z-index: 1; }
+
+/* ─── Glass Card — glowing edge on hover ─── */
+[data-theme="dark"] .glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-base);
+}
+
+[data-theme="dark"] .glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    transparent 40%,
+    rgba(245, 158, 11, 0.08) 50%,
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity var(--transition-slow);
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="dark"] .glass-card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-lg), 0 0 24px rgba(245, 158, 11, 0.06);
+  transform: translateY(-2px);
+}
+
+[data-theme="dark"] .glass-card:hover::before {
+  opacity: 1;
+}
+
+/* Ensure card content stays above the gradient overlay */
+[data-theme="dark"] .glass-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme="dark"] .glass-card-static {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ─── Buttons — glow on hover ─── */
+[data-theme="dark"] .btn-primary {
+  background: var(--accent-blue);
+  color: var(--text-inverse);
+  border: none;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+  transition: all var(--transition-base), box-shadow var(--transition-base);
+}
+
+[data-theme="dark"] .btn-primary:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .btn-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+[data-theme="dark"] .btn-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-danger {
+  background: var(--danger);
+  color: #fff;
+  border: none;
+}
+
+[data-theme="dark"] .btn-danger:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+
+/* ─── Inputs — glass well with warm focus glow ─── */
+[data-theme="dark"] .input,
+[data-theme="dark"] .search-box input {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+[data-theme="dark"] .input:focus,
+[data-theme="dark"] .search-box input:focus {
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12), 0 0 16px rgba(245, 158, 11, 0.06);
+}
+
+[data-theme="dark"] .input::placeholder,
+[data-theme="dark"] .search-box input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* ─── Tabs — quiet rail, orange-gold active key ─── */
+[data-theme="dark"] .tabs {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+}
+
+[data-theme="dark"] .tab {
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+}
+
+[data-theme="dark"] .tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .tab.active {
+  background: var(--accent-blue-glow);
+  color: var(--accent-blue);
+  box-shadow: none;
+}
+
+/* ─── Toggle Switch — warm orange-gold when active ─── */
+[data-theme="dark"] .toggle-switch {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-primary);
+}
+
+[data-theme="dark"] .toggle-switch.active {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+}
+
+[data-theme="dark"] .toggle-switch::after {
+  background: #fafafa;
+}
+
+/* ─── Tags / Chips — glass with warm accent ─── */
+[data-theme="dark"] .tag {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .tag:hover,
+[data-theme="dark"] .tag.active {
+  background: var(--accent-blue-glow);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: var(--accent-blue);
+}
+
+/* ─── Progress bar — amber glow fill ─── */
+[data-theme="dark"] .progress-bar {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .progress-bar-fill {
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
+}
+
+/* ─── Modal — glass-heavy with ambient backdrop ─── */
+[data-theme="dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+}
+
+[data-theme="dark"] .modal {
+  background: var(--bg-glass-heavy);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+}
+
+/* ─── Badges — crisp, slightly glowing ─── */
+[data-theme="dark"] .badge-blue { 
+  background: var(--accent-blue-glow); 
+  color: var(--accent-blue); 
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.08);
+}
+
+[data-theme="dark"] .badge-amber { 
+  background: var(--accent-amber-glow); 
+  color: var(--accent-amber); 
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.08);
+}
+
+[data-theme="dark"] .badge-cyan { 
+  background: var(--accent-cyan-glow); 
+  color: var(--accent-cyan); 
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.08);
+}
+
+/* ─── Avatar — warm gradient fallback ─── */
+[data-theme="dark"] .avatar {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: var(--text-inverse);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+}
+
+/* ─── Section header icons ─── */
+[data-theme="dark"] .section-title .icon {
+  border-radius: var(--radius-md);
+  background: var(--accent-blue-glow) !important;
+  color: var(--accent-blue) !important;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.06);
+}
+
+/* ─── Info banners — subtle glow variant ─── */
+[data-theme="dark"] .info-banner {
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid currentColor;
+}
+
+[data-theme="dark"] .info-banner.info {
+  border-color: var(--accent-blue);
+  background: rgba(245, 158, 11, 0.06);
+  color: var(--accent-blue);
+}
+
+[data-theme="dark"] .info-banner.success {
+  border-color: var(--accent-emerald);
+  background: rgba(52, 211, 153, 0.06);
+  color: var(--accent-emerald);
+}
+
+[data-theme="dark"] .info-banner.warning {
+  border-color: var(--accent-amber);
+  background: rgba(245, 158, 11, 0.06);
+  color: var(--accent-amber);
+}
+
+[data-theme="dark"] .info-banner.danger {
+  border-color: var(--accent-rose);
+  background: rgba(251, 113, 133, 0.06);
+  color: var(--accent-rose);
+}
+
+/* ─── Scrollbar — warm accent on hover ─── */
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.08);
+}
+
+/* ─── Card list items — glow on hover ─── */
+[data-theme="dark"] .card-list-item {
+  border: 1px solid var(--border-primary);
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+}
+
+[data-theme="dark"] .card-list-item:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-md);
+}
+
+/* ─── Focus ring — warm amber ─── */
+[data-theme="dark"] :focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* ─── Reduced motion — keep glow, drop transforms ─── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="dark"] .glass-card:hover {
+    transform: none;
+  }
+
+  [data-theme="dark"] body::before,
+  [data-theme="dark"] body::after {
+    animation: none;
+  }
+
+  [data-theme="dark"] .btn-primary:hover {
+    transform: none;
+  }
+
+  [data-theme="dark"] .btn-primary:active {
+    transform: none;
+  }
+}

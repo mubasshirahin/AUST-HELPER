@@ -320,6 +320,7 @@ export function accountToUser(account) {
     linkedin: account.linkedin || '',
     discord: account.discord || '',
     linkedSocial: account.linkedSocial || {},
+    linkedAccounts: account.linkedAccounts || [],
     cgpa: account.cgpa ?? 0,
     creditsCompleted: account.creditsCompleted ?? 0,
     totalCredits: account.totalCredits ?? 160,
@@ -497,18 +498,22 @@ export function restoreSessionUser() {
   }
   const user = accountToUser(account);
 
-  // Fallback: if the account doesn't have an avatar (e.g. older account
-  // or Google picture wasn't persisted to the accounts list), try the
-  // cached user profile which might have it from a previous session.
-  if (!user.avatar) {
-    try {
-      const cached = localStorage.getItem(profileKey);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed.avatar) user.avatar = parsed.avatar;
+  // Fallback: if the account is missing some profile data (avatar,
+  // linkedAccounts, etc.) that was saved in the cached user profile
+  // from a previous session, restore it.
+  try {
+    const cached = localStorage.getItem(profileKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (!user.avatar && parsed.avatar) user.avatar = parsed.avatar;
+      if ((!user.linkedAccounts || user.linkedAccounts.length === 0) && parsed.linkedAccounts?.length) {
+        user.linkedAccounts = parsed.linkedAccounts;
       }
-    } catch { /* ignore */ }
-  }
+      if ((!user.linkedSocial || Object.keys(user.linkedSocial).length === 0) && parsed.linkedSocial && Object.keys(parsed.linkedSocial).length > 0) {
+        user.linkedSocial = { ...parsed.linkedSocial };
+      }
+    }
+  } catch { /* ignore */ }
 
   persistUserProfile(user);
   return user;

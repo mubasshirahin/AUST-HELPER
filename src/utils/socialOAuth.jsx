@@ -1,0 +1,87 @@
+const PROVIDER_MAP = {
+  github: {
+    name: 'GitHub',
+    color: '#181717',
+    icon: <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>,
+    profileUrl: (account) => `https://github.com/${account.username}`,
+  },
+  discord: {
+    name: 'Discord',
+    color: '#5865F2',
+    icon: <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M20.317 4.3698a19.7913 19.7913 0 0 0-4.8851-1.5152.0741.0741 0 0 0-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 0 0-.0785-.037 19.7363 19.7363 0 0 0-4.8852 1.515.0699.0699 0 0 0-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 0 0 .0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 0 0 .0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 0 0-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 0 1-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 0 1 .0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 0 1 .0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 0 1-.0066.1276 12.2986 12.2986 0 0 1-1.873.8914.0766.0766 0 0 0-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 0 0 .0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 0 0 .0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 0 0-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z"/></svg>,
+    // Discord has no public web profile pages — only viewable inside the Discord app
+  },
+  spotify: {
+    name: 'Spotify',
+    color: '#1DB954',
+    icon: <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.52 17.34c-.24.36-.72.48-1.08.24-2.88-1.8-6.54-2.16-10.8-1.2-.42.12-.84-.12-.96-.54-.12-.42.12-.84.54-.96 4.56-1.08 8.52-.6 11.76 1.32.36.24.48.72.24 1.08zm1.44-3.24c-.3.42-.84.6-1.26.3-3.3-2.04-8.34-2.64-12.24-1.44-.48.12-1.02-.12-1.14-.6-.12-.48.12-1.02.6-1.14 4.5-1.32 9.9-.66 13.68 1.68.42.24.6.78.36 1.2zm.12-3.42c-3.96-2.34-10.5-2.58-14.28-1.44-.54.18-1.14-.12-1.32-.66-.18-.54.12-1.14.66-1.32 4.44-1.32 11.52-1.02 16.08 1.68.48.3.66.96.36 1.44-.3.42-.96.6-1.44.3z"/></svg>,
+    profileUrl: (account) => `https://open.spotify.com/user/${account.username}`,
+  },
+  facebook: {
+    name: 'Facebook',
+    color: '#1877F2',
+    icon: <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>,
+    profileUrl: (account) => account.link || `https://facebook.com/${account.username}`,
+  },
+  steam: {
+    name: 'Steam',
+    color: '#171a21',
+    icon: <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M11.979 0C5.678 0 .511 4.86.022 10.968l5.17 2.135a2.93 2.93 0 0 1 1.642-.49c.082 0 .165.002.247.008l2.403-3.475v-.049a3.889 3.889 0 1 1 3.889 3.889l-.01-.003-2.716 3.583c.007.085.013.17.013.256a3.282 3.282 0 1 1-3.282-3.281l.335.009 2.902-3.686a3.84 3.84 0 0 1-.326-1.564 3.891 3.891 0 0 1 6.495-2.899 3.89 3.89 0 0 1-2.627 6.716l-.06-.003-2.49 3.6v.012a5.02 5.02 0 0 1 2.627 5.332l3.935 1.869A12 12 0 0 0 11.979 0zM4.107 14.557l2.71 1.118a2.27 2.27 0 0 0 .72 1.646 2.303 2.303 0 0 0 1.649.69 2.29 2.29 0 0 0 .56-.071 2.308 2.308 0 0 0 1.305-.898 2.304 2.304 0 0 0 .374-1.554 2.286 2.286 0 0 0-.882-1.562l-2.472-1.448a1.393 1.393 0 0 0-1.964.75 1.396 1.396 0 0 0 1.544 1.799l.326.132-2.092-.864a.596.596 0 0 1 .081-1.138.6.6 0 0 1 .413.023l.08.032a1.385 1.385 0 0 0 1.287-2.459l-.082-.039a2.178 2.178 0 0 0-2.088-.098 2.176 2.176 0 0 0-.83 3.189z"/></svg>,
+    profileUrl: (account) => `https://steamcommunity.com/profiles/${account.username}`,
+  },
+
+};
+
+const getBaseUrl = () => {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5174';
+  }
+  return window.location.origin;
+};
+
+export function startOAuthFlow(provider) {
+  return new Promise((resolve, reject) => {
+    const baseUrl = getBaseUrl();
+    const popup = window.open(
+      `${baseUrl}/api/auth/${provider}/login`,
+      'oauth-popup',
+      'width=600,height=700,scrollbars=yes,popup=1'
+    );
+
+    if (!popup) {
+      reject(new Error('Popup blocked. Please allow popups for this site.'));
+      return;
+    }
+
+    const handleMessage = (event) => {
+      if (event.data?.provider === provider) {
+        window.removeEventListener('message', handleMessage);
+        if (event.data.profile?.error) {
+          reject(new Error(event.data.profile.error));
+        } else {
+          resolve(event.data.profile);
+        }
+        try { popup.close(); } catch {}
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    const checkClosed = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(checkClosed);
+        window.removeEventListener('message', handleMessage);
+        reject(new Error('OAuth popup was closed before completing.'));
+      }
+    }, 1000);
+
+    setTimeout(() => {
+      clearInterval(checkClosed);
+      window.removeEventListener('message', handleMessage);
+      try { popup.close(); } catch {}
+      reject(new Error('OAuth request timed out. Please try again.'));
+    }, 300000);
+  });
+}
+
+export { PROVIDER_MAP };

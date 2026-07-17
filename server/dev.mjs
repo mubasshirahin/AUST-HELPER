@@ -35,6 +35,8 @@ import {
   getOccupancy
 } from './libraryDB.mjs';
 import { initializeDatabase, resetDatabase, query, sql } from './db.mjs';
+import { handleOAuthRequest } from './socialOAuth.mjs';
+import { createWSServer } from './wsServer.mjs';
 
 // Helper function to answer callback query
 async function answerCallbackQueryFn(botToken, callbackQueryId, text) {
@@ -1277,6 +1279,12 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // ========== Social OAuth Endpoints ==========
+
+  if (await handleOAuthRequest(req, res)) {
+    return;
+  }
+
   // ========== Google Auth Endpoint ==========
 
   if (req.url === '/api/auth/google' && req.method === 'POST') {
@@ -1319,6 +1327,9 @@ const server = http.createServer(async (req, res) => {
   await sendStaticFile(req, res);
 });
 
+// Initialize WebSocket server for real-time messaging
+createWSServer(server);
+
 server.listen(port, '0.0.0.0', () => {
   console.log(`AUSTWise running at http://localhost:${port}`);
   console.log(`Mode: ${useViteMiddleware ? 'Vite middleware' : 'static dist (no HMR)'}`);
@@ -1354,6 +1365,11 @@ server.listen(port, '0.0.0.0', () => {
   console.log('');
   console.log('Auth Endpoints:');
   console.log('  POST /api/auth/google                  - Verify Google OAuth JWT');
+  console.log('  GET  /api/auth/github/(login|callback) - GitHub OAuth');
+  console.log('  GET  /api/auth/discord/(login|callback)- Discord OAuth');
+  console.log('  GET  /api/auth/spotify/(login|callback)- Spotify OAuth');
+  console.log('  GET  /api/auth/facebook/(login|callback)- Facebook OAuth');
+  console.log('  GET  /api/auth/steam/(login|callback)   - Steam OpenID');
   console.log('');
   console.log('📞 Telegram Webhook Setup:');
   console.log('  To enable button clicks in Telegram, set your webhook URL using:');

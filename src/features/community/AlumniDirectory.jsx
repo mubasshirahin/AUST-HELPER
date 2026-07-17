@@ -74,21 +74,19 @@ export default function AlumniDirectory() {
   };
 
   return (
-    <div className="glass-card-static alumni-container animate-fadeInUp">
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-        <div>
-          <h2 className="section-title" style={{ fontSize: 'var(--fs-lg)', margin: 0 }}>Alumni Corner</h2>
-          <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
-            Registered AUST graduates, grouped by batch — oldest batches first
-          </p>
+    <div className="glass-card-static animate-fadeInUp">
+      {/* Header section */}
+      <div className="alumni-header-section">
+        <div className="alumni-header-left">
+          <h2>Alumni Corner</h2>
+          <p>Registered AUST graduates, grouped by batch — oldest batches first</p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="alumni-controls">
           <select
-            className="input"
+            className="input alumni-select"
             value={selectedDept}
             onChange={(e) => setSelectedDept(e.target.value)}
-            style={{ padding: '8px 12px', minWidth: '160px' }}
           >
             {departments.map((dept) => (
               <option key={dept} value={dept}>
@@ -97,7 +95,7 @@ export default function AlumniDirectory() {
             ))}
           </select>
 
-          <div className="search-box" style={{ width: '220px' }}>
+          <div className="search-box alumni-search">
             <input
               type="text"
               placeholder="Search by name / company..."
@@ -149,60 +147,45 @@ export default function AlumniDirectory() {
       )}
 
       {alumni.length === 0 ? (
-        <div className="empty-state" style={{ padding: '48px 16px', textAlign: 'center' }}>
-          <GraduationCap size={40} style={{ opacity: 0.5 }} />
-          <h3 style={{ fontSize: 'var(--fs-md)', marginTop: '12px' }}>No alumni registered yet</h3>
-          <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
-            Alumni who sign up with an alumni account will appear here, grouped by batch.
-          </p>
+        <div className="alumni-empty-state">
+          <GraduationCap size={40} style={{ opacity: 0.5, color: 'var(--text-tertiary)' }} />
+          <h3>No alumni registered yet</h3>
+          <p>Alumni who sign up with an alumni account will appear here, grouped by batch.</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="empty-state" style={{ padding: '48px 16px', textAlign: 'center' }}>
-          <Search size={36} style={{ opacity: 0.5 }} />
-          <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-secondary)', marginTop: '8px' }}>
-            No alumni match your filters.
-          </p>
+        <div className="alumni-empty-state" style={{ paddingTop: 'var(--sp-10)' }}>
+          <Search size={36} style={{ opacity: 0.5, color: 'var(--text-tertiary)' }} />
+          <p>No alumni match your filters.</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="alumni-groups">
           {batchGroups.map((group) => (
             <div key={group.label}>
               {/* Batch header */}
-              <div
-                className="flex items-center gap-2 mb-3"
-                style={{ borderBottom: '1px solid var(--border-primary)', paddingBottom: '8px' }}
-              >
-                <span className="badge badge-cyan" style={{ fontSize: '12px', padding: '4px 10px' }}>
+              <div className="alumni-batch-header">
+                <span className="badge badge-cyan alumni-batch-badge">
                   {group.label}
                 </span>
-                <span className="flex items-center gap-1" style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                <span className="alumni-batch-count">
                   <Users size={12} /> {group.members.length} alumni
                 </span>
               </div>
 
               {/* Alumni cards for this batch */}
-              <div className="grid-3">
+              <div className="alumni-grid-inner">
                 {group.members.map((al) => {
                   const isMe = al.id === user?.id;
                   const canMessage = al.openForTalk && !isMe && !isGuest;
                   return (
-                    <div
-                      key={al.id}
-                      className="glass-card"
-                      style={{
-                        padding: '16px 20px',
-                        background: 'var(--bg-input)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '12px',
-                      }}
-                    >
-                      <div className="flex gap-3 items-start">
+                    <div key={al.id} className="alumni-card">
+                      {/* Shine overlay — matches dashboard pattern */}
+                      <div className="card-shine" aria-hidden="true" />
+                      <div className="alumni-card-top">
                         <div className="avatar" style={{ width: '40px', height: '40px', flexShrink: 0 }}>
                           {al.initials}
                         </div>
-                        <div style={{ minWidth: 0 }}>
-                          <h3 style={{ fontSize: '15px', fontWeight: 'bold', margin: 0 }}>
+                        <div className="alumni-card-info">
+                          <h3 className="alumni-card-name">
                             {al.name}
                             {isMe && (
                               <span className="badge badge-cyan" style={{ fontSize: '9px', marginLeft: '6px', padding: '1px 6px' }}>
@@ -210,49 +193,44 @@ export default function AlumniDirectory() {
                               </span>
                             )}
                           </h3>
-                          <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: 0 }}>
+                          <p className="alumni-card-dept">
                             {al.department}
                             {al.graduationYear ? ` · Class of ${al.graduationYear}` : ''}
                           </p>
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                      <div className="alumni-card-details">
                         {al.designation && (
-                          <span className="flex items-center gap-1.5">
+                          <span className="alumni-card-detail">
                             <GraduationCap size={12} /> {al.designation}
                           </span>
                         )}
                         {al.company && (
-                          <span className="flex items-center gap-1.5">
+                          <span className="alumni-card-detail">
                             <Building2 size={12} /> {al.company}
                           </span>
                         )}
                         {al.email && (
-                          <a
-                            href={`mailto:${al.email}`}
-                            className="flex items-center gap-1.5"
-                            style={{ color: 'var(--accent-blue)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                          >
+                          <a href={`mailto:${al.email}`} className="alumni-card-email">
                             <Mail size={12} /> {al.email}
                           </a>
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between" style={{ gap: '8px' }}>
+                      <div className="alumni-card-footer">
                         {al.openForTalk ? (
-                          <span className="flex items-center gap-1" style={{ fontSize: '10px', color: 'var(--accent-cyan)', fontWeight: 600 }}>
+                          <span className="alumni-card-status alumni-card-status-online">
                             <Radio size={11} /> Open for Talk
                           </span>
                         ) : (
-                          <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>Not available</span>
+                          <span className="alumni-card-status alumni-card-status-offline">Not available</span>
                         )}
 
                         {canMessage ? (
                           <button
                             type="button"
                             className="btn btn-secondary btn-sm"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                             onClick={() => handleMessage(al)}
                           >
                             <MessageCircle size={13} /> Message

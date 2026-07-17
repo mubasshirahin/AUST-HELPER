@@ -38,7 +38,7 @@ function resolvePeer(peerId) {
   return { id: peerId, name: 'AUST User', initials: 'AU', role: '', department: '' };
 }
 
-export function sendMessage(fromId, toId, text) {
+export function sendMessage(fromId, toId, text, replyTo) {
   const clean = String(text || '').trim();
   if (!clean || !fromId || !toId || fromId === toId) return null;
 
@@ -51,6 +51,15 @@ export function sendMessage(fromId, toId, text) {
     timestamp: new Date().toISOString(),
     read: false,
   };
+
+  // If replying to a message, attach the reply metadata
+  if (replyTo && replyTo.messageId) {
+    message.replyTo = {
+      messageId: replyTo.messageId,
+      text: String(replyTo.text || '').slice(0, 120),
+      fromId: replyTo.fromId || '',
+    };
+  }
 
   const messages = loadMessages();
   messages.push(message);
@@ -119,6 +128,81 @@ export function markConversationRead(userId, peerId) {
 
 export function getUnreadCount(userId) {
   return loadMessages().filter((m) => m.toId === userId && !m.read).length;
+}
+
+/* ─── Message Deletion & Editing ─── */
+
+/** Soft-delete a message. Returns the updated message or null if not found. */
+export function deleteMessage(messageId) {
+  const messages = loadMessages();
+  const msg = messages.find((m) => m.id === messageId);
+  if (!msg) return null;
+
+  msg.deleted = true;
+  msg.text = '';
+  msg.edited = false;
+  saveMessages(messages);
+  return { id: msg.id, conversationId: msg.conversationId, deleted: true };
+}
+
+/** Edit a message. Returns the updated message or null if not found/deleted. */
+export function editMessage(messageId, newText) {
+  const clean = String(newText || '').trim();
+  if (!clean) return null;
+
+  const messages = loadMessages();
+  const msg = messages.find((m) => m.id === messageId);
+  if (!msg || msg.deleted) return null;
+
+  msg.text = clean;
+  msg.edited = true;
+  msg.editedAt = new Date().toISOString();
+  saveMessages(messages);
+  return { id: msg.id, text: msg.text, edited: true, editedAt: msg.editedAt, conversationId: msg.conversationId };
+}
+
+/* ─── Message Reactions ─── */
+
+const DEFAULT_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+
+/** Add or remove a reaction from a message. Returns the updated reactions map. */
+export function toggleReaction(messageId, userId, emoji) {
+  const messages = loadMessages();
+  const msg = messages.find((m) => m.id === messageId);
+  if (!msg) return null;
+
+  // Ensure reactions object exists
+  if (!msg.reactions) msg.reactions = {};
+  if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
+
+  // Toggle user's reaction
+  const idx = msg.reactions[emoji].indexOf(userId);
+  if (idx > -1) {
+    msg.reactions[emoji].splice(idx, 1);
+    if (msg.reactions[emoji].length === 0) delete msg.reactions[emoji];
+  } else {
+    msg.reactions[emoji].push(userId);
+  }
+
+  saveMessages(messages);
+  return { ...msg.reactions };
+}
+
+/** Search messages within a conversation for a query. Returns array of matching message IDs. */
+export function searchMessages(userId, peerId, query) {
+  const cleanQuery = String(query || '').trim().toLowerCase();
+  if (!cleanQuery || !userId || !peerId) return [];
+
+  const convId = getConversationId(userId, peerId);
+  return loadMessages()
+    .filter((m) => m.conversationId === convId && m.text.toLowerCase().includes(cleanQuery))
+    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+    .map((m) => m.id);
+}
+
+/** Get the list of available default emoji reactions. */
+export function getDefaultReactions() {
+  return DEFAULT_REACTIONS;
 }
 
 export function formatMessageTime(iso) {

@@ -7,7 +7,7 @@ import {
   LayoutDashboard, CalendarDays, BarChart3, BookOpen, MapPin, Users, ShoppingBag, Settings, MessageSquare,
   LogIn, Shield, Eye, Megaphone, Utensils,
   Library, FileText, FolderOpen, FileSpreadsheet, Map, ScrollText,
-  ChevronLeft, ChevronRight, ExternalLink, Moon
+  ChevronLeft, ChevronRight, ExternalLink, Moon, Crown
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -23,9 +23,10 @@ const navItems = [
   { path: '/cheatsheets', label: 'Cheatsheets', icon: ScrollText },
   { path: '/settings', label: 'Settings', icon: Settings },
   { path: '/shadow', label: 'Shadow', icon: Moon },
+  { path: '/pro', label: 'AUSTWise Pro', icon: Crown },
   { path: '/workspace', label: 'Workspace', icon: ExternalLink },
   { id: 'toggle', label: 'Collapse', icon: ChevronLeft },
-];
+  ];
 
 export default function Sidebar({ collapsed, onToggle }) {
   const { user, isAuthenticated } = useAuth();
