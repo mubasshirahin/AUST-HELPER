@@ -233,9 +233,9 @@ function StudyStreak() {
 
 const focusModes = [
   { id: 'stats', label: 'Quick Stats', icon: TrendingUp, desc: 'CGPA & metrics', color: 'blue' },
-  { id: 'routine', label: 'Routine Schedule', icon: CalendarDays, desc: 'Weekly timetable', color: 'cyan' },
-  { id: 'calendar', label: 'Academic Calendar', icon: Calendar, desc: '14-week view', color: 'purple' },
-  { id: 'exams', label: 'Exam Tracker', icon: BookOpen, desc: 'Quiz, Mid & Final', color: 'amber' },
+  { id: 'routine', label: 'Routine', icon: CalendarDays, desc: 'Weekly timetable', color: 'cyan' },
+  { id: 'calendar', label: 'Semester View', icon: Calendar, desc: '14-week view', color: 'purple' },
+  { id: 'exams', label: 'Zero Hour', icon: BookOpen, desc: 'Quiz, Mid & Final', color: 'amber' },
   { id: 'attendance', label: 'Attendance', icon: Percent, desc: 'Semester progress', color: 'emerald' },
 ];
 
@@ -515,15 +515,6 @@ export default function DashboardPage() {
 
       {isVisible('routine') && (
         <section className="dash-section-group">
-          <div className="section-header">
-            <h2 className="section-title">
-              <span className="icon" style={{ background: 'var(--accent-cyan-glow)', color: 'var(--accent-cyan)' }}>
-                <CalendarDays size={16} />
-              </span>
-              Routine Schedule
-            </h2>
-            <p className="section-subtitle">Weekly class timetable &amp; semester calendar</p>
-          </div>
           <div className="dash-section">
             <WeeklyPlanner />
           </div>
@@ -534,12 +525,11 @@ export default function DashboardPage() {
         <section className="dash-section-group">
           <div className="section-header">
             <h2 className="section-title">
-              <span className="icon" style={{ background: 'var(--accent-purple-glow)', color: 'var(--accent-purple)' }}>
-                <Calendar size={16} />
+              <span className="icon" style={{ background: 'var(--accent-purple-glow)', color: 'var(--accent-purple)', width: 28, height: 28 }}>
+                <Calendar size={8} />
               </span>
-              Academic Calendar
+              <span style={{ fontSize: 'var(--fs-sm)' }}>Semester View</span>
             </h2>
-            <p className="section-subtitle">14-week schedule with tasks &amp; events</p>
           </div>
           <div className="dash-section">
             <WeekSchedule />
@@ -555,7 +545,7 @@ export default function DashboardPage() {
                 <span className="icon" style={{ background: 'var(--accent-amber-glow)', color: 'var(--accent-amber)' }}>
                   <BookOpen size={16} />
                 </span>
-                Exam Tracker
+                Zero Hour
               </h2>
               <p className="section-subtitle">Quiz, Mid &amp; Final exam dates &amp; syllabus</p>
             </div>
@@ -574,6 +564,7 @@ export default function DashboardPage() {
                   </span>
                   Daily Flow
                 </h2>
+                <p className="section-subtitle">Stay productive and attend class or study</p>
               </div>
               <div className="dash-section">
                 <RoutineCard />

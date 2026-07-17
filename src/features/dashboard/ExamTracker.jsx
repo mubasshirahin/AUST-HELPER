@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useRoutine } from '../../context/RoutineContext';
 import { useAuth } from '../../context/AuthContext';
-import { BookOpen, PenLine, Save, ChevronDown, FileText } from 'lucide-react';
+import { BookOpen, PenLine, X, Check } from 'lucide-react';
 import './ExamTracker.css';
 
 const STORAGE_KEY = 'aust-exam-tracker';
@@ -10,6 +10,7 @@ const EXAM_SLOTS = [
   { key: 'quiz1', label: 'Quiz 1', color: 'var(--accent-blue)', glow: 'var(--accent-blue-glow)' },
   { key: 'quiz2', label: 'Quiz 2', color: 'var(--accent-orange)', glow: 'var(--accent-orange-glow)' },
   { key: 'quiz3', label: 'Quiz 3', color: 'var(--accent-purple)', glow: 'var(--accent-purple-glow)' },
+  { key: 'quiz4', label: 'Quiz 4', color: 'var(--accent-emerald)', glow: 'var(--accent-emerald-glow)' },
   { key: 'mid', label: 'Mid', color: 'var(--accent-amber)', glow: 'var(--accent-amber-glow)' },
   { key: 'final', label: 'Final', color: 'var(--accent-rose)', glow: 'var(--accent-rose-glow)' },
 ];
@@ -28,62 +29,30 @@ function getSlotState(dateStr) {
 
 function formatDate(dateStr) {
   if (!dateStr) return '\u2014';
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function SlotCard({ slot, slotData, isEditing, editDate, editSyllabus, onDateChange, onSyllabusChange, isExpanded, onToggle, courseCode }) {
+function SlotCard({ slot, slotData, onViewDetails, courseCode, courseName }) {
   const state = getSlotState(slotData?.date);
 
+  const handleClick = () => onViewDetails(slot.key, slot.label, slotData?.date, slotData?.syllabus, courseCode, courseName);
+
   return (
-    <div className="exam-slot" style={{ '--slot-clr': slot.color }}>
+    <div
+      className="exam-slot"
+      style={{ '--slot-clr': slot.color }}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter') handleClick(); }}
+    >
       <div className="exam-slot-header">
         <span className="exam-slot-name">{slot.label}</span>
-        {!isEditing && (
-          <span className={`exam-slot-state ${state.cls}`}>{state.label}</span>
-        )}
+        <span className={`exam-slot-state ${state.cls}`}>{state.label}</span>
       </div>
-      {isEditing ? (
-        <div className="exam-slot-edit">
-          <input
-            type="date"
-            value={editDate || ''}
-            onChange={(e) => onDateChange(slot.key, e.target.value)}
-            className="exam-slot-date-input"
-          />
-          <textarea
-            value={editSyllabus || ''}
-            onChange={(e) => onSyllabusChange(slot.key, e.target.value)}
-            className="exam-slot-syllabus-input"
-            placeholder="Syllabus topics, chapters, page numbers..."
-            rows={4}
-            style={{ minHeight: '72px', padding: '8px 10px', fontSize: '11px' }}
-          />
-        </div>
-      ) : (
-        <div className="exam-slot-display">
-          <span className="exam-slot-date">{formatDate(slotData?.date)}</span>
-          {slotData?.syllabus && (
-            <div
-              className={`exam-slot-syllabus ${isExpanded ? 'expanded' : ''}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => onToggle(courseCode, slot.key)}
-              onKeyDown={(e) => { if (e.key === ' ') { e.preventDefault(); onToggle(courseCode, slot.key); } }}
-            >
-              <div className="exam-slot-syllabus-header">
-                <FileText size={11} />
-                <span>Syllabus</span>
-                <ChevronDown size={11} className={`exam-slot-chevron ${isExpanded ? 'open' : ''}`} />
-              </div>
-              {isExpanded && (
-                <div className="exam-slot-syllabus-body">
-                  {slotData.syllabus}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+      <div className="exam-slot-display">
+        <span className="exam-slot-date">{formatDate(slotData?.date)}</span>
+      </div>
     </div>
   );
 }
@@ -95,11 +64,7 @@ export default function ExamTracker() {
     try { const stored = localStorage.getItem(STORAGE_KEY); return stored ? JSON.parse(stored) : {}; }
     catch { return {}; }
   });
-  const [editingCourse, setEditingCourse] = useState(null);
-  const [editDates, setEditDates] = useState({});
-  const [editSyllabus, setEditSyllabus] = useState({});
-  const [expandedSlots, setExpandedSlots] = useState({});
-  const [isSaving, setIsSaving] = useState(false);
+  const [detailModal, setDetailModal] = useState(null); // { slotKey, slotLabel, date, syllabus, courseCode, courseName, isEditing, editDate, editSyllabus }
 
   const canEdit = user?.role === 'admin' || user?.role === 'cr' || user?.role === 'sr';
 
@@ -116,36 +81,22 @@ export default function ExamTracker() {
     return courses;
   }, [routine]);
 
-  const handleEdit = (course) => {
-    setEditingCourse(course.code);
-    const courseData = examData[course.code] || {};
-    const dates = {}; const syllabus = {};
-    EXAM_SLOTS.forEach(slot => {
-      dates[slot.key] = courseData[slot.key]?.date || '';
-      syllabus[slot.key] = courseData[slot.key]?.syllabus || '';
-    });
-    setEditDates(dates);
-    setEditSyllabus(syllabus);
+  const openDetails = (slotKey, slotLabel, date, syllabus, courseCode, courseName) => {
+    setDetailModal({ slotKey, slotLabel, date, syllabus, courseCode, courseName, isEditing: false, editDate: date || '', editSyllabus: syllabus || '' });
   };
 
-  const handleSave = (courseCode) => {
-    setIsSaving(true);
-    const courseData = examData[courseCode] || {};
-    const updated = { ...examData, [courseCode]: {} };
-    EXAM_SLOTS.forEach(slot => {
-      updated[courseCode][slot.key] = {
-        date: editDates[slot.key] || courseData[slot.key]?.date || '',
-        syllabus: editSyllabus[slot.key] || courseData[slot.key]?.syllabus || ''
-      };
-    });
+  const handleSaveSingleSlot = () => {
+    if (!detailModal) return;
+    const { courseCode, slotKey, editDate, editSyllabus } = detailModal;
+    const updated = { ...examData };
+    if (!updated[courseCode]) updated[courseCode] = {};
+    updated[courseCode][slotKey] = {
+      date: editDate || '',
+      syllabus: editSyllabus || ''
+    };
     setExamData(updated);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    setEditingCourse(null);
-    setTimeout(() => setIsSaving(false), 300);
-  };
-
-  const toggleSyllabus = (courseCode, slotKey) => {
-    setExpandedSlots(prev => ({ ...prev, [`${courseCode}-${slotKey}`]: !prev[`${courseCode}-${slotKey}`] }));
+    setDetailModal(null);
   };
 
   if (theoryCourses.length === 0) {
@@ -162,22 +113,104 @@ export default function ExamTracker() {
 
   return (
     <div className="exam-tracker animate-fadeIn">
+      {/* ─── Detail Overlay ─── */}
+      {detailModal && (
+        <div className="modal-overlay" onClick={() => setDetailModal(null)}>
+          <div className="modal glass-card-static" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px', width: '90%', padding: '24px', margin: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div>
+                <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--accent-blue)', fontWeight: 'var(--fw-semibold)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{detailModal.slotLabel}</span>
+                <h3 style={{ fontSize: 'var(--fs-lg)', fontWeight: 'var(--fw-bold)', margin: '4px 0 0' }}>{detailModal.courseCode}</h3>
+                <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-secondary)', margin: '2px 0 0' }}>{detailModal.courseName}</p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {canEdit && !detailModal.isEditing && (
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => setDetailModal(prev => ({ ...prev, isEditing: true }))}
+                  >
+                    <PenLine size={12} /> Edit
+                  </button>
+                )}
+                {canEdit && detailModal.isEditing && (
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={handleSaveSingleSlot}
+                  >
+                    <Check size={13} /> Done
+                  </button>
+                )}
+                <button className="btn btn-ghost btn-icon" onClick={() => setDetailModal(null)}>
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {detailModal.isEditing ? (
+              <>
+                <div style={{ marginBottom: '14px' }}>
+                  <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Date</span>
+                  <input
+                    type="date"
+                    value={detailModal.editDate || ''}
+                    onChange={(e) => setDetailModal(prev => ({ ...prev, editDate: e.target.value }))}
+                    style={{
+                      width: '100%', height: '38px', padding: '6px 12px', fontSize: 'var(--fs-sm)',
+                      borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-primary)',
+                      background: 'var(--bg-input)', color: 'var(--text-primary)', outline: 'none'
+                    }}
+                  />
+                </div>
+                <div>
+                  <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Syllabus</span>
+                  <textarea
+                    value={detailModal.editSyllabus || ''}
+                    onChange={(e) => setDetailModal(prev => ({ ...prev, editSyllabus: e.target.value }))}
+                    placeholder="Syllabus topics, chapters, page numbers..."
+                    rows={6}
+                    style={{
+                      width: '100%', padding: '10px 12px', fontSize: 'var(--fs-sm)', lineHeight: '1.6',
+                      borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-primary)',
+                      background: 'var(--bg-input)', color: 'var(--text-primary)', resize: 'vertical',
+                      fontFamily: 'inherit', outline: 'none'
+                    }}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', padding: '14px 16px', marginBottom: '16px' }}>
+                  <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)', display: 'block', marginBottom: '4px' }}>Date</span>
+                  <span style={{ fontSize: 'var(--fs-md)', fontWeight: 'var(--fw-bold)', color: 'var(--text-primary)' }}>{formatDate(detailModal.date)}</span>
+                </div>
+                {detailModal.syllabus ? (
+                  <div>
+                    <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Syllabus</span>
+                    <div style={{ fontSize: 'var(--fs-base)', lineHeight: '1.7', color: 'var(--text-primary)', whiteSpace: 'pre-wrap', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', padding: '16px' }}>
+                      {detailModal.syllabus}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-tertiary)', fontSize: 'var(--fs-sm)' }}>
+                    No syllabus added yet
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {theoryCourses.map((course) => {
         const courseExams = examData[course.code] || {};
-        const isEditing = editingCourse === course.code;
 
         return (
-          <div key={course.code} className={`exam-course-card${isEditing ? ' editing' : ''}`}>
+          <div key={course.code} className="exam-course-card">
             <div className="exam-course-header">
               <div className="exam-course-title">
                 <span className="exam-course-code" style={{ color: course.color }}>{course.code}</span>
                 <span className="exam-course-name">{course.name}</span>
               </div>
-              {canEdit && !isEditing && (
-                <button className="exam-edit-trigger" onClick={() => handleEdit(course)} aria-label="Edit exams">
-                  <PenLine size={13} />
-                </button>
-              )}
             </div>
 
             <div className="exam-slots-grid">
@@ -188,29 +221,13 @@ export default function ExamTracker() {
                     key={slot.key}
                     slot={slot}
                     slotData={slotData}
-                    isEditing={isEditing}
-                    editDate={editDates[slot.key]}
-                    editSyllabus={editSyllabus[slot.key]}
-                    onDateChange={(key, val) => setEditDates(prev => ({ ...prev, [key]: val }))}
-                    onSyllabusChange={(key, val) => setEditSyllabus(prev => ({ ...prev, [key]: val }))}
-                    isExpanded={expandedSlots[`${course.code}-${slot.key}`]}
-                    onToggle={toggleSyllabus}
+                    onViewDetails={openDetails}
                     courseCode={course.code}
+                    courseName={course.name}
                   />
                 );
               })}
             </div>
-
-            {isEditing && (
-              <div className="exam-edit-actions-bar">
-                <button className="exam-save-btn" onClick={() => handleSave(course.code)} disabled={isSaving}>
-                  <Save size={13} /> {isSaving ? 'Saved' : 'Save'}
-                </button>
-                <button className="exam-cancel-btn" onClick={() => setEditingCourse(null)}>
-                  Cancel
-                </button>
-              </div>
-            )}
           </div>
         );
       })}

@@ -25,6 +25,7 @@ import {
   getStats,
   isRegistered,
   saveAttendanceRecord,
+  saveAttendanceRecordForDate,
   getTodayAttendanceRecord,
   getUserAttendanceRecords,
   getAttendanceSummary
@@ -36,7 +37,7 @@ import {
 } from './libraryDB.mjs';
 import { initializeDatabase, resetDatabase, query, sql } from './db.mjs';
 import { handleOAuthRequest } from './socialOAuth.mjs';
-import { createWSServer } from './wsServer.mjs';
+import { createWSServer, broadcastToAll } from './wsServer.mjs';
 
 // Helper function to answer callback query
 async function answerCallbackQueryFn(botToken, callbackQueryId, text) {
@@ -741,6 +742,71 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 500, {
         success: false,
         error: error.message || 'Failed to record attendance.',
+      });
+    }
+    return;
+  }
+
+  // ========== Attendance Sync Endpoint (Telegram Bot Webhook) ==========
+  // Called by the Telegram Bot when a student marks Present/Absent.
+  // Payload: { studentId, courseId, date, status }
+  //   studentId -> Telegram Chat ID
+  //   courseId  -> Course code (e.g. 'CSE101')
+  //   date      -> YYYY-MM-DD string
+  //   status    -> 'Present' | 'Absent'
+  if (req.url === '/api/attendance/telegram-sync' && req.method === 'POST') {
+    try {
+      const { studentId, courseId, date, status } = await readJsonBody(req);
+
+      if (!studentId || !courseId || !date || !status) {
+        sendJson(res, 400, {
+          success: false,
+          error: 'studentId, courseId, date, and status are required.'
+        });
+        return;
+      }
+
+      const attended = status.toLowerCase() === 'present';
+
+      // Save to database with the specific date from Telegram payload
+      // Uses saveAttendanceRecordForDate to support backdated entries
+      const record = await saveAttendanceRecordForDate(studentId, courseId, attended, date);
+
+      if (record) {
+        // Broadcast real-time update to all connected WebSocket clients
+        broadcastToAll({
+          type: 'attendance-sync',
+          payload: {
+            studentId,
+            courseId,
+            date,
+            attended,
+            timestamp: new Date().toISOString(),
+          }
+        });
+
+        console.log(`📡 Attendance synced: ${courseId} for student ${studentId} = ${attended ? 'Present' : 'Absent'} on ${date}`);
+
+        sendJson(res, 200, {
+          success: true,
+          record: {
+            chatId: studentId,
+            course: courseId,
+            attended,
+            recordDate: date,
+          }
+        });
+      } else {
+        sendJson(res, 404, {
+          success: false,
+          error: 'Failed to save attendance record — user not found or DB error.'
+        });
+      }
+    } catch (error) {
+      console.error('❌ Attendance sync error:', error.message);
+      sendJson(res, 500, {
+        success: false,
+        error: error.message || 'Attendance sync failed.'
       });
     }
     return;

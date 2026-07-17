@@ -25,10 +25,6 @@
   border-color: color-mix(in srgb, var(--accent-blue) 28%, var(--border-primary));
   box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--accent-blue) 14%, transparent);
 }
-.exam-course-card.editing {
-  border-color: var(--accent-blue);
-  background: color-mix(in srgb, var(--accent-blue) 6%, var(--bg-card));
-}
 
 .exam-course-header {
   display: flex;
@@ -62,30 +58,11 @@
   white-space: nowrap;
 }
 
-.exam-edit-trigger {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border-primary);
-  background: transparent;
-  color: var(--text-tertiary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  flex-shrink: 0;
-}
-.exam-edit-trigger:hover {
-  border-color: var(--accent-blue);
-  background: var(--accent-blue-glow);
-  color: var(--accent-blue);
-}
 
 /* ─── Slots Grid ─── */
 .exam-slots-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
 
@@ -106,6 +83,19 @@
   background: var(--bg-input);
   border: 1px solid var(--border-primary);
   outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease,
+              box-shadow 0.2s ease,
+              transform 0.2s ease,
+              background 0.2s ease;
+}
+
+.exam-slot:hover {
+  border-color: color-mix(in srgb, var(--slot-clr, var(--accent-blue)) 40%, var(--border-primary));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--slot-clr, var(--accent-blue)) 12%, transparent),
+              0 4px 16px -4px color-mix(in srgb, var(--slot-clr, var(--accent-blue)) 16%, transparent);
+  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--slot-clr, var(--accent-blue)) 6%, var(--bg-input));
 }
 
 .exam-slot:focus {
@@ -113,7 +103,8 @@
 }
 
 .exam-slot:focus-visible {
-  outline: none;
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
 }
 
 .exam-slot-header {
@@ -174,129 +165,7 @@
   border-bottom: none;
 }
 
-/* ─── Syllabus Toggle ─── */
-.exam-slot-syllabus {
-  cursor: pointer;
-  user-select: none;
-  outline: none;
-}
 
-.exam-slot-syllabus:focus {
-  outline: none;
-}
-
-.exam-slot-syllabus:focus-visible {
-  outline: none;
-}
-
-.exam-slot-syllabus-header {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 9px;
-  color: var(--text-tertiary);
-  padding: 4px 6px;
-  border-radius: 4px;
-  background: var(--bg-secondary);
-}
-.exam-slot-syllabus-header:hover {
-  background: var(--bg-card-hover);
-}
-
-.exam-slot-chevron {
-  margin-left: auto;
-  transition: transform 0.2s ease;
-}
-.exam-slot-chevron.open {
-  transform: rotate(180deg);
-}
-
-.exam-slot-syllabus-body {
-  margin-top: 6px;
-  padding: 6px 8px;
-  font-size: 9px;
-  line-height: 1.5;
-  color: var(--text-secondary);
-  background: var(--bg-card);
-  border-radius: 4px;
-  border: 1px solid var(--border-secondary);
-  animation: fadeIn 0.2s ease;
-}
-
-/* ─── Edit Mode ─── */
-.exam-slot-edit {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.exam-slot-date-input {
-  width: 100%;
-  height: 30px;
-  padding: 4px 8px;
-  font-size: 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-primary);
-  background: var(--bg-card);
-  color: var(--text-primary);
-}
-
-.exam-slot-syllabus-input {
-  width: 100%;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-primary);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  font-family: inherit;
-  resize: vertical;
-}
-
-/* ─── Edit Actions Bar ─── */
-.exam-edit-actions-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: var(--sp-4);
-  padding-top: var(--sp-3);
-  border-top: 1px solid var(--border-secondary);
-}
-
-.exam-save-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 14px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: var(--accent-blue);
-  color: #fff;
-  font-size: 11px;
-  font-weight: var(--fw-semibold);
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-.exam-save-btn:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-.exam-save-btn:hover:not(:disabled) {
-  opacity: 0.85;
-}
-
-.exam-cancel-btn {
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-primary);
-  background: transparent;
-  color: var(--text-tertiary);
-  font-size: 11px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.exam-cancel-btn:hover {
-  border-color: var(--accent-rose);
-  color: var(--accent-rose);
-}
 
 /* ─── Empty State ─── */
 .exam-empty {

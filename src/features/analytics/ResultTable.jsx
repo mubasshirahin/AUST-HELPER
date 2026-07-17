@@ -419,8 +419,8 @@ export default function ResultTable({ onResultsChange }) {
               style={{
                 border: 'none', cursor: 'pointer', borderRadius: '6px', padding: '4px 12px',
                 fontSize: '11px', fontWeight: 'bold', whiteSpace: 'nowrap',
-                background: expandedSemester === sem.semester ? 'var(--accent-blue)' : 'rgba(255,255,255,0.04)',
-                color: expandedSemester === sem.semester ? '#fff' : hasReal ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                background: expandedSemester === sem.semester ? 'var(--accent-amber)' : 'rgba(255,255,255,0.04)',
+                color: expandedSemester === sem.semester ? '#0d0d0d' : hasReal ? 'var(--text-primary)' : 'var(--text-tertiary)',
                 opacity: hasReal ? 1 : 0.45,
                 transition: 'all 0.15s'
               }}>
@@ -483,11 +483,11 @@ export default function ResultTable({ onResultsChange }) {
                 <div className="flex items-center gap-6" style={{ marginRight: '16px' }}>
                   <div>
                     <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', display: 'block', textAlign: 'right' }}>SGPA</span>
-                    <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-purple)' }}>{displaySemester.sgpa ?? '—'}</span>
+                    <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-cyan)' }}>{displaySemester.sgpa ?? '—'}</span>
                   </div>
                   <div>
                     <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', display: 'block', textAlign: 'right' }}>CGPA</span>
-                    <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-blue)' }}>{displaySemester.cgpa ?? '—'}</span>
+                    <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-amber)' }}>{displaySemester.cgpa ?? '—'}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2" style={{ marginRight: '12px' }} onClick={(event) => event.stopPropagation()}>
@@ -685,11 +685,11 @@ export default function ResultTable({ onResultsChange }) {
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '24px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                     <div style={{ textAlign: 'right' }}>
                       <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', display: 'block', fontWeight: 'var(--fw-semibold)' }}>SGPA</span>
-                      <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-purple)' }}>{displaySemester.sgpa ?? '—'}</span>
+                      <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-cyan)' }}>{displaySemester.sgpa ?? '—'}</span>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', display: 'block', fontWeight: 'var(--fw-semibold)' }}>CGPA</span>
-                      <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-blue)' }}>{displaySemester.cgpa ?? '—'}</span>
+                      <span style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-sm)', color: 'var(--accent-amber)' }}>{displaySemester.cgpa ?? '—'}</span>
                     </div>
                   </div>
                   {isEditing && (
@@ -734,8 +734,8 @@ export default function ResultTable({ onResultsChange }) {
                     setShowTemplateSelectionModal(false);
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--accent-blue)';
-                    e.currentTarget.style.background = 'var(--accent-blue-glow)';
+                    e.currentTarget.style.borderColor = 'var(--accent-amber)';
+                    e.currentTarget.style.background = 'color-mix(in srgb, var(--accent-amber) 8%, transparent)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = 'var(--border-primary)';
@@ -751,7 +751,7 @@ export default function ResultTable({ onResultsChange }) {
                         <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>{template.courses.length} courses</span>
                       </div>
                     </div>
-                    <div style={{ fontSize: '9px', color: 'var(--accent-cyan)' }}>
+                    <div style={{ fontSize: '9px', color: 'var(--accent-amber)' }}>
                       Click to load
                     </div>
                   </div>
@@ -796,8 +796,8 @@ export default function ResultTable({ onResultsChange }) {
                     }}
                     onClick={() => handleLoadTemplate(template)}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = 'var(--accent-blue)';
-                      e.currentTarget.style.background = 'var(--accent-blue-glow)';
+                      e.currentTarget.style.borderColor = 'var(--accent-amber)';
+                      e.currentTarget.style.background = 'color-mix(in srgb, var(--accent-amber) 8%, transparent)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = 'var(--border-primary)';
@@ -813,14 +813,14 @@ export default function ResultTable({ onResultsChange }) {
                           <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>{template.year}</span>
                         </div>
                       </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
-                          {template.courses.length} courses
-                        </span>
-                        <div style={{ fontSize: '9px', color: 'var(--accent-cyan)', marginTop: '2px' }}>
-                          Click to load
+                        <div style={{ textAlign: 'right' }}>
+                          <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
+                            {template.courses.length} courses
+                          </span>
+                          <div style={{ fontSize: '9px', color: 'var(--accent-amber)', marginTop: '2px' }}>
+                            Click to load
+                          </div>
                         </div>
-                      </div>
                     </div>
                   </div>
                 ))}

@@ -429,6 +429,18 @@ export function createWSServer(httpServer) {
   return wss;
 }
 
+/**
+ * Broadcast a JSON message to ALL connected WebSocket clients.
+ * Used for real-time updates like attendance sync from Telegram.
+ */
+export function broadcastToAll(data) {
+  for (const [, clients] of userClients) {
+    for (const ws of clients) {
+      sendTo(ws, data);
+    }
+  }
+}
+
 /* ─── Internal Helpers ─── */
 
 function sendTo(ws, data) {

@@ -14,7 +14,10 @@ export default function WeekSchedule() {
     const stored = localStorage.getItem('aust-semester-start');
     return stored || new Date().toISOString().split('T')[0];
   });
-  const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [currentDate, setCurrentDate] = useState(() => {
+    const stored = localStorage.getItem('aust-semester-start');
+    return stored ? new Date(stored + 'T00:00:00') : new Date();
+  });
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -73,6 +76,7 @@ export default function WeekSchedule() {
   // Save semester start date
   const saveSemesterStart = (date) => {
     setSemesterStart(date);
+    setCurrentDate(new Date(date + 'T00:00:00'));
     localStorage.setItem('aust-semester-start', date);
   };
 
@@ -96,7 +100,7 @@ export default function WeekSchedule() {
 
   const getWeekDates = (refDate) => {
     const startOfWeek = new Date(refDate);
-    startOfWeek.setDate(refDate.getDate() - refDate.getDay());
+    startOfWeek.setDate(refDate.getDate() - ((refDate.getDay() - 5 + 7) % 7));
     const dates = [];
     for (let i = 0; i < 7; i++) {
       const date = new Date(startOfWeek);
@@ -113,7 +117,7 @@ export default function WeekSchedule() {
     const month = currentDate.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const startPad = firstDay.getDay();
+    const startPad = (firstDay.getDay() - 5 + 7) % 7;
     const days = [];
     for (let i = 0; i < startPad; i++) days.push(null);
     for (let d = 1; d <= lastDay.getDate(); d++) days.push(new Date(year, month, d));
@@ -121,11 +125,32 @@ export default function WeekSchedule() {
   };
 
   const getCurrentWeekNum = () => {
+    // Normalize both Fridays to midnight so diff is always exact 7-day multiples
+    const toFriday = (d) => {
+      const f = new Date(d);
+      f.setDate(d.getDate() - ((d.getDay() - 5 + 7) % 7));
+      return f;
+    };
     const startDate = new Date(semesterStart);
-    const diff = currentDate.getTime() - startDate.getTime();
-    const weekNum = Math.floor(diff / (7 * 24 * 60 * 60 * 1000)) + 1;
-    return Math.max(1, Math.min(14, weekNum));
+    const weekFriday = new Date(weekDates[0]);
+    weekFriday.setHours(0, 0, 0, 0);
+    const semFriday = toFriday(startDate);
+    semFriday.setHours(0, 0, 0, 0);
+    const diff = weekFriday.getTime() - semFriday.getTime();
+    return Math.floor(diff / (7 * 24 * 60 * 60 * 1000)) + 1;
   };
+
+  const getWeekLabel = () => {
+    const raw = Math.max(1, Math.min(17, getCurrentWeekNum()));
+    if (raw <= 7) return `Week ${raw}`;
+    if (raw === 8) return 'Mid Break';
+    if (raw === 9) return 'Mid Exam';
+    if (raw <= 16) return `Week ${raw - 2}`;
+    return 'PL';
+  };
+
+  const canGoNext = () => getCurrentWeekNum() < 17;
+  const canGoPrev = () => getCurrentWeekNum() > 1;
 
   // Load tasks from localStorage
   const [tasks, setTasks] = useState([]);
@@ -469,7 +494,7 @@ export default function WeekSchedule() {
             const d = new Date(currentDate);
             if (viewMode === 'daily') d.setDate(d.getDate() - 1);
             else if (viewMode === 'monthly') d.setMonth(d.getMonth() - 1);
-            else d.setDate(d.getDate() - 7);
+            else if (canGoPrev()) d.setDate(d.getDate() - 7);
             setCurrentDate(d);
           }}>
             <ChevronLeft size={20} />
@@ -479,13 +504,13 @@ export default function WeekSchedule() {
               ? currentDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })
               : viewMode === 'monthly'
                 ? currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-                : `Week ${getCurrentWeekNum()}`}
+                : getWeekLabel()}
           </span>
           <button className="schedule-nav-btn" onClick={() => {
             const d = new Date(currentDate);
             if (viewMode === 'daily') d.setDate(d.getDate() + 1);
             else if (viewMode === 'monthly') d.setMonth(d.getMonth() + 1);
-            else d.setDate(d.getDate() + 7);
+            else if (canGoNext()) d.setDate(d.getDate() + 7);
             setCurrentDate(d);
           }}>
             <ChevronRight size={20} />
@@ -542,7 +567,7 @@ export default function WeekSchedule() {
       })() : viewMode === 'monthly' ? (
         <>
           <div className="schedule-month-grid" style={{ marginBottom: '12px' }}>
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            {['Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu'].map(day => (
               <div key={day} className="schedule-month-header">{day}</div>
             ))}
           </div>
@@ -578,7 +603,7 @@ export default function WeekSchedule() {
       ) : (
         <>
           <div className="schedule-grid" style={{ marginBottom: '12px' }}>
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            {['Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu'].map(day => (
               <div key={day} className="schedule-day-header">{day}</div>
             ))}
           </div>
@@ -688,7 +713,7 @@ export default function WeekSchedule() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                   <span style={{ fontSize: 'var(--fs-xs)' }}>📊</span>
                   <span style={{ fontSize: 'var(--fs-xs)', fontWeight: 'var(--fw-semibold)', color: 'var(--accent-blue)' }}>
-                    Week {getCurrentWeekNum()}
+                    {getWeekLabel()}
                   </span>
                 </div>
                 <p style={{ margin: 0, fontSize: 'var(--fs-xs)', fontWeight: 'var(--fw-bold)' }}>

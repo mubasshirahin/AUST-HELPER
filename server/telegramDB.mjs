@@ -67,6 +67,27 @@ export async function saveAttendanceRecord(chatId, courseCode, attended) {
   return r.recordset[0] || null;
 }
 
+/**
+ * Save an attendance record for a specific date (for Telegram sync with backdated entries).
+ * Uses the provided date string (YYYY-MM-DD) instead of GETDATE().
+ */
+export async function saveAttendanceRecordForDate(chatId, courseCode, attended, recordDate) {
+  const r = await query(`
+    MERGE AttendanceRecords AS target
+    USING (SELECT @chatId AS ChatId, @course AS CourseCode, @recordDate AS RecordDate) AS source
+    ON target.ChatId = source.ChatId AND target.CourseCode = source.CourseCode AND target.RecordDate = source.RecordDate
+    WHEN MATCHED THEN UPDATE SET Attended = @attended, Timestamp = GETDATE()
+    WHEN NOT MATCHED THEN INSERT (ChatId, CourseCode, Attended, RecordDate, Timestamp) VALUES (@chatId, @course, @attended, @recordDate, GETDATE())
+    OUTPUT inserted.*;
+  `, { 
+    chatId: { value: String(chatId) }, 
+    course: { value: courseCode }, 
+    attended: { type: sql.Bit, value: attended },
+    recordDate: { value: recordDate }
+  });
+  return r.recordset[0] || null;
+}
+
 export async function getTodayAttendanceRecord(chatId, courseCode) {
   const r = await query("SELECT * FROM AttendanceRecords WHERE ChatId = @chatId AND CourseCode = @course AND RecordDate = CAST(GETDATE() AS DATE)", { chatId: { value: String(chatId) }, course: { value: courseCode } });
   return r.recordset[0] || null;

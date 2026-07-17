@@ -67,22 +67,25 @@ export default function CGPAGraph() {
         {
           label: 'SGPA',
           data: sgpaList,
-          borderColor: '#8f8675',
-          backgroundColor: 'rgba(143, 134, 117, 0.12)',
-          tension: 0.3,
+          borderColor: '#06b6d4',
+          backgroundColor: 'rgba(6, 182, 212, 0.08)',
+          tension: 0.35,
           borderWidth: 2,
-          pointBackgroundColor: '#8f8675',
+          pointBackgroundColor: '#06b6d4',
+          pointBorderColor: 'rgba(6,182,212,0.4)',
           pointRadius: 4,
+          pointHoverRadius: 6,
         },
         {
           label: 'CGPA',
           data: cgpaList,
-          borderColor: '#b0975d',
-          backgroundColor: 'rgba(176, 151, 93, 0.16)',
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.10)',
           fill: true,
-          tension: 0.3,
+          tension: 0.35,
           borderWidth: 3,
-          pointBackgroundColor: '#b0975d',
+          pointBackgroundColor: '#f59e0b',
+          pointBorderColor: 'rgba(245,158,11,0.35)',
           pointRadius: 5,
           pointHoverRadius: 7,
         }
@@ -102,25 +105,26 @@ export default function CGPAGraph() {
         }
       },
       tooltip: {
-        backgroundColor: 'rgba(17, 24, 39, 0.95)',
-        titleColor: '#fff',
-        bodyColor: '#f3f4f6',
-        borderColor: 'var(--border-primary)',
+        backgroundColor: 'rgba(13, 13, 13, 0.97)',
+        titleColor: '#f59e0b',
+        bodyColor: '#e5e7eb',
+        borderColor: 'rgba(245, 158, 11, 0.25)',
         borderWidth: 1,
-        padding: 12,
+        padding: 14,
+        cornerRadius: 10,
         titleFont: { size: 13, weight: 'bold' },
         bodyFont: { size: 12 }
       }
     },
     scales: {
       x: {
-        grid: { color: 'var(--border-secondary)' },
+        grid: { color: 'rgba(255,255,255,0.05)' },
         ticks: { color: 'var(--text-secondary)' }
       },
       y: {
         min: 2.0,
         max: 4.0,
-        grid: { color: 'var(--border-secondary)' },
+        grid: { color: 'rgba(255,255,255,0.05)' },
         ticks: { 
           color: 'var(--text-secondary)',
           stepSize: 0.25

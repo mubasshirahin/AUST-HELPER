@@ -116,12 +116,12 @@ export default function DeptHeatmap() {
                       gridTemplateColumns: '120px repeat(8, 1fr)',
                       gap: '6px',
                       alignItems: 'center',
-                      background: isUserBatch ? 'var(--accent-blue-glow)' : 'transparent',
+                      background: isUserBatch ? 'color-mix(in srgb, var(--accent-amber) 6%, transparent)' : 'transparent',
                       padding: '4px 0',
                       borderRadius: 'var(--radius-sm)',
                     }}
                   >
-                    <div style={{ paddingLeft: '8px', fontSize: '12px', fontWeight: isUserBatch ? 'bold' : 'normal', color: isUserBatch ? 'var(--accent-blue)' : 'var(--text-primary)' }}>
+                    <div style={{ paddingLeft: '8px', fontSize: '12px', fontWeight: isUserBatch ? 'bold' : 'normal', color: isUserBatch ? 'var(--accent-amber)' : 'var(--text-primary)' }}>
                       {batch.label}{isUserBatch ? ' (You)' : ''}
                       <span style={{ display: 'inline-flex', alignItems:'center', gap:'3px', marginLeft:'8px', fontSize:'9px', fontWeight:'bold', padding:'1px 8px', borderRadius:'10px', background:batch.contributorCount >= MIN_BATCH_CONTRIBUTORS ? 'var(--accent-emerald-glow)' : 'var(--accent-amber-glow)', color:batch.contributorCount >= MIN_BATCH_CONTRIBUTORS ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>
                         {batch.contributorCount}/{MIN_BATCH_CONTRIBUTORS} students
@@ -143,7 +143,7 @@ export default function DeptHeatmap() {
                           fontSize: '10px',
                           fontWeight: 'bold',
                           color: gpa !== null ? '#fff' : 'var(--text-tertiary)',
-                          boxShadow: isUserBatch && gpa !== null ? '0 0 6px var(--accent-blue)' : 'none',
+                          boxShadow: isUserBatch && gpa !== null ? '0 0 8px color-mix(in srgb, var(--accent-amber) 60%, transparent)' : 'none',
                         }}
                       >
                         {gpa !== null ? gpa.toFixed(2) : '—'}
