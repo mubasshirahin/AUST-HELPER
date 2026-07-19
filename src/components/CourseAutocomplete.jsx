@@ -14,7 +14,9 @@ export default function CourseAutocomplete({
   placeholder = 'Start typing course code or name...', 
   type = 'code', // 'code' or 'name' - determines what field is being edited
   disabled = false,
-  className = ''
+  className = '',
+  department = null, // optional: 'CSE', 'EEE', etc. — filters suggestions to that dept
+  showCredit = true // show credit in dropdown
 }) {
   const [inputValue, setInputValue] = useState(value || '');
   const [suggestions, setSuggestions] = useState([]);
@@ -130,7 +132,7 @@ export default function CourseAutocomplete({
     setInputValue(newValue);
 
     if (newValue.trim().length > 0) {
-      const results = searchCourses(newValue, 50); // Show up to 50 results
+      const results = searchCourses(newValue, department, 50); // filtered by department
       setSuggestions(results);
       // Always show suggestions dropdown when typing (even if empty, to show "use custom" message)
       setShowSuggestions(true);
@@ -307,7 +309,7 @@ export default function CourseAutocomplete({
                   WebkitUserSelect: 'none'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
                   <span 
                     className="course-code"
                     style={{ 
@@ -323,16 +325,31 @@ export default function CourseAutocomplete({
                     style={{ 
                       color: 'var(--text-secondary)',
                       fontSize: 'var(--fs-xs)',
-                      textAlign: 'right',
-                      marginLeft: '12px',
+                      textAlign: 'left',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
-                      maxWidth: '60%'
+                      flex: 1
                     }}
                   >
                     {highlightMatch(course.name, inputValue)}
                   </span>
+                  {showCredit && course.credit && (
+                    <span 
+                      className="course-credit"
+                      style={{
+                        color: 'var(--accent-amber)',
+                        fontSize: 'var(--fs-xs)',
+                        fontWeight: 'var(--fw-bold)',
+                        background: 'var(--accent-amber-glow)',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        flexShrink: 0
+                      }}
+                    >
+                      {course.credit}
+                    </span>
+                  )}
                 </div>
               </li>
             ))

@@ -8,29 +8,54 @@ const steps = [
   { id: 'ready', label: 'Materials', icon: Library },
 ];
 
-export default function VaultStepProgress({ currentStep }) {
+export default function VaultStepProgress({ currentStep, onStepClick, transitioning }) {
   const currentIndex = steps.findIndex((step) => step.id === currentStep);
 
+  const handleStepClick = (stepId) => {
+    if (onStepClick && !transitioning) {
+      onStepClick(stepId);
+    }
+  };
+
   return (
-    <div className="vault-step-progress">
+    <div className={`vault-step-progress ${transitioning ? 'vault-step-progress-exit' : ''}`}>
       {steps.map((step, index) => {
         const Icon = step.icon;
         const isDone = index < currentIndex;
         const isActive = index === currentIndex;
+        const isClickable = isDone && !transitioning;
+        const reverseIndex = steps.length - 1 - index;
+
+        const StepTag = isClickable ? 'button' : 'div';
+        const stepProps = isClickable
+          ? { type: 'button', onClick: () => handleStepClick(step.id) }
+          : {};
 
         return (
           <React.Fragment key={step.id}>
-            <div
-              className={`vault-step-item ${isDone ? 'done' : ''} ${isActive ? 'active' : ''}`}
-              style={{ animationDelay: `${index * 80}ms` }}
+            <StepTag
+              className={`vault-step-item ${isDone ? 'done' : ''} ${isActive ? 'active' : ''} ${isClickable ? 'clickable' : ''} ${transitioning && (isDone || isActive) ? 'vault-step-exit' : ''}`}
+              style={{
+                animationDelay: transitioning
+                  ? `${reverseIndex * 60}ms`
+                  : `${index * 80}ms`,
+              }}
+              {...stepProps}
             >
               <span className="vault-step-dot">
                 {isDone ? <Check size={14} /> : <Icon size={14} />}
               </span>
               <span className="vault-step-label">{step.label}</span>
-            </div>
+            </StepTag>
             {index < steps.length - 1 && (
-              <div className={`vault-step-line ${index < currentIndex ? 'filled' : ''}`} />
+              <div
+                className={`vault-step-line ${index < currentIndex ? 'filled' : ''} ${transitioning && index < currentIndex ? 'vault-step-line-exit' : ''}`}
+                style={{
+                  animationDelay: transitioning
+                    ? `${reverseIndex * 60}ms`
+                    : undefined,
+                }}
+              />
             )}
           </React.Fragment>
         );

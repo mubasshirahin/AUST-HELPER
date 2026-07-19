@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CalendarDays, Trash2, X, Download, Eye, Check, RotateCcw, FileDown, ChevronDown } from 'lucide-react';
+import { Trash2, X, Download, Eye, Check, RotateCcw, FileDown, ChevronDown } from 'lucide-react';
 import { useRoutine } from '../../context/RoutineContext';
 import { ocrImportedRoutine, ocrImportedWeekDays } from '../../context/RoutineContext';
 import { normalizeAccentColor, getCourseColor } from '../../utils/colorPalette';
@@ -413,16 +413,7 @@ export default function WeeklyPlanner() {
   };
 
   return (
-    <div className="glass-card-static weekly-planner animate-fadeInUp">
-      <div className="dash-header-three mb-4">
-        <div className="dash-header-left">
-          <div className="icon" style={{ backgroundColor: 'var(--accent-cyan-glow)', color: 'var(--accent-cyan)', padding: '6px', borderRadius: '8px' }}>
-            <CalendarDays size={18} />
-          </div>
-          <div>
-            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>{ramadanMode ? 'Ramadan schedule — 40 min per slot (SUN-THU)' : 'Traditional AUST timetable — 50 min per slot (SUN-THU)'}</p>
-          </div>
-        </div>
+    <div className="glass-card-static weekly-planner animate-fadeInUp">      <div className="dash-header-three mb-4">
 
         {/* Middle: ⬇️ Export + 🌙 Toggle */}
         <div className="dash-header-center">
@@ -879,6 +870,7 @@ export default function WeeklyPlanner() {
                   value={editing.form.course}
                   placeholder="Type course code (e.g., CSE1101)..."
                   type="code"
+                  department={user?.department}
                   onCourseSelect={(course) => {
                     if (course) {
                       if (course.partialUpdate) {
@@ -898,6 +890,7 @@ export default function WeeklyPlanner() {
                   value={editing.form.name}
                   placeholder="Type course name (e.g., Data Structures)..."
                   type="name"
+                  department={user?.department}
                   onCourseSelect={(course) => {
                     if (course) {
                       if (course.partialUpdate) {

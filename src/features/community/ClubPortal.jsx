@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
-  Target, Users, Search, Filter, PlusCircle, CheckCircle, X,
+  Target, Users, Search, PlusCircle, CheckCircle, X,
   Calendar, Award, User, ExternalLink, ChevronDown, ChevronUp,
   Code, Trophy, Bot, Music, Palette, Camera, Heart, Gamepad2,
   BookOpen, Leaf, Briefcase, MessageCircle, Shield,
@@ -25,20 +25,10 @@ const clubIcons = {
   shield: Shield,
 };
 
-const categoryEmojis = {
-  'Academic & Technical': '🧠',
-  'Sports & Recreation': '⚽',
-  'Cultural & Arts': '🎭',
-  'Social & Humanitarian': '🤝',
-  'Professional Development': '💼',
-};
-
 export default function ClubPortal() {
   const [clubs, setClubs] = useState(clubsData);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterCategory, setFilterCategory] = useState('all');
   const [expandedClub, setExpandedClub] = useState(null);
-  const [showJoinedOnly, setShowJoinedOnly] = useState(false);
   const searchRef = useRef(null);
 
   // Keyboard shortcut: Ctrl/Cmd + K to focus search
@@ -62,11 +52,6 @@ export default function ClubPortal() {
     }));
   };
 
-  const categories = useMemo(() => {
-    const cats = [...new Set(clubs.map(c => c.category))];
-    return cats;
-  }, [clubs]);
-
   const filteredClubs = useMemo(() => {
     let result = [...clubs];
 
@@ -80,16 +65,8 @@ export default function ClubPortal() {
       );
     }
 
-    if (filterCategory !== 'all') {
-      result = result.filter(c => c.category === filterCategory);
-    }
-
-    if (showJoinedOnly) {
-      result = result.filter(c => c.joined);
-    }
-
     return result;
-  }, [clubs, searchQuery, filterCategory, showJoinedOnly]);
+  }, [clubs, searchQuery]);
 
   const stats = useMemo(() => ({
     total: clubs.length,
@@ -169,33 +146,7 @@ export default function ClubPortal() {
           <kbd className="clubs-search-kbd">Ctrl+K</kbd>
         </div>
 
-        <div className="clubs-controls-right">
-          <div className="clubs-filter-group">
-            <Filter size={14} />
-            <button
-              className={`clubs-filter-btn ${filterCategory === 'all' ? 'active' : ''}`}
-              onClick={() => setFilterCategory('all')}
-            >
-              All
-            </button>
-            {categories.map(cat => (
-              <button
-                key={cat}
-                className={`clubs-filter-btn ${filterCategory === cat ? 'active' : ''}`}
-                onClick={() => setFilterCategory(cat)}
-              >
-                {categoryEmojis[cat] || '📌'} {cat.split(' & ')[0]}
-              </button>
-            ))}
-          </div>
-          <button
-            className={`clubs-joined-toggle ${showJoinedOnly ? 'active' : ''}`}
-            onClick={() => setShowJoinedOnly(prev => !prev)}
-          >
-            <Star size={14} />
-            Joined
-          </button>
-        </div>
+
       </div>
 
       {/* ── Clubs Grid ── */}
@@ -208,12 +159,10 @@ export default function ClubPortal() {
           <p>
             {searchQuery
               ? `No results for "${searchQuery}". Try a different search term.`
-              : showJoinedOnly
-                ? 'You haven\'t joined any clubs yet. Browse and join one!'
-                : 'No clubs match your filters.'}
+              : 'No clubs match your search.'}
           </p>
-          {(searchQuery || showJoinedOnly) && (
-            <button className="btn btn-primary" onClick={() => { setSearchQuery(''); setShowJoinedOnly(false); }}>
+          {searchQuery && (
+            <button className="btn btn-primary" onClick={() => { setSearchQuery(''); }}>
               <X size={16} /> Clear Filters
             </button>
           )}
@@ -230,8 +179,6 @@ export default function ClubPortal() {
                 className={`clubs-card animate-fadeInUp ${club.joined ? 'clubs-card-joined' : ''}`}
                 style={{ animationDelay: `${(idx % 6) * 60}ms` }}
               >
-                {/* Shine overlay — matches dashboard pattern */}
-                <div className="card-shine" aria-hidden="true" />
                 {/* Top accent bar */}
                 <div className="clubs-card-accent" style={{ background: club.color }} />
 
@@ -249,11 +196,6 @@ export default function ClubPortal() {
                       {club.members.toLocaleString()}
                       <Users size={12} />
                     </span>
-                  </div>
-
-                  {/* Category tag */}
-                  <div className="clubs-card-category">
-                    {categoryEmojis[club.category] || '📌'} {club.category}
                   </div>
 
                   {/* Description */}

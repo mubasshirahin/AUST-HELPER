@@ -13,21 +13,7 @@
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-primary);
   background: var(--bg-card);
-  overflow: hidden;
-  box-shadow:
-    0 1px 0 0 rgba(255,255,255,0.04) inset,
-    var(--shadow-md);
   animation: gradeHeroIn 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.grade-hero:hover {
-  border-color: color-mix(in srgb, var(--accent-amber) 30%, var(--border-primary));
-  box-shadow:
-    0 1px 0 0 rgba(255,255,255,0.06) inset,
-    0 0 0 1px color-mix(in srgb, var(--accent-amber) 10%, transparent),
-    0 8px 40px -8px color-mix(in srgb, var(--accent-amber) 12%, transparent),
-    var(--shadow-lg);
 }
 
 @keyframes gradeHeroIn {
@@ -36,84 +22,7 @@
 }
 
 /* ─── Hero: Background layers ─── */
-.grade-hero-bg {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
 
-.grade-hero-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-  background-size: 40px 40px;
-  mask-image: linear-gradient(135deg, black 0%, transparent 70%);
-}
-
-.grade-hero-shimmer {
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 60%;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--accent-amber) 60%, transparent),
-    transparent
-  );
-  animation: heroShimmer 4s ease-in-out infinite 1s;
-}
-
-@keyframes heroShimmer {
-  0% { left: -60%; opacity: 0; }
-  30% { opacity: 1; }
-  100% { left: 110%; opacity: 0; }
-}
-
-.grade-hero-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(72px);
-  animation: gradeFloat 10s ease-in-out infinite;
-}
-
-.grade-hero-orb-1 {
-  width: 280px;
-  height: 280px;
-  top: -120px;
-  right: -60px;
-  background: radial-gradient(circle, rgba(167,139,250,0.16) 0%, transparent 70%);
-}
-
-.grade-hero-orb-2 {
-  width: 200px;
-  height: 200px;
-  bottom: -80px;
-  left: 4%;
-  background: radial-gradient(circle, rgba(245,158,11,0.10) 0%, transparent 70%);
-  animation-delay: -4.5s;
-}
-
-.grade-hero-orb-3 {
-  width: 140px;
-  height: 140px;
-  top: 50%;
-  left: 40%;
-  transform: translateY(-50%);
-  background: radial-gradient(circle, rgba(167,139,250,0.08) 0%, transparent 70%);
-  animation-delay: -2s;
-  filter: blur(48px);
-}
-
-@keyframes gradeFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(10px, -14px) scale(1.04); }
-  66% { transform: translate(-8px, 6px) scale(0.97); }
-}
 
 /* ─── Hero: Content ─── */
 .grade-hero-content {
@@ -142,12 +51,6 @@
   background: color-mix(in srgb, var(--accent-amber) 14%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent-amber) 22%, transparent);
   color: var(--accent-amber);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.grade-hero:hover .grade-hero-icon {
-  transform: rotate(-6deg) scale(1.08);
-  box-shadow: 0 0 14px color-mix(in srgb, var(--accent-amber) 30%, transparent);
 }
 
 .grade-hero-title {
@@ -170,12 +73,6 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: brightness(1.05);
-  transition: filter 0.3s ease;
-}
-
-.grade-hero:hover .grade-hero-name {
-  filter: brightness(1.15) drop-shadow(0 0 12px color-mix(in srgb, var(--accent-amber) 40%, transparent));
 }
 
 .grade-hero-subtitle {
@@ -442,9 +339,113 @@
   animation: dash-enter-card 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
 }
 
-/* ── CGPA chart card ── */
-.cgpagraph-container > .glass-card-static:only-of-type {
+/* ── CGPA Chart Card ── */
+.cgpa-chart-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-xl);
+  box-shadow: 
+    0 4px 28px rgba(0,0,0,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  overflow: hidden;
   animation: dash-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.24s both;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.cgpa-chart-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  pointer-events: none;
+}
+
+.cgpa-chart-card:hover {
+  border-color: color-mix(in srgb, var(--accent-amber) 22%, var(--border-primary));
+  box-shadow: 
+    0 8px 32px -6px color-mix(in srgb, var(--accent-amber) 12%, transparent),
+    0 4px 28px rgba(0,0,0,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* ── Chart Header ── */
+.cgpa-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-5) var(--sp-6) 0;
+  gap: var(--sp-4);
+}
+
+.cgpa-chart-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.cgpa-chart-icon {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-amber) 18%, transparent), color-mix(in srgb, var(--accent-emerald) 14%, transparent));
+  border: 1px solid color-mix(in srgb, var(--accent-amber) 20%, transparent);
+  color: var(--accent-amber);
+}
+
+.cgpa-chart-title {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.cgpa-chart-subtitle {
+  font-size: var(--fs-xs);
+  color: rgba(255,255,255,0.75);
+  margin: 2px 0 0;
+  line-height: 1.4;
+}
+
+.cgpa-chart-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--accent-emerald) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-emerald) 18%, transparent);
+  color: var(--accent-emerald);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  animation: badgePulse 3s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* ── Chart Body ── */
+.cgpa-chart-body {
+  height: 290px;
+  position: relative;
+  padding: var(--sp-4) var(--sp-5) var(--sp-5);
 }
 
 /* ── Result table: semester row stagger ── */
@@ -544,9 +545,37 @@
   animation: dash-enter 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
 }
 
+/* Remove hover glow from CoursePoll leaderboard cards */
+.course-poll-wrapper .grid-2 > .glass-card-static:hover {
+  box-shadow: var(--shadow-sm) !important;
+  border-color: var(--border-primary) !important;
+  transform: none !important;
+}
+
+/* Remove ALL hover effects from PickList input cards (Best/Worst course pickers) */
+.course-poll-wrapper .grid-2 > .glass-card {
+  transition: none !important;
+}
+.course-poll-wrapper .grid-2 > .glass-card:hover,
+.course-poll-wrapper .grid-2 > .glass-card:hover::before {
+  box-shadow: var(--shadow-sm) !important;
+  border-color: var(--border-primary) !important;
+  transform: none !important;
+  background: var(--bg-card) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.course-poll-wrapper .grid-2 > .glass-card:hover .course-autocomplete-input-wrapper .input {
+  border-color: var(--border-primary) !important;
+  box-shadow: none !important;
+}
+
 /* ── Reduced-motion: instant, no movement ── */
 @media (prefers-reduced-motion: reduce) {
   .cgpa-summary-card,
+  .cgpagraph-container > .cgpa-chart-card,
   .cgpagraph-container > .glass-card-static,
   .result-table-container > div:nth-child(3) > div,
   .st-wrapper .st-section-header,

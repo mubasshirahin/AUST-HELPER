@@ -23,63 +23,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.community-hero-bg {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.community-hero-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--accent-blue) 6%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--accent-blue) 6%, transparent) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
-}
-
-.community-hero-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.48;
-  animation: communityFloat 8s ease-in-out infinite;
-}
-
-.community-hero-orb-1 {
-  width: 240px;
-  height: 240px;
-  top: -90px;
-  right: -30px;
-  background: radial-gradient(circle, var(--accent-amber) 0%, transparent 70%);
-}
-
-.community-hero-orb-2 {
-  width: 200px;
-  height: 200px;
-  bottom: -70px;
-  left: 8%;
-  background: radial-gradient(circle, var(--accent-purple) 0%, transparent 70%);
-  animation-delay: -3.5s;
-}
-
-.community-hero-orb-3 {
-  width: 160px;
-  height: 160px;
-  top: 30%;
-  left: -60px;
-  background: radial-gradient(circle, var(--accent-blue) 0%, transparent 70%);
-  animation-delay: -1.8s;
-  opacity: 0.32;
-}
-
-@keyframes communityFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-10px, -8px) scale(1.05); }
-}
-
 .community-hero-content {
   position: relative;
   padding: var(--sp-6) var(--sp-6) var(--sp-5);
@@ -117,8 +60,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--accent-amber), #f59e0b);
-  color: #fff;
+  background: var(--accent-amber-glow);
+  color: var(--accent-amber);
 }
 
 .community-hero-title {
@@ -1719,86 +1662,6 @@
   line-height: 1.4;
 }
 
-.clubs-controls-right {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  flex-wrap: wrap;
-}
-
-.clubs-filter-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px;
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-md);
-  overflow-x: auto;
-  max-width: 100%;
-}
-
-.clubs-filter-group > svg:first-child {
-  color: var(--text-tertiary);
-  margin-left: 4px;
-  flex-shrink: 0;
-  width: 14px;
-  height: 14px;
-}
-
-.clubs-filter-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 10px;
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-medium);
-  border-radius: 6px;
-  color: var(--text-secondary);
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-  background: none;
-  border: none;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.clubs-filter-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-secondary);
-}
-
-.clubs-filter-btn.active {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-sm);
-}
-
-.clubs-joined-toggle {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 14px;
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-medium);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-}
-
-.clubs-joined-toggle:hover {
-  color: var(--text-primary);
-}
-
-.clubs-joined-toggle.active {
-  background: var(--accent-emerald-glow);
-  border-color: var(--accent-emerald);
-  color: var(--accent-emerald);
-}
 
 /* ── Clubs Grid ── */
 .clubs-grid {
@@ -1851,7 +1714,6 @@
   z-index: 1;
 }
 
-.clubs-card:hover .card-shine,
 .alumni-card:hover .card-shine {
   transform: translateX(100%);
 }
@@ -1920,17 +1782,6 @@
 }
 
 /* ── Category tag ── */
-.clubs-card-category {
-  font-size: 11px;
-  font-weight: var(--fw-medium);
-  color: var(--text-secondary);
-  padding: 3px 8px;
-  background: var(--bg-input);
-  border-radius: var(--radius-sm);
-  display: inline-block;
-  align-self: flex-start;
-}
-
 /* ── Description ── */
 .clubs-card-desc {
   font-size: var(--fs-sm);
@@ -2617,29 +2468,7 @@
   display: none;
 }
 
-[data-theme="sketchbook"] .clubs-filter-group {
-  background: #fdfbf7;
-  border-color: #2d2d2d;
-  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-}
 
-[data-theme="sketchbook"] .clubs-filter-btn {
-  font-family: 'Patrick Hand', cursive;
-  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-}
-
-[data-theme="sketchbook"] .clubs-joined-toggle {
-  background: #fdfbf7;
-  border-color: #2d2d2d;
-  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-  font-family: 'Patrick Hand', cursive;
-}
-
-[data-theme="sketchbook"] .clubs-joined-toggle.active {
-  background: #2d2d2d !important;
-  color: #fdfbf7 !important;
-  border-color: #2d2d2d;
-}
 
 [data-theme="sketchbook"] .clubs-card {
   background: #fdfbf7;
@@ -2670,7 +2499,7 @@
 }
 
 [data-theme="sketchbook"] .clubs-card-acronym,
-[data-theme="sketchbook"] .clubs-card-category,
+[data-theme="sketchbook"] .clubs-card-acronym,
 [data-theme="sketchbook"] .clubs-card-desc,
 [data-theme="sketchbook"] .clubs-card-detail,
 [data-theme="sketchbook"] .clubs-card-tag,

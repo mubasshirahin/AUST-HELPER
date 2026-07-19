@@ -47,13 +47,6 @@ export default function AnalyticsPage() {
   return (
     <div className="analytics-page animate-fadeIn">
       <header className="grade-hero">
-        <div className="grade-hero-bg" aria-hidden="true">
-          <div className="grade-hero-grid" />
-          <div className="grade-hero-orb grade-hero-orb-1" />
-          <div className="grade-hero-orb grade-hero-orb-2" />
-          <div className="grade-hero-orb grade-hero-orb-3" />
-          <div className="grade-hero-shimmer" />
-        </div>
         <div className="grade-hero-content">
           <div className="grade-hero-title-row">
             <div className="grade-hero-icon">

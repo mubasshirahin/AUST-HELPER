@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Calendar, Plus, Trash2, ChevronLeft, ChevronRight, ChevronDown, FileDown } from 'lucide-react';
+import { Calendar, ClipboardList, Plus, Trash2, ChevronLeft, ChevronRight, ChevronDown, FileDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import CourseAutocomplete from '../../components/CourseAutocomplete';
 import { findCourseByCode } from '../../data/courses';
@@ -14,10 +14,7 @@ export default function WeekSchedule() {
     const stored = localStorage.getItem('aust-semester-start');
     return stored || new Date().toISOString().split('T')[0];
   });
-  const [currentDate, setCurrentDate] = useState(() => {
-    const stored = localStorage.getItem('aust-semester-start');
-    return stored ? new Date(stored + 'T00:00:00') : new Date();
-  });
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -83,7 +80,7 @@ export default function WeekSchedule() {
   // Handle course code selection
   const handleCourseCodeSelect = (course) => {
     if (course) {
-      const courseData = findCourseByCode(course.code);
+      const courseData = findCourseByCode(course.code, user?.department);
       setNewTask({
         ...newTask,
         courseCode: course.code,
@@ -433,14 +430,14 @@ export default function WeekSchedule() {
   }, [user, viewMode]);
 
   return (
-    <div className="glass-card-static animate-fadeInUp">
+    <div className="glass-card-static animate-fadeInUp" style={{ minHeight: '480px' }}>
       <div className="dash-header-three mb-8">
         <div className="dash-header-left">
-          <div className="icon" style={{ backgroundColor: 'var(--accent-cyan-glow)', color: 'var(--accent-cyan)', padding: '12px', borderRadius: '12px' }}>
-            <Calendar size={28} />
+          <div className="icon" style={{ backgroundColor: 'var(--accent-cyan-glow)', color: 'var(--accent-cyan)', padding: '8px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ClipboardList size={20} />
           </div>
           <div>
-            <p style={{ fontSize: 'var(--fs-md)', color: 'var(--text-secondary)' }}>Academic calendar with tasks & events</p>
+            <p style={{ fontSize: 'var(--fs-lg)', color: 'var(--text-secondary)' }}>Academic calendar with tasks & events</p>
           </div>
         </div>
         {/* Middle: Export + Settings */}
@@ -577,7 +574,7 @@ export default function WeekSchedule() {
               const dayTasks = getTasksForDate(date);
               return (
                 <div key={idx} className={`schedule-day-card${isToday(date) ? ' today' : ''}`}>
-                  <div className={`schedule-day-num${isToday(date) ? ' today' : ''}`}>{getDayNumber(date)}</div>
+                  <div className={`schedule-day-num${isToday(date) ? ' today' : ''}`}>{getDayNumber(date)} <span className="schedule-day-month">{getMonthName(date)}</span></div>
                   <div className="schedule-task-list">
                     {dayTasks.slice(0, 5).map(task => (
                       <div key={task.id} onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
@@ -616,7 +613,7 @@ export default function WeekSchedule() {
                     <div className="schedule-empty">{getDayNumber(date)}</div>
                   ) : (
                     <>
-                      <div className={`schedule-day-num${isToday(date) ? ' today' : ''}`}>{getDayNumber(date)}</div>
+                      <div className={`schedule-day-num${isToday(date) ? ' today' : ''}`}>{getDayNumber(date)} <span className="schedule-day-month">{getMonthName(date)}</span></div>
                       <div className="schedule-task-list">
                         {dayTasks.map(task => (
                           <div key={task.id} onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
@@ -799,29 +796,29 @@ export default function WeekSchedule() {
         </div>
       )}
 
-      {/* Add Task Modal — minimal */}
+      {/* Add Task Modal */}
       {showAddModal && canAddTask && (
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)} style={{ overflow: 'hidden', padding: '24px' }}>
-          <div className="modal glass-card-static" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '300px', width: '85%', padding: '8px 10px 8px', margin: 0, maxHeight: 'none', overflow: 'visible', boxSizing: 'border-box' }}>
-            <h3 style={{ fontSize: '11px', fontWeight: '600', margin: '0 0 4px', color: 'var(--text-secondary)' }}>New Task</h3>
-            <form onSubmit={handleAddTask} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-              <div style={{ maxWidth: '100%' }}>
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal glass-card-static" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '280px', width: '85%', padding: '6px 10px 4px', boxSizing: 'border-box' }}>
+            <form onSubmit={handleAddTask} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div>
                 <CourseAutocomplete
                   value={newTask.courseCode}
                   onCourseSelect={handleCourseCodeSelect}
-                  placeholder="Course code (e.g. CSE1101)"
+                  placeholder="Code (e.g. CSE1101)"
                   type="code"
+                  department={user?.department}
                 />
               </div>
-              <input type="text" value={newTask.courseName} onChange={(e) => setNewTask({ ...newTask, courseName: e.target.value })} className="input" placeholder="Course name" disabled style={{ opacity: newTask.courseName ? 1 : 0.6, fontSize: '9px', padding: '3px 6px', maxWidth: '100%', boxSizing: 'border-box', margin: 0 }} />
-              <input type="text" value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })} className="input" placeholder="Title (e.g. Quiz 1)" required style={{ fontSize: '9px', padding: '3px 6px', maxWidth: '100%', boxSizing: 'border-box', margin: 0 }} />
-              <div style={{ display: 'flex', gap: '2px' }}>
-                <input type="date" value={newTask.date} onChange={(e) => setNewTask({ ...newTask, date: e.target.value })} className="input" required style={{ fontSize: '9px', padding: '3px 6px', width: '100%', minWidth: 0, boxSizing: 'border-box', margin: 0 }} />
-                <input type="time" value={newTask.time} onChange={(e) => setNewTask({ ...newTask, time: e.target.value })} className="input" style={{ fontSize: '9px', padding: '3px 6px', width: '100%', minWidth: 0, boxSizing: 'border-box', margin: 0 }} />
+              <input type="text" value={newTask.courseName} onChange={(e) => setNewTask({ ...newTask, courseName: e.target.value })} className="input" placeholder="Course name" disabled style={{ opacity: newTask.courseName ? 1 : 0.6, width: '100%', boxSizing: 'border-box', fontSize: '11px', padding: '4px 6px' }} />
+              <input type="text" value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })} className="input" placeholder="Title (e.g. Quiz 1)" required style={{ width: '100%', boxSizing: 'border-box', fontSize: '11px', padding: '4px 6px' }} />
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <input type="date" value={newTask.date} onChange={(e) => setNewTask({ ...newTask, date: e.target.value })} className="input" required style={{ flex: 1, fontSize: '11px', padding: '4px 6px', minWidth: 0, boxSizing: 'border-box' }} />
+                <input type="time" value={newTask.time} onChange={(e) => setNewTask({ ...newTask, time: e.target.value })} className="input" style={{ flex: 1, fontSize: '11px', padding: '4px 6px', minWidth: 0, boxSizing: 'border-box' }} />
               </div>
-              <div style={{ display: 'flex', gap: '3px', marginTop: '1px' }}>
-                <button type="submit" className="btn btn-primary btn-sm" style={{ flex: 1, fontSize: '9px', padding: '3px 6px', minHeight: '22px' }}>Add</button>
-                <button type="button" className="btn btn-secondary btn-sm" style={{ flex: 1, fontSize: '9px', padding: '3px 6px', minHeight: '22px' }} onClick={() => setShowAddModal(false)}>Cancel</button>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button type="button" className="btn btn-secondary" style={{ flex: 1, fontSize: '11px', padding: '3px 8px', minHeight: '24px' }} onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, fontSize: '11px', padding: '3px 8px', minHeight: '24px' }}>Add</button>
               </div>
             </form>
           </div>

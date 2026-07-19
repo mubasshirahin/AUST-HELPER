@@ -251,7 +251,19 @@ function ancestorsOf(id) {
   return out;
 }
 
+const DEPARTMENTS = [
+  { id: 'CSE', label: 'CSE', available: true },
+  { id: 'EEE', label: 'EEE', available: false },
+  { id: 'CE',  label: 'CE',  available: false },
+  { id: 'ME',  label: 'ME',  available: false },
+  { id: 'IPE', label: 'IPE', available: false },
+  { id: 'TE',  label: 'TE',  available: false },
+  { id: 'ARCH',label: 'ARCH',available: false },
+  { id: 'BBA', label: 'BBA', available: false },
+];
+
 export default function PrerequisiteTree() {
+  const [dept, setDept] = useState('CSE');
   const [expanded, setExpanded] = useState(() => new Set(['Root']));
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
@@ -530,8 +542,42 @@ export default function PrerequisiteTree() {
     return () => { document.body.style.overflow = prev; };
   }, [fullscreen]);
 
+  const isDeptAvailable = DEPARTMENTS.find(d => d.id === dept)?.available;
+
   const content = (
     <div className={`prerequisite-tree ${fullscreen ? 'prereq-fullscreen' : ''}`} ref={containerRef}>
+      {/* Department Selector */}
+      <div className="prereq-dept-bar">
+        <span className="prereq-dept-label">Department:</span>
+        <div className="prereq-dept-pills">
+          {DEPARTMENTS.map((d) => (
+            <button
+              key={d.id}
+              className={`prereq-dept-pill ${dept === d.id ? 'active' : ''}`}
+              onClick={() => setDept(d.id)}
+            >
+              {d.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="prereq-coming-soon" style={{ display: !isDeptAvailable ? 'flex' : 'none' }}>
+        <div className="prereq-coming-soon-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" opacity="0.3" />
+            <path d="M12 8v4" />
+            <path d="M12 16v0" />
+          </svg>
+        </div>
+        <h3 className="prereq-coming-soon-title">Coming Soon</h3>
+        <p className="prereq-coming-soon-desc">
+          Prerequisite tree for <strong>{dept}</strong> is under development.
+          Switch to <strong>CSE</strong> to explore the current prerequisite map.
+        </p>
+      </div>
+
+      <div className="prereq-content" style={{ display: isDeptAvailable ? 'contents' : 'none' }}>
       {/* Toolbar */}
       <div className="prereq-toolbar">
         <div className="prereq-search">
@@ -733,6 +779,7 @@ export default function PrerequisiteTree() {
             Click to expand/collapse &bull; Scroll to zoom &bull; ⌘F Search &bull; ⌘0 Reset &bull; Esc Exit fullscreen
           </span>
         </div>
+      </div>
       </div>
     </div>
   );

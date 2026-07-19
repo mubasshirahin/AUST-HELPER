@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { MessageCircle, Users, Building2, GraduationCap } from 'lucide-react';
-import StoryFeed from './StoryFeed';
+import { Users, Building2, GraduationCap, MessageCircle } from 'lucide-react';
 import AlumniDirectory from './AlumniDirectory';
 import ClubPortal from './ClubPortal';
 import StudentDirectory from './StudentDirectory';
@@ -10,7 +9,6 @@ import './CommunityPage.css';
 const COMMUNITY_TAB_KEY = 'aust-community-active-tab';
 
 const communityTabs = [
-  { id: 'feed', label: 'Confessions Feed', icon: MessageCircle, color: 'amber', desc: 'Share & discover' },
   { id: 'alumni', label: 'Alumni Directory', icon: GraduationCap, color: 'purple', desc: 'Connect with alumni' },
   { id: 'clubs', label: 'Clubs Hub', icon: Building2, color: 'emerald', desc: 'Join student clubs' },
   { id: 'students', label: 'Student Directory', icon: Users, color: 'blue', desc: 'Find classmates' },
@@ -18,7 +16,7 @@ const communityTabs = [
 
 export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem(COMMUNITY_TAB_KEY) || 'feed';
+    return localStorage.getItem(COMMUNITY_TAB_KEY) || 'alumni';
   });
 
   const handleTabChange = (tab) => {
@@ -28,20 +26,16 @@ export default function CommunityPage() {
 
   const renderActiveTab = () => {
     switch (activeTab) {
-      case 'feed': return <StoryFeed />;
       case 'alumni': return <AlumniDirectory />;
       case 'clubs': return <ClubPortal />;
       case 'students': return <StudentDirectory />;
-      default: return <StoryFeed />;
+      default: return <AlumniDirectory />;
     }
   };
 
   return (
     <div className="community-page animate-fadeIn">
       <header className="community-hero">
-        <div className="community-hero-bg" aria-hidden="true">
-          <div className="community-hero-grid" />
-        </div>
         <div className="community-hero-content">
           <div className="community-hero-title-row">
             <div className="community-hero-icon">
@@ -52,7 +46,7 @@ export default function CommunityPage() {
                 <span className="community-hero-title-highlight">Community</span>
               </h1>
               <p className="community-hero-subtitle">
-                Share anonymous student confessions, lookup alumni networks, and join active clubs.
+                Connect with alumni networks, join student clubs, and find classmates.
               </p>
             </div>
           </div>

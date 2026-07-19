@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Moon, Eye, Star, Shield, Send, User, Timer, MessageSquare,
+  Moon, Eye, Star, Shield, Send, User, Timer, MessageSquare, MessageCircle,
   Loader2, AlertTriangle, Wifi, WifiOff,
 } from 'lucide-react';
 import CourseReview from '../analytics/CourseReview';
+import StoryFeed from '../community/StoryFeed';
 import GliderTabs from '../../components/GliderTabs';
 import './ShadowPage.css';
 
@@ -266,7 +267,7 @@ export default function ShadowPage() {
                 <span className="shadow-hero-title-highlight">Shadow</span>
               </h1>
               <p className="shadow-hero-subtitle">
-                Anonymous course reviews and 10-minute anonymous chats — no login required.
+                Anonymous confessions, course reviews, and 10-minute anonymous chats — no login required.
               </p>
             </div>
           </div>
@@ -302,8 +303,9 @@ export default function ShadowPage() {
       {/* ── Glider Tabs ── */}
       <GliderTabs
         tabs={[
+          { id: 'feed', label: 'Confessions Feed', desc: 'Anonymous posts', color: 'amber', icon: MessageCircle },
           { id: 'reviews', label: 'Course Reviews', desc: 'Anonymous feedback', color: 'purple', icon: Star },
-          { id: 'chat', label: 'Shadow Chat', desc: '10-min anonymous match', color: 'amber', icon: MessageSquare },
+          { id: 'chat', label: 'Shadow Chat', desc: '10-min anonymous match', color: 'rose', icon: MessageSquare },
         ]}
         activeTab={activeTab}
         onChange={setActiveTab}
@@ -324,6 +326,19 @@ export default function ShadowPage() {
               <p className="section-subtitle">Anonymous feedback shared by the AUST community</p>
             </div>
             <CourseReview />
+          </>
+        ) : activeTab === 'feed' ? (
+          <>
+            <div className="section-header">
+              <h2 className="section-title">
+                <span className="icon" style={{ background: 'var(--accent-amber-glow)', color: 'var(--accent-amber)' }}>
+                  <MessageCircle size={16} />
+                </span>
+                Confessions Feed
+              </h2>
+              <p className="section-subtitle">Anonymous posts shared by the AUST community</p>
+            </div>
+            <StoryFeed />
           </>
         ) : (
           <section className="shadow-chat-card">

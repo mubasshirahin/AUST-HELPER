@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Flame } from 'lucide-react';
+import { Flame, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { formatSemesterLabel } from '../../utils/semester';
 import {
@@ -64,26 +64,63 @@ export default function DeptHeatmap() {
           </div>
         </div>
 
-        <label className="flex items-center gap-2" style={{ fontSize: 'var(--fs-sm)', whiteSpace: 'nowrap' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Department</span>
-          <select
-            className="input"
-            value={selectedDepartment}
-            onChange={(event) => setSelectedDepartment(event.target.value)}
-            style={{ minWidth: '120px', width: 'auto' }}
-          >
-            {heatmapDepartments.map((department) => (
-              <option key={department} value={department}>{department}</option>
-            ))}
-          </select>
+        <label className="flex items-center gap-3" style={{ fontSize: 'var(--fs-sm)', whiteSpace: 'nowrap' }}>
+          <span style={{ color: 'var(--text-secondary)', fontWeight: 'var(--fw-medium)' }}>Department</span>
+          <div style={{ position: 'relative', display: 'inline-flex' }}>
+            <select
+              value={selectedDepartment}
+              onChange={(event) => setSelectedDepartment(event.target.value)}
+              style={{
+                padding: '8px 32px 8px 14px',
+                fontSize: 'var(--fs-sm)',
+                fontWeight: 'var(--fw-semibold)',
+                borderRadius: 'var(--radius-full)',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-primary)',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                outline: 'none',
+                minWidth: '120px',
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                MozAppearance: 'none',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent-rose)';
+                e.currentTarget.style.background = 'color-mix(in srgb, var(--accent-rose) 8%, var(--bg-card))';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-primary)';
+                e.currentTarget.style.background = 'var(--bg-card)';
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent-rose)';
+                e.currentTarget.style.background = 'color-mix(in srgb, var(--accent-rose) 8%, var(--bg-card))';
+                e.currentTarget.style.boxShadow = '0 0 0 3px color-mix(in srgb, var(--accent-rose) 20%, transparent)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-primary)';
+                e.currentTarget.style.background = 'var(--bg-card)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              {heatmapDepartments.map((department) => (
+                <option key={department} value={department}>{department}</option>
+              ))}
+            </select>
+            <ChevronDown size={12} style={{
+              position: 'absolute',
+              right: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'var(--text-tertiary)',
+              pointerEvents: 'none',
+            }} />
+          </div>
         </label>
       </div>
 
-      {userBatchNo && userPendingBatch && (
-        <div className="flex gap-3 flex-wrap" style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-          <span>Your batch ({userBatchNo}): <strong style={{color: userPendingBatch.contributorCount >= MIN_BATCH_CONTRIBUTORS ? 'var(--accent-emerald)' : 'var(--accent-amber)'}}>{userPendingBatch.contributorCount}/{MIN_BATCH_CONTRIBUTORS}</strong> contributors</span>
-        </div>
-      )}
 
       {heatmapView.visibleBatches.length === 0 ? (
         <div className="empty-state" style={{ padding: '32px 16px' }}>

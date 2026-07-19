@@ -8,6 +8,7 @@ const userStoragePrefixes = {
   semesterResults: 'aust-user-semester-results',
   routineAttendanceEnabled: 'aust-user-routine-attendance-enabled',
   routineAttendanceData: 'aust-user-routine-attendance-data',
+  routineAttendanceSessions: 'aust-user-routine-attendance-sessions',
   userRoutine: 'aust-user-routine',
   userWeekDays: 'aust-user-weekdays',
   // Semester Tracker

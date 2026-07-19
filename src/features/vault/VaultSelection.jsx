@@ -76,10 +76,12 @@ export default function VaultSelection({
                 <span className="vault-dept-card-glow" aria-hidden="true" />
                 <span className="vault-dept-code">{dept}</span>
                 <span className="vault-dept-name">{departmentLabels[dept] || dept}</span>
-                <span className="vault-dept-meta">
-                  {paperCount > 0 ? `${paperCount} papers` : 'Coming soon'}
-                  <ChevronRight size={14} />
-                </span>
+                {paperCount > 0 && (
+                  <span className="vault-dept-meta">
+                    {paperCount} papers
+                    <ChevronRight size={14} />
+                  </span>
+                )}
               </button>
             );
           })}
@@ -111,21 +113,7 @@ export default function VaultSelection({
                 {departmentLabels[department]}
               </p>
             </div>
-          </div>
-
-          <div className="vault-pill-select">
-            <span className="vault-pill-select-label">Dept</span>
-            <select
-              className="vault-pill-select-input"
-              value={department}
-              onChange={(e) => onSelectDepartment(e.target.value)}
-            >
-              {heatmapDepartments.map((dept) => (
-                <option key={dept} value={dept}>{dept}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+          </div>          </div>
 
         <div className="vault-sem-slider-wrap">
           <div className="vault-sem-slider">
@@ -143,9 +131,11 @@ export default function VaultSelection({
                   <span className="vault-sem-year">Y{year}</span>
                   <span className="vault-sem-term">{term}</span>
                   <span className="vault-sem-label">{sem}</span>
-                  <span className="vault-sem-count">
-                    {paperCount > 0 ? `${paperCount} papers` : 'Empty'}
-                  </span>
+                  {paperCount > 0 && (
+                    <span className="vault-sem-count">
+                      {paperCount} papers
+                    </span>
+                  )}
                 </button>
               );
             })}

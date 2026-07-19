@@ -97,6 +97,7 @@ export default function AddVaultCourse({ department, yearSem, onAdded }) {
                 value={form.course}
                 placeholder="e.g. CSE3101"
                 type="code"
+                department={department}
                 onCourseSelect={(selected) => {
                   if (!selected) return;
                   if (selected.partialUpdate) {
@@ -119,6 +120,7 @@ export default function AddVaultCourse({ department, yearSem, onAdded }) {
                 value={form.name}
                 placeholder="e.g. Database Systems"
                 type="name"
+                department={department}
                 onCourseSelect={(selected) => {
                   if (!selected) return;
                   if (selected.partialUpdate) {

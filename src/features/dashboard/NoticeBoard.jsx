@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BellRing, Pin, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { Megaphone, BellRing, Pin, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { notices } from '../../data/mockData';
 
 export default function NoticeBoard() {
@@ -42,10 +42,10 @@ export default function NoticeBoard() {
 
   return (
     <div className="glass-card-static notice-board premium-card animate-fadeInUp">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between" style={{ paddingTop: '10px', paddingBottom: '8px' }}>
         <div className="flex items-center gap-2">
-          <div className="icon" style={{ backgroundColor: 'var(--accent-amber-glow)', color: 'var(--accent-amber)', padding: '6px', borderRadius: '8px' }}>
-            <BellRing size={18} />
+          <div className="icon" style={{ backgroundColor: 'var(--accent-amber-glow)', color: 'var(--accent-amber)', padding: '6px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Megaphone size={18} />
           </div>
           <div>
             <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>Official University Announcements</p>

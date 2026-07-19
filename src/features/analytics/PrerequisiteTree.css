@@ -10,6 +10,100 @@
   --pt-match: var(--accent-rose);
 }
 
+/* ─── Department Selector ─── */
+.prereq-dept-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.prereq-dept-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.prereq-dept-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.prereq-dept-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.prereq-dept-pill:hover {
+  border-color: var(--accent-amber);
+  color: var(--accent-amber);
+  background: color-mix(in srgb, var(--accent-amber) 8%, transparent);
+}
+
+.prereq-dept-pill.active {
+  border-color: var(--accent-amber);
+  background: color-mix(in srgb, var(--accent-amber) 14%, transparent);
+  color: var(--accent-amber);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent-amber) 20%, transparent);
+}
+
+/* ─── Coming Soon Placeholder ─── */
+.prereq-coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  text-align: center;
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: var(--radius-xl);
+  animation: fadeIn 0.35s ease;
+}
+
+.prereq-coming-soon-icon {
+  color: var(--text-tertiary);
+  margin-bottom: var(--sp-4);
+  opacity: 0.5;
+}
+
+.prereq-coming-soon-title {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--sp-2);
+}
+
+.prereq-coming-soon-desc {
+  font-size: var(--fs-sm);
+  color: var(--text-tertiary);
+  max-width: 360px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.prereq-coming-soon-desc strong {
+  color: var(--accent-amber);
+  font-weight: var(--fw-semibold);
+}
+
 /* ─── Toolbar ─── */
 .prereq-toolbar {
   display: flex;

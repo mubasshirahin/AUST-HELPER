@@ -1,10 +1,23 @@
 import { useState, useEffect } from 'react';
-import { Hourglass, AlertTriangle, CalendarRange, Zap } from 'lucide-react';
+import { Hourglass, AlertTriangle, CalendarRange, Zap, Timer } from 'lucide-react';
 import { deadlines } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
 
 export default function DeadlineTicker() {
   const { user } = useAuth();
+
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes hourglass-sand {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .deadline-hourglass svg { animation: hourglass-sand 4s ease-in-out infinite alternate; }
+    `;
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, []);
   const [timers, setTimers] = useState([]);
   const [calendarTasks, setCalendarTasks] = useState([]);
 
@@ -125,8 +138,8 @@ export default function DeadlineTicker() {
     <div className="glass-card-static deadline-ticker premium-card animate-fadeInUp">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="icon" style={{ backgroundColor: 'var(--accent-rose-glow)', color: 'var(--accent-rose)', padding: '6px', borderRadius: '8px' }}>
-            <Hourglass size={18} />
+          <div className="icon" style={{ backgroundColor: 'var(--accent-rose-glow)', color: 'var(--accent-rose)', padding: '6px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Timer size={18} />
           </div>
           <div>
             <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>Live countdown tracker</p>

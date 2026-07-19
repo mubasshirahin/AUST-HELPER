@@ -325,6 +325,8 @@ export default function RoutineAttendanceTracker() {
     };
   }, [courseStats, attendanceData, sessionMarks, telegramAttendance]);
 
+  useEffect(() => { try { localStorage.setItem('aust-attendance-overall-average', String(overallStats.average)); } catch {} }, [overallStats.average]);
+
   // ---------- Premium toggle button styles ----------
   const ToggleBtn = ({ sessionId, courseKey, currentStatus, targetStatus, label, icon: Icon, activeColor, activeBg, mutedColor }) => {
     const isActive = currentStatus === targetStatus;

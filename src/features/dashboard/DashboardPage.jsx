@@ -9,11 +9,11 @@ import WeekSchedule from './WeekSchedule';
 import NotificationBanner from './NotificationBanner';
 import RoutineAttendanceTracker from './RoutineAttendanceTracker';
 import GliderTabs from '../../components/GliderTabs';
-import { deadlines, leaderboardData } from '../../data/mockData';
+import { leaderboardData } from '../../data/mockData';
 import {
-  TrendingUp, Percent, Clock, BookOpen,
+  TrendingUp, Gauge, Percent, BookOpen,
   CalendarDays, Zap, AlertTriangle, Calendar,
-  Hourglass, BellRing, Flame, X, Trophy, Medal,
+  Hourglass, BellRing, Flame, X, Trophy, Medal, Award, Star, Target, Sparkles, Sun, BarChart3, UserCheck,
 } from 'lucide-react';
 import { getUserStorageItem, getCurrentUserId } from '../../utils/authStorage';
 import { useAuth } from '../../context/AuthContext';
@@ -157,7 +157,7 @@ function StudyStreak() {
             <div className="leaderboard-header">
               <div className="leaderboard-header-left">
                 <div className="icon" style={{ background: 'var(--accent-amber-glow)', color: 'var(--accent-amber)' }}>
-                  <Trophy size={18} />
+                  <Award size={18} />
                 </div>
                 <div>
                   <h3>Streak Leaderboard</h3>
@@ -172,7 +172,7 @@ function StudyStreak() {
             {/* ─── Top 3 Podium ─── */}
             <div className="leaderboard-podium">
               {topThree.map((entry, i) => {
-                const icons = [<Trophy size={16} />, <Medal size={16} />, <Medal size={16} />];
+                const icons = [<Trophy size={16} />, <Medal size={16} />, <Star size={16} />];
                 const colors = ['var(--accent-amber)', 'var(--text-secondary)', 'var(--accent-orange)'];
                 return (
                   <div key={entry.id} className={`podium-item podium-${i + 1}`}>
@@ -180,7 +180,7 @@ function StudyStreak() {
                     <div className="podium-name">{entry.name}</div>
                     <div className="podium-dept">{entry.dept}</div>
                     <div className="podium-streak" style={{ color: colors[i] }}>
-                      <Flame size={12} /> {entry.streak}
+                      <Zap size={12} /> {entry.streak}
                     </div>
                   </div>
                 );
@@ -197,7 +197,7 @@ function StudyStreak() {
                     <span className="leaderboard-row-dept">{entry.dept}</span>
                   </div>
                   <span className="leaderboard-row-streak">
-                    <Flame size={11} /> {entry.streak}
+                    <Sparkles size={11} /> {entry.streak}
                   </span>
                 </div>
               ))}
@@ -206,7 +206,7 @@ function StudyStreak() {
             {/* ─── My Position ─── */}
             <div className="leaderboard-my-rank">
               <div className="leaderboard-my-rank-content">
-                <Flame size={16} style={{ color: getStreakColor() }} />
+                <Sun size={16} style={{ color: getStreakColor() }} />
                 <div>
                   <span className="leaderboard-my-rank-label">My Streak</span>
                   <span className="leaderboard-my-rank-value" style={{ color: getStreakColor() }}>{streak} days</span>
@@ -214,7 +214,7 @@ function StudyStreak() {
               </div>
               <div className="leaderboard-my-rank-divider" />
               <div className="leaderboard-my-rank-content">
-                <Trophy size={16} style={{ color: 'var(--accent-amber)' }} />
+                <Target size={16} style={{ color: 'var(--accent-amber)' }} />
                 <div>
                   <span className="leaderboard-my-rank-label">My Rank</span>
                   <span className="leaderboard-my-rank-value" style={{ color: 'var(--accent-amber)' }}>
@@ -232,7 +232,7 @@ function StudyStreak() {
 }
 
 const focusModes = [
-  { id: 'stats', label: 'Quick Stats', icon: TrendingUp, desc: 'CGPA & metrics', color: 'blue' },
+  { id: 'stats', label: 'Quick Stats', icon: Gauge, desc: 'CGPA & metrics', color: 'blue' },
   { id: 'routine', label: 'Routine', icon: CalendarDays, desc: 'Weekly timetable', color: 'cyan' },
   { id: 'calendar', label: 'Semester View', icon: Calendar, desc: '14-week view', color: 'purple' },
   { id: 'exams', label: 'Zero Hour', icon: BookOpen, desc: 'Quiz, Mid & Final', color: 'amber' },
@@ -241,9 +241,10 @@ const focusModes = [
 
 function getGreeting() {
   const hour = new Date().getHours();
-  if (hour < 12) return { text: 'Good morning', period: 'morning' };
-  if (hour < 17) return { text: 'Good afternoon', period: 'afternoon' };
-  return { text: 'Good evening', period: 'evening' };
+  if (hour >= 5 && hour < 12) return { text: 'Good morning', period: 'morning' };
+  if (hour >= 12 && hour < 17) return { text: 'Good afternoon', period: 'afternoon' };
+  if (hour >= 17 && hour < 20) return { text: 'Good evening', period: 'evening' };
+  return { text: 'Good night', period: 'night' };
 }
 
 function getGreetingMeta(period) {
@@ -253,33 +254,75 @@ function getGreetingMeta(period) {
   const subtitles = {
     morning: 'Rise and shine — your schedule is ready for today.',
     afternoon: 'Keep the momentum going. You\'re doing great.',
-    evening: 'Welcome back. Here\'s your overview for tonight.',
+    evening: 'Wind down — here\'s your evening overview.',
+    night: 'Rest up — here\'s a quick look before tomorrow.',
   };
   return { day, date, subtitle: subtitles[period] };
 }
 
+/* ─── Sunrise SVG ─── */
+function SunriseIcon({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      {/* Horizon line */}
+      <path d="M22 22H2" />
+      {/* Sun disk glow */}
+      <circle cx="12" cy="18" r="5" fill="currentColor" opacity="0.1" />
+      {/* Sun rising (half above horizon) */}
+      <path d="M7 18a5 5 0 0 1 10 0" fill="currentColor" fillOpacity="0.15" />
+      {/* Rays going UPWARD */}
+      <path d="M12 2v4" />
+      <path d="M5 9l2 2" />
+      <path d="M19 9l-2 2" />
+      {/* Upward-pointing peak */}
+      <path d="M9 4l3-3 3 3" />
+    </svg>
+  );
+}
+
+/* ─── Sun SVG ─── */
+function SunIcon({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="5" fill="currentColor" opacity="0.2" />
+      <path d="M12 1v2M12 21v2M1 12h2M21 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+    </svg>
+  );
+}
+
+/* ─── Sunset SVG ─── */
+function SunsetIcon({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 18a5 5 0 0 0-10 0" />
+      <path d="M22 22H2" />
+      <path d="M12 2v7" />
+      <path d="M4.93 13.93l1.41-1.41" />
+      <path d="M17.66 13.93l-1.41-1.41" />
+      <path d="M18 18h2" />
+      <path d="M4 18h2" />
+      <circle cx="12" cy="14" r="2" fill="currentColor" opacity="0.15" />
+    </svg>
+  );
+}
+
+/* ─── Moon SVG ─── */
+function MoonIcon({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor" opacity="0.12" />
+      <circle cx="9" cy="8" r="0.8" fill="currentColor" opacity="0.6" />
+      <circle cx="17" cy="16" r="0.8" fill="currentColor" opacity="0.6" />
+      <circle cx="7" cy="13" r="0.5" fill="currentColor" opacity="0.4" />
+    </svg>
+  );
+}
+
 const PERIOD_ICONS = {
-  morning: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="4" fill="currentColor" opacity="0.9"/>
-      <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
-        stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    </svg>
-  ),
-  afternoon: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="5" fill="currentColor" opacity="0.9"/>
-      <path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"
-        stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
-    </svg>
-  ),
-  evening: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
-        fill="currentColor" opacity="0.9" stroke="currentColor" strokeWidth="1.5"
-        strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
+  morning: <SunriseIcon />,
+  afternoon: <SunIcon />,
+  evening: <SunsetIcon />,
+  night: <MoonIcon />,
 };
 
 function useAnimatedValue(target, duration = 900) {
@@ -314,6 +357,61 @@ function useAnimatedValue(target, duration = 900) {
   return display;
 }
 
+function RunningClock({ size = 18 }) {
+  useEffect(() => {
+    if (document.getElementById('rc-style')) return;
+    const style = document.createElement('style');
+    style.id = 'rc-style';
+    style.textContent = `
+      @keyframes rc-min { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+      @keyframes rc-hour { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+      .rc-min { animation: rc-min 60s linear infinite; transform-origin: 50% 50%; }
+      .rc-hour { animation: rc-hour 3600s linear infinite; transform-origin: 50% 50%; }
+    `;
+    document.head.appendChild(style);
+  }, []);
+
+  const s = size;
+  const cx = s / 2, cy = s / 2, r = s / 2 - 1;
+  return (
+    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx={cx} cy={cy} r={r} />
+      <line className="rc-hour" x1={cx} y1={cy} x2={cx} y2={cy - r * 0.5} stroke="currentColor" strokeWidth="1.5" />
+      <line className="rc-min" x1={cx} y1={cy} x2={cx} y2={cy - r * 0.75} stroke="currentColor" strokeWidth="1" />
+    </svg>
+  );
+}
+
+function FlippingBook({ size = 18 }) {
+  useEffect(() => {
+    if (document.getElementById('fb-style')) return;
+    const s = document.createElement('style');
+    s.id = 'fb-style';
+    s.textContent = `
+      @keyframes fb-mv {
+        0%,100%{transform:translateX(0);opacity:.7}
+        25%{transform:translateX(-3px);opacity:.3}
+        50%{transform:translateX(-6px);opacity:0}
+        75%{transform:translateX(0);opacity:.7}
+      }
+      .fb1{animation:fb-mv 2.4s ease-in-out infinite}
+      .fb2{animation:fb-mv 2.4s ease-in-out .8s infinite}
+      .fb3{animation:fb-mv 2.4s ease-in-out 1.6s infinite}
+    `;
+    document.head.appendChild(s);
+  }, []);
+
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+      <path d="M12 2v20" opacity="0.15" />
+      <path className="fb1" d="M16 5v14" opacity="0.6" />
+      <path className="fb2" d="M17 6v12" opacity="0.4" strokeWidth="1" />
+      <path className="fb3" d="M15 6v12" opacity="0.4" strokeWidth="1" />
+    </svg>
+  );
+}
+
 function QuickStats() {
   const [userResults, setUserResults] = useState(null);
   const [isGuest, setIsGuest] = useState(false);
@@ -326,11 +424,39 @@ function QuickStats() {
   }, []);
 
   const stats = useMemo(() => {
+    const stored = localStorage.getItem('aust-deadlines');
+    const allDeadlines = stored ? (() => { try { return JSON.parse(stored); } catch { return []; } })() : [];
+    const storedTasks = localStorage.getItem('aust-week-tasks');
+    const allTasks = storedTasks ? (() => { try { return JSON.parse(storedTasks); } catch { return []; } })() : [];
+    const now = Date.now();
+    const pendingDeadlines = allDeadlines.filter((d) => {
+      const due = d.dueDate ? new Date(d.dueDate).getTime() : 0;
+      return due > now;
+    }).length;
+    const pendingTasks = allTasks.filter((t) => {
+      if (!t.date) return false;
+      const taskDate = new Date(t.date);
+      if (t.time) {
+        const [h, m] = t.time.split(':');
+        taskDate.setHours(parseInt(h), parseInt(m), 0);
+      } else {
+        taskDate.setHours(23, 59, 59);
+      }
+      return taskDate.getTime() > now;
+    }).length;
+    const pending = pendingDeadlines + pendingTasks;
+
+    let avgAttendance = null;
+    try {
+      const v = localStorage.getItem('aust-attendance-overall-average');
+      if (v) { avgAttendance = parseFloat(v); if (isNaN(avgAttendance)) avgAttendance = null; }
+    } catch {}
+
     if (isGuest || !userResults) {
       return {
         currentCgpa: null,
-        avgAttendance: '—',
-        upcomingDeadlines: deadlines.filter((d) => d.dueDate.getTime() > Date.now()).length,
+        avgAttendance: avgAttendance !== null ? avgAttendance : '—',
+        upcomingDeadlines: pending,
         creditsCompleted: 0,
       };
     }
@@ -341,7 +467,7 @@ function QuickStats() {
       return total + sem.courses.reduce((sum, c) => (c.point !== null ? sum + (Number(c.credit) || 0) : sum), 0);
     }, 0);
 
-    return { currentCgpa, avgAttendance: '—', upcomingDeadlines: 0, creditsCompleted };
+    return { currentCgpa, avgAttendance: avgAttendance !== null ? avgAttendance : '—', upcomingDeadlines: pending, creditsCompleted };
   }, [userResults, isGuest]);
 
   const animatedCgpa = useAnimatedValue(stats.currentCgpa);
@@ -356,7 +482,7 @@ function QuickStats() {
       label: 'Current CGPA',
       value: hasCgpa ? animatedCgpa : '0.00',
       placeholder: !hasCgpa,
-      icon: TrendingUp,
+      icon: BarChart3,
       color: 'var(--accent-blue)',
       bg: 'var(--accent-blue-glow)',
       accent: 'blue',
@@ -364,9 +490,9 @@ function QuickStats() {
     },
     {
       label: 'Avg. Attendance',
-      value: hasAttendance ? `${stats.avgAttendance}%` : '0%',
+      value: hasAttendance ? `${stats.avgAttendance}%` : '—',
       placeholder: !hasAttendance,
-      icon: Percent,
+      icon: UserCheck,
       color: 'var(--accent-emerald)',
       bg: 'var(--accent-emerald-glow)',
       accent: 'emerald',
@@ -375,7 +501,7 @@ function QuickStats() {
     {
       label: 'Pending Deadlines',
       value: animatedDeadlines,
-      icon: Clock,
+      icon: RunningClock,
       color: stats.upcomingDeadlines > 3 ? 'var(--accent-rose)' : 'var(--accent-amber)',
       bg: stats.upcomingDeadlines > 3 ? 'var(--accent-rose-glow)' : 'var(--accent-amber-glow)',
       accent: stats.upcomingDeadlines > 3 ? 'rose' : 'amber',
@@ -384,7 +510,7 @@ function QuickStats() {
     {
       label: 'Credits Completed',
       value: animatedCredits,
-      icon: BookOpen,
+      icon: FlippingBook,
       color: 'var(--accent-purple)',
       bg: 'var(--accent-purple-glow)',
       accent: 'purple',
@@ -496,7 +622,7 @@ export default function DashboardPage() {
           <div className="section-header">
             <h2 className="section-title">
               <span className="icon" style={{ background: 'var(--accent-blue-glow)', color: 'var(--accent-blue)' }}>
-                <TrendingUp size={16} />
+                <Gauge size={16} />
               </span>
               Quick Statistics
             </h2>
@@ -515,6 +641,15 @@ export default function DashboardPage() {
 
       {isVisible('routine') && (
         <section className="dash-section-group">
+          <div className="section-header">
+            <h2 className="section-title">
+              <span className="icon" style={{ background: 'var(--accent-cyan-glow)', color: 'var(--accent-cyan)' }}>
+                <CalendarDays size={16} />
+              </span>
+              Weekly Timetable
+            </h2>
+            <p className="section-subtitle">Traditional AUST timetable — 50 min per slot (SUN-THU)</p>
+          </div>
           <div className="dash-section">
             <WeeklyPlanner />
           </div>
@@ -525,10 +660,10 @@ export default function DashboardPage() {
         <section className="dash-section-group">
           <div className="section-header">
             <h2 className="section-title">
-              <span className="icon" style={{ background: 'var(--accent-purple-glow)', color: 'var(--accent-purple)', width: 28, height: 28 }}>
-                <Calendar size={8} />
+              <span className="icon" style={{ background: 'var(--accent-purple-glow)', color: 'var(--accent-purple)' }}>
+                <Calendar size={16} />
               </span>
-              <span style={{ fontSize: 'var(--fs-sm)' }}>Semester View</span>
+              <span>Semester View</span>
             </h2>
           </div>
           <div className="dash-section">
@@ -560,7 +695,7 @@ export default function DashboardPage() {
               <div className="section-header">
                 <h2 className="section-title">
                   <span className="icon" style={{ background: 'var(--accent-blue-glow)', color: 'var(--accent-blue)' }}>
-                    <Clock size={16} />
+                    <CalendarDays size={16} />
                   </span>
                   Daily Flow
                 </h2>

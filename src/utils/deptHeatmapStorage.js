@@ -168,7 +168,7 @@ export function buildHeatmapView(department) {
 
     const summary = {
       batchNo: batchEntry.batchNo,
-      label: `Batch ${batchEntry.batchNo}`,
+      label: `${batchEntry.batchNo}`,
       contributorCount,
       cells,
     };

@@ -192,7 +192,7 @@ export default function CoursePoll() {
   }
 
   return (
-    <div className="animate-fadeInUp" style={{
+    <div className="course-poll-wrapper animate-fadeInUp" style={{
       background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
       backdropFilter: 'blur(16px)',
       WebkitBackdropFilter: 'blur(16px)',
@@ -229,9 +229,62 @@ export default function CoursePoll() {
 
         {error && <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--accent-rose)', marginTop: '12px' }}>{error}</p>}
 
-        <button type="submit" className="btn btn-primary btn-sm" style={{ marginTop: '14px' }}>
-          <Send size={14} /> Submit my picks
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+        <button type="submit" style={{
+          padding: '10px 28px 10px 24px',
+          fontSize: 'var(--fs-sm)',
+          fontWeight: 'var(--fw-semibold)',
+          borderRadius: 'var(--radius-full)',
+          background: 'rgba(255,255,255,0.04)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          color: 'var(--text-primary)',
+          cursor: 'pointer',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '10px',
+          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+          outline: 'none',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+        onMouseEnter={(e) => {
+          const btn = e.currentTarget;
+          btn.style.borderColor = 'var(--accent-amber)';
+          btn.style.background = 'color-mix(in srgb, var(--accent-amber) 12%, transparent)';
+          btn.style.color = 'var(--accent-amber)';
+          btn.style.boxShadow = '0 0 20px color-mix(in srgb, var(--accent-amber) 15%, transparent)';
+          const icon = btn.querySelector('.submit-icon');
+          if (icon) icon.style.transform = 'translateX(4px)';
+        }}
+        onMouseLeave={(e) => {
+          const btn = e.currentTarget;
+          btn.style.borderColor = 'rgba(255,255,255,0.1)';
+          btn.style.background = 'rgba(255,255,255,0.04)';
+          btn.style.color = 'var(--text-primary)';
+          btn.style.boxShadow = 'none';
+          const icon = btn.querySelector('.submit-icon');
+          if (icon) icon.style.transform = 'none';
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = 'var(--accent-amber)';
+          e.currentTarget.style.boxShadow = '0 0 0 3px color-mix(in srgb, var(--accent-amber) 20%, transparent)';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+          e.currentTarget.style.boxShadow = 'none';
+        }}
+        >
+          Submit My Picks
+          <span className="submit-icon" style={{
+            display: 'inline-flex',
+            transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}>
+            <Send size={15} />
+          </span>
         </button>
+        </div>
       </form>
 
       <div className="grid-2" style={{ gap: '16px' }}>

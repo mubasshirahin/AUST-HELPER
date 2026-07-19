@@ -13,7 +13,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { TrendingUp, Award, CheckCircle } from 'lucide-react';
+import { TrendingUp, Award, CheckCircle, ChartLine, Sparkles } from 'lucide-react';
 import { getUserStorageItem, getCurrentUserId } from '../../utils/authStorage';
 
 ChartJS.register(
@@ -67,27 +67,52 @@ export default function CGPAGraph() {
         {
           label: 'SGPA',
           data: sgpaList,
-          borderColor: '#06b6d4',
-          backgroundColor: 'rgba(6, 182, 212, 0.08)',
+          borderColor: '#2dd4bf',
+          backgroundColor: (ctx) => {
+            if (!ctx.chart?.ctx) return 'rgba(45, 212, 191, 0.08)';
+            const chartArea = ctx.chart.chartArea;
+            if (!chartArea) return 'rgba(45, 212, 191, 0.08)';
+            const gradient = ctx.chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            gradient.addColorStop(0, 'rgba(45, 212, 191, 0.25)');
+            gradient.addColorStop(1, 'rgba(45, 212, 191, 0.01)');
+            return gradient;
+          },
           tension: 0.35,
-          borderWidth: 2,
-          pointBackgroundColor: '#06b6d4',
-          pointBorderColor: 'rgba(6,182,212,0.4)',
-          pointRadius: 4,
-          pointHoverRadius: 6,
+          borderWidth: 3,
+          borderDash: [6, 3],
+          pointBackgroundColor: '#2dd4bf',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          pointHoverBackgroundColor: '#2dd4bf',
+          pointHoverBorderColor: '#fff',
+          pointHoverBorderWidth: 3,
         },
         {
           label: 'CGPA',
           data: cgpaList,
-          borderColor: '#f59e0b',
-          backgroundColor: 'rgba(245, 158, 11, 0.10)',
+          borderColor: '#fbbf24',
+          backgroundColor: (ctx) => {
+            if (!ctx.chart?.ctx) return 'rgba(251, 191, 36, 0.10)';
+            const chartArea = ctx.chart.chartArea;
+            if (!chartArea) return 'rgba(251, 191, 36, 0.10)';
+            const gradient = ctx.chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            gradient.addColorStop(0, 'rgba(251, 191, 36, 0.30)');
+            gradient.addColorStop(1, 'rgba(251, 191, 36, 0.01)');
+            return gradient;
+          },
           fill: true,
           tension: 0.35,
-          borderWidth: 3,
-          pointBackgroundColor: '#f59e0b',
-          pointBorderColor: 'rgba(245,158,11,0.35)',
-          pointRadius: 5,
-          pointHoverRadius: 7,
+          borderWidth: 3.5,
+          pointBackgroundColor: '#fbbf24',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2.5,
+          pointRadius: 6,
+          pointHoverRadius: 9,
+          pointHoverBackgroundColor: '#fbbf24',
+          pointHoverBorderColor: '#fff',
+          pointHoverBorderWidth: 3.5,
         }
       ]
     };
@@ -96,38 +121,76 @@ export default function CGPAGraph() {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      intersect: false,
+      mode: 'index'
+    },
     plugins: {
       legend: {
         position: 'top',
+        align: 'center',
         labels: {
-          color: 'var(--text-secondary)',
-          font: { family: 'Inter', size: 12 }
+          color: '#ffffff',
+          font: { family: 'Inter', size: 13, weight: '600' },
+          padding: 16,
+          usePointStyle: true,
+          pointStyle: 'circle'
         }
       },
       tooltip: {
-        backgroundColor: 'rgba(13, 13, 13, 0.97)',
-        titleColor: '#f59e0b',
-        bodyColor: '#e5e7eb',
-        borderColor: 'rgba(245, 158, 11, 0.25)',
-        borderWidth: 1,
-        padding: 14,
-        cornerRadius: 10,
-        titleFont: { size: 13, weight: 'bold' },
-        bodyFont: { size: 12 }
+        backgroundColor: 'rgba(10, 10, 15, 0.95)',
+        titleColor: '#ffffff',
+        titleFont: { size: 14, weight: 'bold', family: 'Inter' },
+        bodyColor: '#ffffff',
+        bodyFont: { size: 13, family: 'Inter' },
+        borderColor: 'rgba(255, 255, 255, 0.12)',
+        borderWidth: 1.5,
+        padding: 16,
+        cornerRadius: 12,
+        boxPadding: 6,
+        usePointStyle: true,
+        callbacks: {
+          labelColor: function(context) {
+            return {
+              borderColor: context.dataset.borderColor,
+              backgroundColor: context.dataset.borderColor,
+              borderWidth: 2,
+            };
+          }
+        }
       }
     },
     scales: {
       x: {
-        grid: { color: 'rgba(255,255,255,0.05)' },
-        ticks: { color: 'var(--text-secondary)' }
+        grid: { 
+          color: 'rgba(255,255,255,0.08)',
+          drawTicks: false
+        },
+        ticks: { 
+          color: '#ffffff',
+          font: { size: 11, weight: '500', family: 'Inter' },
+          padding: 8
+        },
+        border: {
+          color: 'rgba(255,255,255,0.10)'
+        }
       },
       y: {
         min: 2.0,
         max: 4.0,
-        grid: { color: 'rgba(255,255,255,0.05)' },
+        grid: { 
+          color: 'rgba(255,255,255,0.08)',
+          drawTicks: false
+        },
         ticks: { 
-          color: 'var(--text-secondary)',
-          stepSize: 0.25
+          color: '#ffffff',
+          font: { size: 11, weight: '500', family: 'Inter' },
+          stepSize: 0.25,
+          padding: 8,
+          callback: (value) => value.toFixed(2)
+        },
+        border: {
+          color: 'rgba(255,255,255,0.10)'
         }
       }
     }
@@ -192,16 +255,24 @@ export default function CGPAGraph() {
         </div>
       </div>
 
-      {/* CGPA Chart */}
-      <div className="glass-card-static" style={{ 
-        height: '350px',
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: 'var(--radius-xl)',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.06)',
-      }}>
-        <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 'var(--fw-bold)', marginBottom: '16px', letterSpacing: '-0.01em' }}>Academic Progression Trend</h3>
-        <div style={{ height: '280px', position: 'relative' }}>
+      {/* CGPA Chart Card */}
+      <div className="cgpa-chart-card">
+        <div className="cgpa-chart-header">
+          <div className="cgpa-chart-header-left">
+            <div className="cgpa-chart-icon">
+              <ChartLine size={18} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h3 className="cgpa-chart-title">Academic Progression Trend</h3>
+              <p className="cgpa-chart-subtitle">SGPA &amp; CGPA across semesters</p>
+            </div>
+          </div>
+          <div className="cgpa-chart-badge">
+            <Sparkles size={12} strokeWidth={2.5} />
+            <span>Live</span>
+          </div>
+        </div>
+        <div className="cgpa-chart-body">
           <Line data={chartData} options={options} />
         </div>
       </div>

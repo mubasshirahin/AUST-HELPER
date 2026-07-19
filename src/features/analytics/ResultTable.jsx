@@ -591,6 +591,7 @@ export default function ResultTable({ onResultsChange }) {
                               <div style={{ position: 'relative', zIndex: 10001 }}>
                                 <CourseAutocomplete
                                   value={course.code}
+                                  department={user?.department}
                                   onCourseSelect={(selectedCourse) => {
                                     updateCourseField(displaySemester.semester, courseIndex, 'code', selectedCourse.code);
                                     updateCourseField(displaySemester.semester, courseIndex, 'name', selectedCourse.name);
